@@ -2,7 +2,6 @@ package org.example;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -46,7 +45,7 @@ public abstract class DataField<T> {
 
 		// calc value
 		double res = m * value + n;
-		DtaFile.Value<Number> val = DtaFile.Value.of(Math.round(res) / (table.getPrecision()));
+		DtaFile.Value<Number> val = DtaFile.Value.of((res) / (table.getPrecision()));
 		return DataFieldContainer.single(category, name, val);
 	}
 
@@ -61,7 +60,7 @@ public abstract class DataField<T> {
 	public static DataFieldContainer analogue(String category, String name, double factor, int precision, ByteBuffer buffer, boolean highbytes){
 
 		int val = highbytes ? buffer.getInt() : buffer.getShort();
-		double res = (double) Math.round(val / factor * precision) / precision;
+		double res = (val / factor * precision) / precision;
 
 		DtaFile.Value<Number> value = DtaFile.Value.of(res);
 		return DataFieldContainer.single(category, name, value);

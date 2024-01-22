@@ -28,6 +28,7 @@ public class DtaPlot {
 
 	private static final String HEATPUMP_LOCATION = "http://192.168.178.47/proclog";
 	private static final NumberFormat timeFormat = new DecimalFormat("00");
+	private static final NumberFormat degreeFormat = new DecimalFormat("#0.00");
 
 	private final Collection<Map<String, DtaFile.Value<?>>> data = new ArrayList<>();
 	private final Plot plot = new Plot();
@@ -144,12 +145,6 @@ public class DtaPlot {
 		});
 		menuBar.add(fileMenu);
 
-		/*selections.addItemListener(e -> {
-			if (e.getStateChange() == ItemEvent.SELECTED){
-				addPoints();
-			}
-		});*/
-
 		JButton set = new JButton("Display");
 		JButton add = new JButton("Add to graph");
 		set.addActionListener(new AbstractAction() {
@@ -259,9 +254,10 @@ public class DtaPlot {
 								timeFormat.format(zTime.getMonthValue()),
 								timeFormat.format(zTime.getYear())
 						);
+						double val = ((Number) value.get()).doubleValue();
 						plot.addXTick(label, time);
-						plot.addPoint(set, time,
-								((Number) value.get()).doubleValue(), true);
+						//plot.addYTick(degreeFormat.format(val), val);
+						plot.addPoint(set, time, val, true);
 					}
 
 				});
