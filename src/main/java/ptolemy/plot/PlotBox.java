@@ -2922,7 +2922,7 @@ public class PlotBox extends JPanel implements Printable, PlotBoxInterface {
                 if (labxpos > preLength) {
                     // calculate the length of the label
                     preLength = xCoord1
-                            + _labelFontMetrics.stringWidth(label) / 2 + 10;
+                            + _labelFontMetrics.stringWidth(label) / 2f + 10;
 
                     // Draw the label.
                     // NOTE: 3 pixel spacing between axis and labels.

@@ -11,8 +11,6 @@ import java.io.InputStream;
 import java.net.URI;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
@@ -21,7 +19,6 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import com.formdev.flatlaf.FlatLightLaf;
@@ -36,14 +33,29 @@ public class Main {
 
 	public static void main(String[] args) {
 
-			FlatLightLaf.setup();
+		FlatLightLaf.setup();
 
+		plot();
 
-			Path p = Path.of("240121_2122_proclog.dta");
-			open(p);
+		/*if (args.length>0){
+			for (String s : args){
+				if (s.endsWith(".json") || s.endsWith(".dta")){
+					if (s.endsWith(".json")){
+						ad
+					}
+				} else {
+					System.err.println("Unsupported file type: "+s);
+				}
+			}
+		} else {
+
+		}*/
+
+			//Path p = Path.of("240121_2122_proclog.dta");
+			//open(p);
 	}
 
-	private static Path download() {
+	/*private static Path download() {
 		String name = formatter.format(new Date());
 		Path target = Path.of(name + "_" + FILE_LOCATION.substring(FILE_LOCATION.lastIndexOf("/") + 1) + ".dta");
 		download(URI.create(FILE_LOCATION), target);
@@ -56,28 +68,10 @@ public class Main {
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
-	}
+	}*/
 
-	private static void open(Path file) {
-		try {
-			byte[] data = Files.readAllBytes(file);
-			open(data);
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	private static void open(byte[] data) {
-		DtaFile<?> dta = new DtaFile8209(ByteBuffer.wrap(data));
-
-		plot(dta);
-	}
-
-	private static void plot(DtaFile<?> file) {
+	private static void plot() {
 		final Collection<Map<String, DtaFile.Value<?>>> data = new ArrayList<>();
-		if (file != null){
-			data.addAll(file.datapoints.values());
-		}
 		JFrame frame = new JFrame();
 		frame.setTitle("DtaPlot");
 
@@ -97,12 +91,12 @@ public class Main {
 				if (chooser.getSelectedFile().getName().endsWith(".dta")) {
 					try {
 						byte[] bytes = Files.readAllBytes(chooser.getSelectedFile().toPath());
-						addToGraph(bytes, data, plot, (String) graphs.getSelectedItem());
+						addToGraph(bytes, data, plot, graphs);
 					} catch (IOException ex) {
 						throw new RuntimeException(ex);
 					}
 				} else if (chooser.getSelectedFile().getName().endsWith(".json")) {
-					addToGraph(DataLoader.getInstance().load(chooser.getSelectedFile().toPath()), data, plot, (String) graphs.getSelectedItem());
+					addToGraph(DataLoader.getInstance().load(chooser.getSelectedFile().toPath()), data, plot, graphs);
 				}
 			}
 		});
@@ -117,12 +111,12 @@ public class Main {
 				if (chooser.getSelectedFile().getName().endsWith(".dta")) {
 					try {
 						byte[] bytes = Files.readAllBytes(chooser.getSelectedFile().toPath());
-						addToGraph(bytes, data, plot, (String) graphs.getSelectedItem());
+						addToGraph(bytes, data, plot, graphs);
 					} catch (IOException ex) {
 						throw new RuntimeException(ex);
 					}
 				} else if (chooser.getSelectedFile().getName().endsWith(".json")) {
-					addToGraph(DataLoader.getInstance().load(chooser.getSelectedFile().toPath()), data, plot, (String) graphs.getSelectedItem());
+					addToGraph(DataLoader.getInstance().load(chooser.getSelectedFile().toPath()), data, plot, graphs);
 				}
 			}
 		});
@@ -132,7 +126,7 @@ public class Main {
 				try (InputStream in = URI.create(FILE_LOCATION).toURL().openStream()) {
 					byte[] bytes = in.readAllBytes();
 					data.clear();
-					addToGraph(bytes, data, plot, (String) graphs.getSelectedItem());
+					addToGraph(bytes, data, plot, graphs);
 				} catch (IOException ex) {
 					throw new RuntimeException(ex);
 				}
@@ -143,7 +137,7 @@ public class Main {
 			public void actionPerformed(ActionEvent e) {
 				try (InputStream in = URI.create(FILE_LOCATION).toURL().openStream()) {
 					byte[] bytes = in.readAllBytes();
-					addToGraph(bytes, data, plot, (String) graphs.getSelectedItem());
+					addToGraph(bytes, data, plot, graphs);
 				} catch (IOException ex) {
 					throw new RuntimeException(ex);
 				}
@@ -179,19 +173,13 @@ public class Main {
 		});
 		menuBar.add(fileMenu);
 
-
-		file.datapoints.values().stream().map(Map::keySet).distinct()
-				.forEach(strings -> strings.forEach(graphs::addItem));
 		graphs.addActionListener(new AbstractAction() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				addPoints(plot, data, (String) graphs.getSelectedItem());
+				addPoints(plot, data, graphs);
 
 			}
 		});
-
-		loadFileIntoGraph(plot, file, (String) graphs.getSelectedItem());
-
 
 		frame.setLayout(new BorderLayout());
 
@@ -209,53 +197,50 @@ public class Main {
 		frame.setVisible(true);
 	}
 
-	private static void addToGraph(byte[] bytes, Collection<Map<String, DtaFile.Value<?>>> data, Plot plot, String selected){
+	private static void addToGraph(byte[] bytes, Collection<Map<String, DtaFile.Value<?>>> data, Plot plot, JComboBox<String> selected){
 		DtaFile<?> dta = new DtaFile8209(ByteBuffer.wrap(bytes));
 		addToGraph(dta.datapoints.values(), data, plot, selected);
 	}
 
-	private static void addToGraph(Collection<Map<String, DtaFile.Value<?>>> data, Collection<Map<String, DtaFile.Value<?>>> existing, Plot plot, String selected){
+	private static void addToGraph(Collection<Map<String, DtaFile.Value<?>>> data, Collection<Map<String, DtaFile.Value<?>>> existing, Plot plot, JComboBox<String> selected){
 		Set<Integer> times = existing.stream().map(map -> (int)map.get("time").get()).collect(Collectors.toSet());
 		existing.addAll(data.stream()
 				.filter(stringValueMap -> !times.contains((Integer) stringValueMap.get("time").get())).toList());
 		addPoints(plot, existing, selected);
 	}
 
-	private static void addPoints(Plot plot, Collection<Map<String, DtaFile.Value<?>>> data, String selected){
+	private static void addPoints(Plot plot, Collection<Map<String, DtaFile.Value<?>>> data, JComboBox<String> selection){
 		plot.clear(true);
+		plot.clearLegends();
 		plot.setXLabel("time");
 		plot.setYLabel("°C");
-		AtomicInteger points = new AtomicInteger();
 		System.out.println("Plotting "+data.size()+" data points!");
+		String prev = (String) selection.getSelectedItem();
+		selection.removeAllItems();
+		data.stream().map(Map::keySet).forEach(strings -> strings.stream()
+				.filter(s -> !"time".equals(s)).distinct().forEach(selection::addItem));
+		if (prev != null){
+			selection.setSelectedItem(prev);
+		}
+		String selected = (String) selection.getSelectedItem();
+		plot.addLegend(0, selected);
 		data.stream()
 				.sorted(Comparator.comparingInt(map -> (Integer) map.get("time").get()))
 				.forEachOrdered((stringValueMap) -> {
-					AtomicInteger dataset = new AtomicInteger(0);
 					int time = (int) stringValueMap.get("time").get();
 
 					DtaFile.Value<?> value = stringValueMap.get(selected);
 					if (value.get() instanceof Number) {
-						if (points.get() == 0) {
-							plot.addLegend(dataset.get(), selected);
-						}
 						ZonedDateTime zTime = ZonedDateTime.ofInstant(Instant.ofEpochSecond(time),
 								ZoneId.systemDefault());
 						plot.addXTick(timeFormat.format(zTime.getHour())+":"+ timeFormat.format(zTime.getMinute()), time);
-						plot.addPoint(dataset.get(), time,
+						plot.addPoint(0, time,
 								((Number) value.get()).doubleValue(), true);
-						dataset.getAndIncrement();
 					}
-					points.getAndIncrement();
 
 				});
 		plot.fillPlot();
 		plot.repaint();
-	}
-
-	private static void loadFileIntoGraph(Plot plot, DtaFile<?> file, String selected) {
-		plot.setXLabel("time");
-		plot.setYLabel("°C");
-		addPoints(plot, file.datapoints.values(), selected);
 	}
 
 	private static void addFileFilters(JFileChooser chooser){
