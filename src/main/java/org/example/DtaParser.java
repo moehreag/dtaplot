@@ -12,14 +12,8 @@ import org.example.versioned.DtaFile9003;
 @RequiredArgsConstructor
 public class DtaParser {
 
-	private final ByteBuffer data;
-
-	public static DtaParser of(ByteBuffer buf){
-		return new DtaParser(buf.order(ByteOrder.LITTLE_ENDIAN));
-	}
-
-	public DtaFile<?> parse(){
-		int version = data.getInt(0);
+	public static DtaFile get(ByteBuffer data){
+		int version = data.order(ByteOrder.LITTLE_ENDIAN).getInt(0);
 		return switch (version){
 			case 8208, 8209 -> new DtaFile8209(data);
 			case 9000 -> new DtaFile9000(data);
@@ -27,5 +21,9 @@ public class DtaParser {
 			case 9003 -> new DtaFile9003(data);
 			default -> throw new IllegalArgumentException("Unsupported DTA version: "+version);
 		};
+	}
+
+	public static DtaFile get(byte[] data){
+		return get(ByteBuffer.wrap(data));
 	}
 }

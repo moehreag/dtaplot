@@ -80,8 +80,7 @@ public class EPSGraphics extends Graphics {
         _out = out;
         _buffer.append("%!PS-Adobe-3.0 EPSF-3.0\n");
         _buffer.append("%%Creator: UC Berkeley Plot Package\n");
-        _buffer.append("%%BoundingBox: 50 50 " + (50 + width) + " "
-                + (50 + height) + "\n");
+        _buffer.append("%%BoundingBox: 50 50 ").append(50 + width).append(" ").append(50 + height).append("\n");
         _buffer.append("%%Pages: 1\n");
         _buffer.append("%%Page: 1 1\n");
         _buffer.append("%%LanguageLevel: 2\n");
@@ -162,8 +161,8 @@ public class EPSGraphics extends Graphics {
     public void drawLine(int x1, int y1, int x2, int y2) {
         Point start = _convert(x1, y1);
         Point end = _convert(x2, y2);
-        _buffer.append("newpath " + start.x + " " + start.y + " moveto\n");
-        _buffer.append("" + end.x + " " + end.y + " lineto\n");
+        _buffer.append("newpath ").append(start.x).append(" ").append(start.y).append(" moveto\n");
+        _buffer.append("").append(end.x).append(" ").append(end.y).append(" lineto\n");
         _buffer.append("stroke\n");
     }
 
@@ -182,12 +181,10 @@ public class EPSGraphics extends Graphics {
      */
     @Override
     public void drawPolygon(int[] xPoints, int[] yPoints, int nPoints) {
-        if (!_polygon(xPoints, yPoints, nPoints)) {
-            return;
-        } else {
+		if (_polygon(xPoints, yPoints, nPoints)) {
             _buffer.append("closepath stroke\n");
         }
-    }
+	}
 
     /** Draw an oval bounded by the specified rectangle with the current color.
      *  @param x The x coordinate of the upper left corner
@@ -202,18 +199,17 @@ public class EPSGraphics extends Graphics {
     public void drawOval(int x, int y, int width, int height) {
         int radius = width / 2;
         Point center = _convert(x + radius, y + radius);
-        _buffer.append("newpath " + center.x + " " + center.y + " " + radius
-                + " 0 360 arc closepath stroke\n");
+        _buffer.append("newpath ").append(center.x).append(" ").append(center.y).append(" ").append(radius).append(" 0 360 arc closepath stroke\n");
     }
 
     @Override
     public void drawRect(int x, int y, int width, int height) {
         Point start = _convert(x, y);
-        _buffer.append("newpath " + start.x + " " + start.y + " moveto\n");
-        _buffer.append("0 " + -height + " rlineto\n");
-        _buffer.append("" + width + " 0 rlineto\n");
-        _buffer.append("0 " + height + " rlineto\n");
-        _buffer.append("" + -width + " 0 rlineto\n");
+        _buffer.append("newpath ").append(start.x).append(" ").append(start.y).append(" moveto\n");
+        _buffer.append("0 ").append(-height).append(" rlineto\n");
+        _buffer.append(width).append(" 0 rlineto\n");
+        _buffer.append("0 ").append(height).append(" rlineto\n");
+        _buffer.append(-width).append(" 0 rlineto\n");
         _buffer.append("closepath stroke\n");
     }
 
@@ -241,17 +237,17 @@ public class EPSGraphics extends Graphics {
     @Override
     public void drawString(String str, int x, int y) {
         Point start = _convert(x, y);
-        _buffer.append("" + start.x + " " + start.y + " moveto\n");
+        _buffer.append(start.x).append(" ").append(start.y).append(" moveto\n");
 
-        if (str.indexOf("(") > -1 && str.indexOf("\\(") == -1) {
+        if (str.contains("(") && !str.contains("\\(")) {
             str = StringUtilities.substitute(str, "(", "\\(");
         }
 
-        if (str.indexOf(")") > -1 && str.indexOf("\\)") == -1) {
+        if (str.contains(")") && !str.contains("\\)")) {
             str = StringUtilities.substitute(str, ")", "\\)");
         }
 
-        _buffer.append("(" + str + ") show\n");
+        _buffer.append("(").append(str).append(") show\n");
     }
 
     @Override

@@ -52,10 +52,7 @@ import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.Serializable;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Formatter;
-import java.util.HashMap;
-import java.util.Locale;
+import java.util.*;
 
 import javax.swing.JComponent;
 
@@ -226,7 +223,6 @@ import ptolemy.util.RunnableExceptionCatcher;
  @Pt.ProposedRating Yellow (cxh)
  @Pt.AcceptedRating Yellow (cxh)
  */
-@SuppressWarnings("serial")
 public class Plot extends PlotBox implements PlotInterface {
 	///////////////////////////////////////////////////////////////////
 	////                         public methods                    ////
@@ -783,12 +779,12 @@ public class Plot extends PlotBox implements PlotInterface {
 			format.lineStroke = new BasicStroke(_width, BasicStroke.CAP_BUTT,
 					BasicStroke.JOIN_BEVEL, 0, dashvalues, 0);
 		} else {
-			StringBuffer results = new StringBuffer();
-			for (String style : java.util.Arrays.asList(_LINE_STYLES_ARRAY)) {
-				if (results.length() > 0) {
+			StringBuilder results = new StringBuilder();
+			for (String style : _LINE_STYLES_ARRAY) {
+				if (!results.isEmpty()) {
 					results.append(", ");
 				}
-				results.append("\"" + style + "\"");
+				results.append("\"").append(style).append("\"");
 			}
 			throw new IllegalArgumentException("Line style \"" + styleString
 					+ "\" is not found, style must be one of " + results);
@@ -905,7 +901,7 @@ public class Plot extends PlotBox implements PlotInterface {
 		_lastPointWithExtraDot.clear();
 
 		for (int i = 0; i < numSets; i++) {
-			_points.add(new ArrayList<PlotPoint>());
+			_points.add(new ArrayList<>());
 			_formats.add(new Format());
 			_prevxpos.add(_INITIAL_PREVIOUS_VALUE);
 			_prevypos.add(_INITIAL_PREVIOUS_VALUE);
@@ -1588,11 +1584,7 @@ public class Plot extends PlotBox implements PlotInterface {
 				// Ignore.  No longer relevant.
 				return true;
 			} else if (lcLine.startsWith("reusedatasets:")) {
-				if (lcLine.indexOf("off", 16) >= 0) {
-					setReuseDatasets(false);
-				} else {
-					setReuseDatasets(true);
-				}
+				setReuseDatasets(lcLine.indexOf("off", 16) < 0);
 
 				return true;
 			} else if (lcLine.startsWith("dataset:")) {
@@ -1623,7 +1615,7 @@ public class Plot extends PlotBox implements PlotInterface {
 				if (!lcLine.isEmpty()) {
 					String legend = line.substring(8).trim();
 
-					if (legend != null && legend.length() > 0) {
+					if (legend != null && !legend.isEmpty()) {
 						addLegend(_currentdataset, legend);
 					}
 				}
@@ -1715,19 +1707,19 @@ public class Plot extends PlotBox implements PlotInterface {
 				connected = false;
 
 				// deal with 'move: 1 2' and 'move:2 2'
-				line = line.substring(5, line.length()).trim();
+				line = line.substring(5).trim();
 			} else if (line.startsWith("move")) {
 				// a disconnected point
 				connected = false;
 
 				// deal with 'move 1 2' and 'move2 2'
-				line = line.substring(4, line.length()).trim();
+				line = line.substring(4).trim();
 			} else if (line.startsWith("draw:")) {
 				// a connected point, if connect is enabled.
-				line = line.substring(5, line.length()).trim();
+				line = line.substring(5).trim();
 			} else if (line.startsWith("draw")) {
 				// a connected point, if connect is enabled.
-				line = line.substring(4, line.length()).trim();
+				line = line.substring(4).trim();
 			}
 
 			line = line.trim();
@@ -1822,12 +1814,9 @@ public class Plot extends PlotBox implements PlotInterface {
 	 */
 	@Override
 	protected void _resetScheduledTasks() {
-		Runnable redraw = new RunnableExceptionCatcher(new Runnable() {
-			@Override
-			public void run() {
-				_scheduledBinsToAdd.clear();
-				_scheduledBinsToErase.clear();
-			}
+		Runnable redraw = new RunnableExceptionCatcher(() -> {
+			_scheduledBinsToAdd.clear();
+			_scheduledBinsToErase.clear();
 		});
 		synchronized (this) {
 			deferIfNecessary(redraw);
@@ -1839,48 +1828,45 @@ public class Plot extends PlotBox implements PlotInterface {
 	@Override
 	protected void _scheduledRedraw() {
 		if (_needPlotRefill || _needBinRedraw) {
-			Runnable redraw = new RunnableExceptionCatcher(new Runnable() {
-				@Override
-				public void run() {
-					ArrayList<Integer> scheduledBinsToAdd = new ArrayList<Integer>();
-					for (int i = 0; i < _scheduledBinsToAdd.size(); ++i) {
-						scheduledBinsToAdd.add(_scheduledBinsToAdd.get(i));
-						_scheduledBinsToAdd.set(i, 0);
-					}
-					ArrayList<Integer> scheduledBinsToErase = new ArrayList<Integer>();
-					for (int i = 0; i < _scheduledBinsToErase.size(); ++i) {
-						scheduledBinsToErase.add(_scheduledBinsToErase.get(i));
-						_scheduledBinsToErase.set(i, 0);
-					}
-					_needBinRedraw = false;
-					if (_needPlotRefill) {
-						fillPlot();
-						_needPlotRefill = false;
-					} else {
-						Graphics graphics = getGraphics();
-						if (graphics != null) {
-							{
-								int nbrOfDataSets = _scheduledBinsToAdd.size();
-								for (int i = 0; i < nbrOfDataSets; ++i) {
-									int nbrOfBins = _bins.get(i).size();
-									int nbrOfBinsToAdd = scheduledBinsToAdd
-											.get(i);
-									for (int binIndex = nbrOfBins
-											- nbrOfBinsToAdd; binIndex < nbrOfBins; ++binIndex) {
-										assert binIndex >= 0;
-										_drawBin(graphics, i, binIndex);
-									}
+			Runnable redraw = new RunnableExceptionCatcher(() -> {
+				ArrayList<Integer> scheduledBinsToAdd = new ArrayList<>();
+				for (int i = 0; i < _scheduledBinsToAdd.size(); ++i) {
+					scheduledBinsToAdd.add(_scheduledBinsToAdd.get(i));
+					_scheduledBinsToAdd.set(i, 0);
+				}
+				ArrayList<Integer> scheduledBinsToErase = new ArrayList<>();
+				for (int i = 0; i < _scheduledBinsToErase.size(); ++i) {
+					scheduledBinsToErase.add(_scheduledBinsToErase.get(i));
+					_scheduledBinsToErase.set(i, 0);
+				}
+				_needBinRedraw = false;
+				if (_needPlotRefill) {
+					fillPlot();
+					_needPlotRefill = false;
+				} else {
+					Graphics graphics = getGraphics();
+					if (graphics != null) {
+						{
+							int nbrOfDataSets = _scheduledBinsToAdd.size();
+							for (int i = 0; i < nbrOfDataSets; ++i) {
+								int nbrOfBins = _bins.get(i).size();
+								int nbrOfBinsToAdd = scheduledBinsToAdd
+										.get(i);
+								for (int binIndex = nbrOfBins
+										- nbrOfBinsToAdd; binIndex < nbrOfBins; ++binIndex) {
+									assert binIndex >= 0;
+									_drawBin(graphics, i, binIndex);
 								}
 							}
-							{
-								int nbrOfDataSets = _scheduledBinsToErase
-										.size();
-								for (int i = 0; i < nbrOfDataSets; ++i) {
-									int nbrOfBinsToErase = scheduledBinsToErase
-											.get(i);
-									for (int binIndex = 0; binIndex < nbrOfBinsToErase; ++binIndex) {
-										_eraseFirstBin(i);
-									}
+						}
+						{
+							int nbrOfDataSets = _scheduledBinsToErase
+									.size();
+							for (int i = 0; i < nbrOfDataSets; ++i) {
+								int nbrOfBinsToErase = scheduledBinsToErase
+										.get(i);
+								for (int binIndex = 0; binIndex < nbrOfBinsToErase; ++binIndex) {
+									_eraseFirstBin(i);
 								}
 							}
 						}
@@ -2028,9 +2014,7 @@ public class Plot extends PlotBox implements PlotInterface {
 			// Write the data
 			ArrayList<PlotPoint> pts = _points.get(dataset);
 
-			for (int pointnum = 0; pointnum < pts.size(); pointnum++) {
-				PlotPoint pt = pts.get(pointnum);
-
+			for (PlotPoint pt : pts) {
 				if (!pt.connected) {
 					output.print("move: ");
 				}
@@ -2057,7 +2041,7 @@ public class Plot extends PlotBox implements PlotInterface {
 	protected volatile int _marks;
 
 	/** A vector of datasets. */
-	protected ArrayList<ArrayList<PlotPoint>> _points = new ArrayList<ArrayList<PlotPoint>>();
+	protected ArrayList<ArrayList<PlotPoint>> _points = new ArrayList<>();
 
 	///////////////////////////////////////////////////////////////////
 	////                         private methods                   ////
@@ -2250,7 +2234,7 @@ public class Plot extends PlotBox implements PlotInterface {
 
 		pt.x = x;
 		pt.y = y;
-		pt.derivatives = derivatives != null ? (double[]) derivatives.clone()
+		pt.derivatives = derivatives != null ? derivatives.clone()
 				: null;
 		pt.connected = connected && _isConnected(dataset);
 
@@ -2366,7 +2350,7 @@ public class Plot extends PlotBox implements PlotInterface {
 				}
 			}
 
-			assert _bins.get(dataset).size() > 0;
+			assert !_bins.get(dataset).isEmpty();
 
 			if (!_timedRepaint()) {
 				// Again, we are in the event thread, so this is safe...
@@ -2493,19 +2477,15 @@ public class Plot extends PlotBox implements PlotInterface {
 	 * all existing bins will first be cleared.
 	 */
 	private void _dividePointsIntoBins() {
-		for (int i = 0; i < _scheduledBinsToAdd.size(); ++i) {
-			_scheduledBinsToAdd.set(i, 0);
-		}
-		for (int i = 0; i < _scheduledBinsToErase.size(); ++i) {
-			_scheduledBinsToErase.set(i, 0);
-		}
+		Collections.fill(_scheduledBinsToAdd, 0);
+		Collections.fill(_scheduledBinsToErase, 0);
 		_needBinRedraw = false;
 
 		_bins.clear();
 		_pointInBinOffset.clear();
 		int nbrOfDataSets = _points.size();
 		for (int i = 0; i < nbrOfDataSets; ++i) {
-			_bins.add(new ArrayList<Bin>());
+			_bins.add(new ArrayList<>());
 			_pointInBinOffset.add(0);
 		}
 
@@ -2616,10 +2596,10 @@ public class Plot extends PlotBox implements PlotInterface {
 			long prev_xpos = previousBin.xpos;
 			long prev_ypos = previousBin.lastYPos();
 			if (derivs != null) {
-				final double x0 = (prev_xpos - _ulx) / +_xscale + _xMin;
+				final double x0 = (prev_xpos - _ulx) / _xscale + _xMin;
 				final double y0 = (prev_ypos - _lry) / -_yscale + _yMin;
 				for (long xpos_k = prev_xpos + 1; xpos_k <= xpos; ++xpos_k) {
-					final double x = (xpos_k - _ulx) / +_xscale + _xMin;
+					final double x = (xpos_k - _ulx) / _xscale + _xMin;
 					double y = 0;
 					for (int i = derivs.length; i >= 0; --i) {
 						y = y / (i + 1) * (x - x0)
@@ -3141,9 +3121,7 @@ public class Plot extends PlotBox implements PlotInterface {
 
 		//Delete points and bin
 		assert startPosition == 0; //No actually necessary in this code, but it should be valid
-		for (int i = startPosition; i < endPosition; ++i) {
-			points.remove(startPosition);
-		}
+		points.subList(startPosition, endPosition).clear();
 		assert bin.firstPointIndex() >= 0;
 
 		_pointInBinOffset.set(dataset, _pointInBinOffset.get(dataset)
@@ -3354,13 +3332,13 @@ public class Plot extends PlotBox implements PlotInterface {
 	 * a line between each point, you can draw a line between the minimum and maximum and maximum
 	 * position.
 	 */
-	private ArrayList<ArrayList<Bin>> _bins = new ArrayList<>();
+	private final ArrayList<ArrayList<Bin>> _bins = new ArrayList<>();
 
 	/** @serial True if the points are connected. */
 	private boolean _connected = true;
 
 	/** @serial Give the diameter of a point for efficiency. */
-	private int _diameter = 6;
+	private final int _diameter = 6;
 
 	/** The initial default width.
 	 */
@@ -3373,7 +3351,7 @@ public class Plot extends PlotBox implements PlotInterface {
 	private boolean _firstInSet = true;
 
 	/** @serial Format information on a per data set basis. */
-	private ArrayList<Format> _formats = new ArrayList<Format>();
+	private final ArrayList<Format> _formats = new ArrayList<>();
 
 	/** Cached copy of graphics, needed to reset when we are exporting
 	 *  to EPS.
@@ -3390,7 +3368,7 @@ public class Plot extends PlotBox implements PlotInterface {
 
 	// We keep track of the last dot that has been add to be able to
 	// remove the dot again in case an extra point was added afterwards.
-	private HashMap<Integer, PlotPoint> _lastPointWithExtraDot = new HashMap<>();
+	private final HashMap<Integer, PlotPoint> _lastPointWithExtraDot = new HashMap<>();
 
 	// A stroke of width 1.
 	private static final BasicStroke _LINE_STROKE1 = new BasicStroke(1f,
@@ -3404,7 +3382,7 @@ public class Plot extends PlotBox implements PlotInterface {
 	private boolean _lineStyles = false;
 
 	/** True if different line styles should be used. */
-	private static String[] _LINE_STYLES_ARRAY = { "solid", "dotted", "dashed",
+	private static final String[] _LINE_STYLES_ARRAY = { "solid", "dotted", "dashed",
 			"dotdashed", "dotdotdashed" };
 
 	/** @serial The highest data set used. */
@@ -3431,25 +3409,25 @@ public class Plot extends PlotBox implements PlotInterface {
 	 *  difference between the index of the point in the current point arraylist
 	 *  and the virtual one containing all points.
 	 */
-	private ArrayList<Integer> _pointInBinOffset = new ArrayList<Integer>();
+	private final ArrayList<Integer> _pointInBinOffset = new ArrayList<>();
 
 	/** @serial Number of points to persist for. */
 	private int _pointsPersistence = 0;
 
 	/** @serial Information about the previously plotted point. */
-	private ArrayList<Long> _prevxpos = new ArrayList<Long>();
+	private final ArrayList<Long> _prevxpos = new ArrayList<>();
 
 	/** @serial Information about the previously plotted point. */
-	private ArrayList<Long> _prevypos = new ArrayList<Long>();
+	private final ArrayList<Long> _prevypos = new ArrayList<>();
 
 	/** @serial Information about the previously erased point. */
-	private ArrayList<Long> _prevErasedxpos = new ArrayList<Long>();
+	private final ArrayList<Long> _prevErasedxpos = new ArrayList<>();
 
 	/** @serial Information about the previously erased point. */
-	private ArrayList<Long> _prevErasedypos = new ArrayList<Long>();
+	private final ArrayList<Long> _prevErasedypos = new ArrayList<>();
 
 	/** @serial Give the radius of a point for efficiency. */
-	private int _radius = 3;
+	private final int _radius = 3;
 
 	/** @serial True if we saw 'reusedatasets: on' in the file. */
 	private boolean _reuseDatasets = false;
@@ -3459,11 +3437,11 @@ public class Plot extends PlotBox implements PlotInterface {
 
 	// _scheduledBinsToAdd a a list a bins that should be added by the scheduled
 	// repaint.
-	private ArrayList<Integer> _scheduledBinsToAdd = new ArrayList<Integer>();
+	private final ArrayList<Integer> _scheduledBinsToAdd = new ArrayList<>();
 
 	// _scheduledBinsToAdd a a list a bins that should be erased by the scheduled
 	// repaint.
-	private ArrayList<Integer> _scheduledBinsToErase = new ArrayList<Integer>();
+	private final ArrayList<Integer> _scheduledBinsToErase = new ArrayList<>();
 
 	/** @serial Set by _drawPlot(), and reset by clear(). */
 	private boolean _showing = false;

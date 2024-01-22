@@ -54,7 +54,7 @@ public interface PlotBoxInterface {
      * @param captionLine The string to be added.
      * @see #getCaptions()
      */
-    public void addCaptionLine(String captionLine);
+	void addCaptionLine(String captionLine);
 
     /** Add a legend (displayed at the upper right) for the specified
      *  data set with the specified string.  Short strings generally
@@ -64,7 +64,7 @@ public interface PlotBoxInterface {
      *  @param legend The label for the dataset.
      *  @see #renameLegend(int, String)
      */
-    public void addLegend(int dataset, String legend);
+	void addLegend(int dataset, String legend);
 
     /** Specify a tick mark for the X axis.  The label given is placed
      *  on the axis at the position given by <i>position</i>. If this
@@ -78,7 +78,7 @@ public interface PlotBoxInterface {
      *  @param label The label for the tick mark.
      *  @param position The position on the X axis.
      */
-    public void addXTick(String label, double position);
+	void addXTick(String label, double position);
 
     /** Specify a tick mark for the Y axis.  The label given is placed
      *  on the axis at the position given by <i>position</i>. If this
@@ -92,7 +92,7 @@ public interface PlotBoxInterface {
      *  @param label The label for the tick mark.
      *  @param position The position on the Y axis.
      */
-    public void addYTick(String label, double position);
+	void addYTick(String label, double position);
 
     /** If the argument is true, clear the axes.  I.e., set all parameters
      *  controlling the axes to their initial conditions.
@@ -100,17 +100,17 @@ public interface PlotBoxInterface {
      *  is false, do nothing.
      *  @param axes If true, clear the axes parameters.
      */
-    public void clear(boolean axes);
+	void clear(boolean axes);
 
     /** Clear all the captions.
      *  For the change to take effect, call repaint().
      *  @see #setCaptions(Vector)
      */
-    public void clearCaptions();
+	void clearCaptions();
 
     /** Clear all legends.  This will show up on the next redraw.
      */
-    public void clearLegends();
+	void clearLegends();
 
     /** If this method is called in the event thread, then simply
      * execute the specified action.  Otherwise,
@@ -127,13 +127,13 @@ public interface PlotBoxInterface {
      * This method is not , so the caller should be.
      * @param action The Runnable object to execute.
      */
-    public void deferIfNecessary(Runnable action);
+	void deferIfNecessary(Runnable action);
 
     /** Destroy the plotter.  This method is usually
      *  called by PlotApplet.destroy().  It does
      *  various cleanups to reduce memory usage.
      */
-    public void destroy();
+	void destroy();
 
     /** Rescale so that the data that is currently plotted just fits.
      *  This is done based on the protected variables _xBottom, _xTop,
@@ -142,26 +142,26 @@ public interface PlotBoxInterface {
      *  This method calls repaint(), which eventually causes the display
      *  to be updated.
      */
-    public void fillPlot();
+	void fillPlot();
 
     /** Get the captions.
      *  @return the captions
      *  @see #addCaptionLine(String)
      *  @see #setCaptions(Vector)
      */
-    public Vector getCaptions();
+	Vector<String> getCaptions();
 
     /** Return whether the plot uses color.
      *  @return True if the plot uses color.
      *  @see #setColor(boolean)
      */
-    public boolean getColor();
+	boolean getColor();
 
     /** Get the point colors.
      *  @return Array of colors
      *  @see #setColors(Object[])
      */
-    public Object[] getColors();
+	Object[] getColors();
 
     /** Get the file specification that was given by setDataurl().
      *  @return the file specification
@@ -169,7 +169,7 @@ public interface PlotBoxInterface {
      *  @deprecated Use read() instead.
      */
     @Deprecated
-    public String getDataurl();
+	String getDataurl();
 
     /** Get the document base that was set by setDocumentBase().
      *  @return the document base.
@@ -177,20 +177,20 @@ public interface PlotBoxInterface {
      *  @deprecated Use read() instead.
      */
     @Deprecated
-    public URL getDocumentBase();
+	URL getDocumentBase();
 
     /** Return whether the grid is drawn.
      *  @return True if a grid is drawn.
      *  @see #setGrid(boolean)
      */
-    public boolean getGrid();
+	boolean getGrid();
 
     /** Get the legend for a dataset, or null if there is none.
      *  The legend would have been set by addLegend().
      *  @param dataset The dataset index.
      *  @return The legend label, or null if there is none.
      */
-    public String getLegend(int dataset);
+	String getLegend(int dataset);
 
     /** Given a legend string, return the corresponding dataset or -1 if no
      *  legend was added with that legend string
@@ -199,7 +199,7 @@ public interface PlotBoxInterface {
      *  @return The legend dataset, or -1 if not found.
      *  @since Ptolemy II 10.0
      */
-    public int getLegendDataset(String legend);
+	int getLegendDataset(String legend);
 
     /** If the size of the plot has been set by setSize(),
      *  then return that size.  Otherwise, return what the superclass
@@ -239,13 +239,13 @@ public interface PlotBoxInterface {
      *  @return Rectangle
      *  @see #setPlotRectangle(Object)
      */
-    public Object getPlotRectangle();
+	Object getPlotRectangle();
 
     /** Get the title of the graph, or an empty string if there is none.
      *  @return The title.
      *  @see #setTitle(String)
      */
-    public String getTitle();
+	String getTitle();
 
     /** Get the range for X values of the data points registered so far.
      *  Usually, derived classes handle managing the range by checking
@@ -254,20 +254,20 @@ public interface PlotBoxInterface {
      *  minimum and the second element is the maximum.
      *  @see #getXRange()
      */
-    public double[] getXAutoRange();
+	double[] getXAutoRange();
 
     /** Get the label for the X (horizontal) axis, or null if none has
      *  been set.
      *  @return The X label.
      *  @see #setXLabel(String)
      */
-    public String getXLabel();
+	String getXLabel();
 
     /** Return whether the X axis is drawn with a logarithmic scale.
      *  @return True if the X axis is logarithmic.
      *  @see #setXLog(boolean)
      */
-    public boolean getXLog();
+	boolean getXLog();
 
     /** Get the X range. If {@link #setXRange(double, double)} has been
      *  called, then this method returns the values passed in as
@@ -280,7 +280,7 @@ public interface PlotBoxInterface {
      *  @see #getXAutoRange()
      *  @see #setXRange(double, double)
      */
-    public double[] getXRange();
+	double[] getXRange();
 
     /** Get the X ticks that have been specified, or null if none.
      *  The return value is an array with two vectors, the first of
@@ -288,7 +288,7 @@ public interface PlotBoxInterface {
      *  and the second of which specifies the corresponding labels.
      *  @return The X ticks.
      */
-    public Vector[] getXTicks();
+	Vector<?>[] getXTicks();
 
     /** Get the range for Y values of the data points registered so far.
      *  Usually, derived classes handle managing the range by checking
@@ -297,20 +297,20 @@ public interface PlotBoxInterface {
      *  minimum and the second element is the maximum.
      *  @see #getYRange()
      */
-    public double[] getYAutoRange();
+	double[] getYAutoRange();
 
     /** Get the label for the Y (vertical) axis, or null if none has
      *  been set.
      *  @return The Y label.
      *  @see #setYLabel(String)
      */
-    public String getYLabel();
+	String getYLabel();
 
     /** Return whether the Y axis is drawn with a logarithmic scale.
      *  @return True if the Y axis is logarithmic.
      *  @see #setYLog(boolean)
      */
-    public boolean getYLog();
+	boolean getYLog();
 
     /** Get the Y range. If {@link #setYRange(double, double)} has been
      *  called, then this method returns the values passed in as
@@ -323,7 +323,7 @@ public interface PlotBoxInterface {
      *  @see #getYAutoRange()
      *  @see #setYRange(double, double)
      */
-    public double[] getYRange();
+	double[] getYRange();
 
     /** Get the Y ticks that have been specified, or null if none.
      *  The return value is an array with two vectors, the first of
@@ -331,7 +331,7 @@ public interface PlotBoxInterface {
      *  and the second of which specifies the corresponding labels.
      *  @return The Y ticks.
      */
-    public Vector[] getYTicks();
+	Vector<?>[] getYTicks();
 
     /** Initialize the component, creating the fill button and parsing
      *  an input file, if one has been specified.  This is deprecated.
@@ -339,7 +339,7 @@ public interface PlotBoxInterface {
      *  @deprecated
      */
     @Deprecated
-    public void init();
+	void init();
 
     /** Syntactic sugar for parseFile(filespec, documentBase).
      *  @param filespec The file to be read.
@@ -348,7 +348,7 @@ public interface PlotBoxInterface {
      *  read the XML-based file format.
      */
     @Deprecated
-    public void parseFile(String filespec);
+	void parseFile(String filespec);
 
     /** Open up the input file, which could be stdin, a URL, or a file.
      *  @param filespec The file to be read.
@@ -356,7 +356,7 @@ public interface PlotBoxInterface {
      *  @deprecated Use read() instead.
      */
     @Deprecated
-    public void parseFile(String filespec, URL documentBase);
+	void parseFile(String filespec, URL documentBase);
 
     /** Read commands and/or plot data from an input stream in the old
      *  (non-XML) file syntax.
@@ -388,20 +388,20 @@ public interface PlotBoxInterface {
      *  @param in The input stream.
      *  @exception IOException If the stream cannot be read.
      */
-    public void read(InputStream in) throws IOException;
+	void read(InputStream in) throws IOException;
 
     /** Read a single line command provided as a string.
      *  The commands can be any of those in the ASCII file format.
      *  @param command A command.
      */
-    public void read(String command);
+	void read(String command);
 
     /** Remove the legend (displayed at the upper right) for the specified
      *  data set. If the dataset is not found, nothing will occur.
      *  The PlotBox must be repainted in order for this to take effect.
      *  @param dataset The dataset index.
      */
-    public void removeLegend(int dataset);
+	void removeLegend(int dataset);
 
     /** Rename a legend.
      *  @param dataset The dataset of the legend to be renamed.
@@ -409,10 +409,10 @@ public interface PlotBoxInterface {
      *  @param newName  The new name of legend.
      *  @see #addLegend(int, String)
      */
-    public void renameLegend(int dataset, String newName);
+	void renameLegend(int dataset, String newName);
 
     /** Repaint the object. */
-    public void repaint();
+	void repaint();
 
     /** Reset the X and Y axes to the ranges that were first specified
      *  using setXRange() and setYRange(). If these methods have not been
@@ -420,12 +420,12 @@ public interface PlotBoxInterface {
      *  This method calls repaint(), which eventually causes the display
      *  to be updated.
      */
-    public void resetAxes();
+	void resetAxes();
 
     /** Do nothing in this base class. Derived classes might want to override
      *  this class to give an example of their use.
      */
-    public void samplePlot();
+	void samplePlot();
 
     /**
      * Set automatic rescale. Automatic rescaling is enabled
@@ -434,12 +434,12 @@ public interface PlotBoxInterface {
      * @param automaticRescale The boolean that specifies whether
      * plots should be automatic rescaled.
      */
-    public void setAutomaticRescale(boolean automaticRescale);
+	void setAutomaticRescale(boolean automaticRescale);
 
     /** Set the background color.
      *  @param background The background color.
      */
-    public void setBackground(Object background);
+	void setBackground(Object background);
 
     /** If the argument is true, make a fill button visible at the upper
      *  right.  This button auto-scales the plot.
@@ -453,7 +453,7 @@ public interface PlotBoxInterface {
      *  @param visible If true, make the fill button appear.
      *  @see #destroy()
      */
-    public void setButtons(boolean visible);
+	void setButtons(boolean visible);
 
     /** Set the strings of the caption.
      *  @param captionStrings A Vector where each element contains a String
@@ -461,14 +461,14 @@ public interface PlotBoxInterface {
      *  @see #getCaptions()
      *  @see #clearCaptions()
      */
-    public void setCaptions(Vector captionStrings);
+	void setCaptions(Vector<String> captionStrings);
 
     /** If the argument is false, draw the plot without using color
      *  (in black and white).  Otherwise, draw it in color (the default).
      *  @param useColor False to draw in back and white.
      *  @see #getColor()
      */
-    public void setColor(boolean useColor);
+	void setColor(boolean useColor);
 
     /** Set the point colors.  Note that the default colors have been
      *  carefully selected to maximize readability and that it is easy
@@ -476,7 +476,7 @@ public interface PlotBoxInterface {
      *  @param colors Array of colors to use in succession for data sets.
      *  @see #getColors()
      */
-    public void setColors(Object[] colors);
+	void setColors(Object[] colors);
 
     /** Set the file to read when init() is called.
      *  @param filespec the file to be read
@@ -484,7 +484,7 @@ public interface PlotBoxInterface {
      *  @deprecated Use read() instead.
      */
     @Deprecated
-    public void setDataurl(String filespec);
+	void setDataurl(String filespec);
 
     /** Set the document base to used when init() is called to read a URL.
      *  @param documentBase The document base to be used.
@@ -492,18 +492,18 @@ public interface PlotBoxInterface {
      *  @deprecated   Use read() instead.
      */
     @Deprecated
-    public void setDocumentBase(URL documentBase);
+	void setDocumentBase(URL documentBase);
 
     /** Set the foreground color.
      *  @param foreground The foreground color.
      */
-    public void setForeground(Object foreground);
+	void setForeground(Object foreground);
 
     /** Control whether the grid is drawn.
      *  @param grid If true, a grid is drawn.
      *  @see #getGrid()
      */
-    public void setGrid(boolean grid);
+	void setGrid(boolean grid);
 
     /** Set the label font, which is used for axis labels and legend labels.
      *  The font names understood are those understood by
@@ -530,7 +530,7 @@ public interface PlotBoxInterface {
      *  @param width The width, in pixels.
      *  @param height The height, in pixels.
      */
-    public void setSize(int width, int height);
+	void setSize(int width, int height);
 
     /**
      * Set repainting with a certain fixed refresh rate. This timed
@@ -539,20 +539,20 @@ public interface PlotBoxInterface {
      * @param timedRepaint The boolean that specifies whether
      * repainting should happen with a certain fixed refresh rate.
      */
-    public void setTimedRepaint(boolean timedRepaint);
+	void setTimedRepaint(boolean timedRepaint);
 
     /** Set the title of the graph.
      *  @param title The title.
      *  @see #getTitle()
      */
-    public void setTitle(String title);
+	void setTitle(String title);
 
     /** Set the title font.
      *  The font names understood are those understood by
      *  java.awt.Font.decode().
      *  @param name A font name.
      */
-    public void setTitleFont(String name);
+	void setTitleFont(String name);
 
     /** Specify whether the X axis is wrapped.
      *  If it is, then X values that are out of range are remapped
@@ -562,13 +562,13 @@ public interface PlotBoxInterface {
      *  or if data has been plotted, then the current fill range.
      *  @param wrap If true, wrapping of the X axis is enabled.
      */
-    public void setWrap(boolean wrap);
+	void setWrap(boolean wrap);
 
     /** Set the label for the X (horizontal) axis.
      *  @param label The label.
      *  @see #getXLabel()
      */
-    public void setXLabel(String label);
+	void setXLabel(String label);
 
     /** Specify whether the X axis is drawn with a logarithmic scale.
      *  If you would like to have the X axis drawn with a
@@ -577,7 +577,7 @@ public interface PlotBoxInterface {
      *  @param xlog If true, logarithmic axis is used.
      *  @see #getXLog()
      */
-    public void setXLog(boolean xlog);
+	void setXLog(boolean xlog);
 
     /** Set the X (horizontal) range of the plot.  If this is not done
      *  explicitly, then the range is computed automatically from data
@@ -589,13 +589,13 @@ public interface PlotBoxInterface {
      *  @param max The right extent of the range.
      *  @see #getXRange()
      */
-    public void setXRange(double min, double max);
+	void setXRange(double min, double max);
 
     /** Set the label for the Y (vertical) axis.
      *  @param label The label.
      *  @see #getYLabel()
      */
-    public void setYLabel(String label);
+	void setYLabel(String label);
 
     /** Specify whether the Y axis is drawn with a logarithmic scale.
      *  If you would like to have the Y axis drawn with a
@@ -604,7 +604,7 @@ public interface PlotBoxInterface {
      *  @param ylog If true, logarithmic axis is used.
      *  @see #getYLog()
      */
-    public void setYLog(boolean ylog);
+	void setYLog(boolean ylog);
 
     /** Set the Y (vertical) range of the plot.  If this is not done
      *  explicitly, then the range is computed automatically from data
@@ -616,7 +616,7 @@ public interface PlotBoxInterface {
      *  @param max The top extent of the range.
      *  @see #getYRange()
      */
-    public void setYRange(double min, double max);
+	void setYRange(double min, double max);
 
     /** Write the current data and plot configuration to the
      *  specified stream in PlotML syntax.  PlotML is an XML
@@ -629,7 +629,7 @@ public interface PlotBoxInterface {
      *  writeFormat and writeData rather than this method.
      *  @param out An output stream.
      */
-    public void write(OutputStream out);
+	void write(OutputStream out);
 
     /** Write the current data and plot configuration to the
      *  specified stream in PlotML syntax.  PlotML is an XML
@@ -645,7 +645,7 @@ public interface PlotBoxInterface {
      *  @param dtd The reference (URL) for the DTD, or null to use the
      *   PUBLIC DTD.
      */
-    public void write(OutputStream out, String dtd);
+	void write(OutputStream out, String dtd);
 
     /** Write the current data and plot configuration to the
      *  specified stream in PlotML syntax.  PlotML is an XML
@@ -659,14 +659,14 @@ public interface PlotBoxInterface {
      *  @param dtd The reference (URL) for the DTD, or null to use the
      *   PUBLIC DTD.
      */
-    public void write(Writer out, String dtd);
+	void write(Writer out, String dtd);
 
     /** Write plot data information to the specified output stream in PlotML.
      *  In this base class, there is no data to write, so this method
      *  returns without doing anything.
      *  @param output A buffered print writer.
      */
-    public void writeData(PrintWriter output);
+	void writeData(PrintWriter output);
 
     /** Write plot format information to the specified output stream in PlotML.
      *  Derived classes should override this method to first call
@@ -674,7 +674,7 @@ public interface PlotBoxInterface {
      *  information they wish to add to the stream.
      *  @param output A buffered print writer.
      */
-    public void writeFormat(PrintWriter output);
+	void writeFormat(PrintWriter output);
 
     /** Write the current data and plot configuration to the
      *  specified stream in the old PtPlot syntax.
@@ -685,7 +685,7 @@ public interface PlotBoxInterface {
      *  @deprecated
      */
     @Deprecated
-    public void writeOldSyntax(OutputStream out);
+	void writeOldSyntax(OutputStream out);
 
     /** Zoom in or out to the specified rectangle.
      *  This method calls repaint().
@@ -694,5 +694,5 @@ public interface PlotBoxInterface {
      *  @param highx The high end of the new X range.
      *  @param highy The high end of the new Y range.
      */
-    public void zoom(double lowx, double lowy, double highx, double highy);
+	void zoom(double lowx, double lowy, double highx, double highy);
 }

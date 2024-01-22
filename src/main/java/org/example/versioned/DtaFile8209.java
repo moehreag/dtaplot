@@ -1,11 +1,9 @@
 package org.example.versioned;
 
-import java.lang.reflect.Array;
 import java.nio.ByteBuffer;
 import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -13,10 +11,9 @@ import lombok.RequiredArgsConstructor;
 import org.example.DtaFile;
 import org.example.LookUpTable;
 
-public class DtaFile8209 extends DtaFile<DtaFile8209.Entry> {
+public class DtaFile8209 extends DtaFile {
 
 	private static final LookUpTable[] lut = new LookUpTable[]{
-
 
 			// LUT for TRL, TVL, TBW, TFB1, TRLext
 			new LookUpTable(
@@ -124,45 +121,14 @@ public class DtaFile8209 extends DtaFile<DtaFile8209.Entry> {
 		super(data);
 		data.position(8);
 
-		int startPos = data.position();
 		System.out.println("File contains " + (data.limit() / getEntryLength()) + " data points!");
-		//System.out.println(Date.from(Instant.ofEpochSecond(data.getInt(data.position()))));
-		//data.limit() / getEntryLength()
+
+		List<Entry> entries = new ArrayList<>();
 		for (int i = 0; i < data.limit() / getEntryLength(); i++) {
-			//int eP = startPos + i * getEntryLength();
-			//System.out.println("Reading entry "+i+" at pos: "+eP+" (Buffer position: "+data.position()+")");
 			entries.add(readEntry());
 		}
 		entries.sort(Comparator.comparingInt(Entry::getTime));
-		datapoints = entries.stream().map(Entry::calculateValues).collect(Collectors.toUnmodifiableMap(m -> (Integer) m.get("time").get(), m -> m));
-		// entries.stream()
-		/*Map<Integer, Map<String, Entry.Value<?>>> datapoints = Stream.of(getEntries().get(0)).map(Entry::calculateValues).collect(Collectors.toUnmodifiableMap(m -> (Integer) m.get("time").get(), m -> m));
-		datapoints.forEach((integer, stringValueMap) -> {
-			StringBuilder b = new StringBuilder();
-			stringValueMap.forEach((s, value) -> {
-				if (!b.isEmpty()){
-					b.append(", ");
-				}
-				if (value.get().getClass().isArray()){
-					StringBuilder val = new StringBuilder("[");
-					for (int i=0;i<Array.getLength(value.get()); i++){
-						if (i>0){
-							val.append(", ");
-						}
-						val.append(Array.get(value.get(), i));
-					}
-					val.append("]");
-					b.append(String.format("%s: %s", s, val));
-				} else {
-					b.append(String.format("%s: %s", s, value.get()));
-				}
-			});
-			System.out.println(b);
-		});*/
-		/*entries.stream()
-				.map(m -> Date.from(Instant.ofEpochSecond(m.time))+": "+
-						m.calculateValues().get("TVL").get()+" ("+m.tA+")")
-				.forEach(System.out::println);*/
+		datapoints = entries.stream().map(Entry::calculateValues).toList();
 	}
 
 	private Entry readEntry() {
@@ -217,9 +183,7 @@ public class DtaFile8209 extends DtaFile<DtaFile8209.Entry> {
 				combine(tMK3soll, tMK3soll_highbytes));
 	}
 
-	private void skip(int i) {
-		data.position(data.position() + i);
-	}
+
 
 	private int getEntryLength() {
 		return getVersion() == 0x2011 ? 168 : 188;
@@ -230,36 +194,15 @@ public class DtaFile8209 extends DtaFile<DtaFile8209.Entry> {
 	@RequiredArgsConstructor
 	public static class Entry extends DtaFile.Entry {
 		private final int time;
-		private final boolean[] statusOut;
-		private final boolean[] statusIn;
-		private final short tempFB1;
-		private final short tBW,
-				tA,
-				tRLext,
-				tRL,
-				tVL,
-				tHG,
-				tWQaus,
-				tWQein;
-		private final int tRLsoll,
-				tMK1soll;
+		private final boolean[] statusOut, statusIn;
+		private final short tempFB1, tBW, tA, tRLext, tRL, tVL, tHG, tWQaus, tWQein;
+		private final int tRLsoll, tMK1soll;
 		private final short comfortPlatine;
 		private final boolean[] statusA_CP;
-		private final short aO1,
-				aO2;
+		private final short aO1, aO2;
 		private final boolean[] statusE_CP;
-		private final short tSS,
-				tSK,
-				tFB2,
-				tFB3,
-				tEE,
-				aI1;
-		private final int tMK2soll,
-				tMK3soll;
-
-		public String toString() {
-			return "DtaFile8209.Entry(time=" + this.getTime() + " (" + Date.from(Instant.ofEpochSecond(getTime())) + ")" + ", statusOut=" + java.util.Arrays.toString(this.getStatusOut()) + ", statusIn=" + java.util.Arrays.toString(this.getStatusIn()) + ", tempFB1=" + this.getTempFB1() + ", tBW=" + this.getTBW() + ", tA=" + this.getTA() + ", tRLext=" + this.getTRLext() + ", tRL=" + this.getTRL() + ", tVL=" + this.getTVL() + ", tHG=" + this.getTHG() + ", tWQaus=" + this.getTWQaus() + ", tWQein=" + this.getTWQein() + ", tRLsoll=" + this.getTRLsoll() + ", tMK1soll=" + this.getTMK1soll() + ", comfortPlatine=" + this.getComfortPlatine() + ", statusA_CP=" + java.util.Arrays.toString(this.getStatusA_CP()) + ", aO1=" + this.getAO1() + ", aO2=" + this.getAO2() + ", statusE_CP=" + java.util.Arrays.toString(this.getStatusE_CP()) + ", tSS=" + this.getTSS() + ", tSK=" + this.getTSK() + ", tFB2=" + this.getTFB2() + ", tFB3=" + this.getTFB3() + ", tEE=" + this.getTEE() + ", aI1=" + this.getAI1() + ", tMK2soll=" + this.getTMK2soll() + ", tMK3soll=" + this.getTMK3soll() + ")";
-		}
+		private final short tSS, tSK, tFB2, tFB3, tEE, aI1;
+		private final int tMK2soll, tMK3soll;
 
 		public Map<String, Value<?>> calculateValues() {
 
@@ -267,14 +210,10 @@ public class DtaFile8209 extends DtaFile<DtaFile8209.Entry> {
 
 			values.put("time", of(time));
 
-			Object[] a = new Object[]{statusOut, statusIn, tempFB1, tBW, tA, tRLext, tRL,
-					tVL,
-					tHG,
-					tWQaus,
-					tWQein,
-					tRLsoll, tMK1soll, comfortPlatine, statusA_CP, aO1, aO2, statusE_CP,
-					tSS, tSK, tFB2, tFB3, tEE, aI1, tMK2soll, tMK3soll
-
+			Object[] a = new Object[]{statusOut, statusIn, tempFB1, tBW, tA, tRLext,
+					tRL, tVL, tHG, tWQaus, tWQein, tRLsoll, tMK1soll, comfortPlatine,
+					statusA_CP, aO1, aO2, statusE_CP, tSS, tSK, tFB2, tFB3, tEE, aI1,
+					tMK2soll, tMK3soll
 			};
 			for (int i = 0; i < Math.min(a.length, Entries.values().length); i++) {
 				String id = Entries.values()[i].getShortName();

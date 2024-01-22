@@ -1,15 +1,18 @@
 package org.example;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URI;
-import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.DecimalFormat;
@@ -17,10 +20,10 @@ import java.text.NumberFormat;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.List;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import org.example.versioned.DtaFile8209;
 import ptolemy.plot.Plot;
 
 public class DtaPlot {
@@ -30,7 +33,8 @@ public class DtaPlot {
 
 	private final Collection<Map<String, DtaFile.Value<?>>> data = new ArrayList<>();
 	private final Plot plot = new Plot();
-	private final JComboBox<String> selections = new JComboBox<>();
+	private final Vector<String> selectionItems = new Vector<>();
+	private final JComboBox<String> selections = new JComboBox<>(selectionItems);
 
 	public void display() {
 		JFrame frame = new JFrame();
@@ -108,6 +112,34 @@ public class DtaPlot {
 				DataLoader.getInstance().append(data, chooser.getSelectedFile().toPath());
 			}
 		});
+		fileMenu.add(new AbstractAction("Export") {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				JFileChooser chooser = new JFileChooser(new File("."));
+				List<String> supported = new ArrayList<>(Arrays.asList(ImageIO.getWriterFileSuffixes()));
+				supported.add("eps");
+				chooser.setFileFilter(new FileNameExtensionFilter("Supported Files", supported.toArray(String[]::new)));
+				for (String s : supported){
+					chooser.addChoosableFileFilter(new FileNameExtensionFilter(s.toUpperCase(Locale.ROOT)+" Image", s));
+				}
+				if (chooser.showOpenDialog(frame) != JFileChooser.APPROVE_OPTION)
+					return;
+				String fileName = chooser.getSelectedFile().getName();
+				if (supported.stream().noneMatch(fileName::endsWith)){
+					return;
+				}
+				try (OutputStream out = Files.newOutputStream(chooser.getSelectedFile().toPath())) {
+
+					if (fileName.endsWith(".eps")) {
+						plot.export(out);
+					} else {
+						ImageIO.write(plot.exportImage(new Rectangle(frame.getSize())), fileName.substring(fileName.lastIndexOf(".")+1), out);
+					}
+				} catch (IOException ex) {
+					throw new RuntimeException(ex);
+				}
+			}
+		});
 		fileMenu.add(new AbstractAction("Quit") {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -116,11 +148,9 @@ public class DtaPlot {
 		});
 		menuBar.add(fileMenu);
 
-		selections.addActionListener(new AbstractAction() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
+		selections.addItemListener(e -> {
+			if (e.getStateChange() == ItemEvent.SELECTED){
 				addPoints(data);
-
 			}
 		});
 
@@ -141,26 +171,27 @@ public class DtaPlot {
 	}
 
 	public void addToGraph(byte[] bytes){
-		DtaFile<?> dta = new DtaFile8209(ByteBuffer.wrap(bytes));
-		addToGraph(dta.datapoints.values());
+		DtaFile dta = DtaParser.get(bytes);
+		addToGraph(dta.datapoints);
 	}
 
 	public void addToGraph(Path file){
-		if (file.getFileName().endsWith(".dta")) {
+		if (file.getFileName().toString().endsWith(".dta")) {
 			try {
 				byte[] bytes = Files.readAllBytes(file);
 				addToGraph(bytes);
 			} catch (IOException ex) {
 				throw new RuntimeException(ex);
 			}
-		} else if (file.getFileName().endsWith(".json")) {
+		} else if (file.getFileName().toString().endsWith(".json")) {
 			addToGraph(DataLoader.getInstance().load(file));
 		} else {
-			System.out.println("Unsupported File: "+file);
+			System.out.println("Unsupported File: "+file+ " ("+file.getFileName()+")");
 		}
 	}
 
 	public void addToGraph(Collection<Map<String, DtaFile.Value<?>>> data){
+		System.out.println("Adding "+ data.size()+" points to the graph");
 		Set<Integer> times = this.data.stream().map(map -> (int)map.get("time").get()).collect(Collectors.toSet());
 		this.data.addAll(data.stream()
 				.filter(stringValueMap -> !times.contains((Integer) stringValueMap.get("time").get())).toList());
@@ -173,14 +204,22 @@ public class DtaPlot {
 		plot.setXLabel("time");
 		plot.setYLabel("°C");
 		System.out.println("Plotting "+data.size()+" data points!");
+		ItemListener[] listeners = selections.getItemListeners();
+		for (ItemListener i : listeners){
+			selections.removeItemListener(i);
+		}
 		String prev = (String) selections.getSelectedItem();
-		selections.removeAllItems();
+		selectionItems.clear();
 		data.stream().map(Map::keySet).forEach(strings -> strings.stream()
-				.filter(s -> !"time".equals(s)).distinct().forEach(selections::addItem));
+				.filter(s -> !"time".equals(s)).distinct()
+				.filter(s -> !selectionItems.contains(s)).forEach(selections::addItem));
 		if (prev != null){
 			selections.setSelectedItem(prev);
 		}
 		String selected = (String) selections.getSelectedItem();
+		for (ItemListener i : listeners){
+			selections.addItemListener(i);
+		}
 		plot.addLegend(0, selected);
 		data.stream()
 				.sorted(Comparator.comparingInt(map -> (Integer) map.get("time").get()))
@@ -191,7 +230,9 @@ public class DtaPlot {
 					if (value.get() instanceof Number) {
 						ZonedDateTime zTime = ZonedDateTime.ofInstant(Instant.ofEpochSecond(time),
 								ZoneId.systemDefault());
-						plot.addXTick(timeFormat.format(zTime.getHour())+":"+ timeFormat.format(zTime.getMinute()), time);
+						String label = zTime.getDayOfMonth()+"."+zTime.getMonthValue()+"\n"+
+								timeFormat.format(zTime.getHour())+":"+ timeFormat.format(zTime.getMinute());
+						plot.addXTick(label, time);
 						plot.addPoint(0, time,
 								((Number) value.get()).doubleValue(), true);
 					}

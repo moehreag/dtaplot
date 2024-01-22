@@ -4,10 +4,11 @@ import java.nio.ByteBuffer;
 
 import org.example.DtaFile;
 
-public class DtaFile9003 extends DtaFile<DtaFile9003.Entry> {
+public class DtaFile9003 extends DtaFile {
 
 	public DtaFile9003(ByteBuffer data) {
 		super(data);
+		throw new UnsupportedOperationException("File format not implemented yet");
 	}
 
 	public static class Entry extends DtaFile.Entry {

@@ -37,7 +37,6 @@ import javax.swing.JPanel;
 
 import ptolemy.gui.ComponentDialog;
 import ptolemy.gui.Query;
-import ptolemy.gui.QueryListener;
 
 ///////////////////////////////////////////////////////////////////
 //// PlotFormatter
@@ -55,7 +54,6 @@ import ptolemy.gui.QueryListener;
  @Pt.ProposedRating Yellow (eal)
  @Pt.AcceptedRating Red (cxh)
  */
-@SuppressWarnings("serial")
 public class PlotFormatter extends JPanel {
     /** Construct a plot formatter for the specified plot object.
      *  @param plot The specified plot object.
@@ -76,13 +74,13 @@ public class PlotFormatter extends JPanel {
         _wideQuery.addLine("title", "Title", _originalTitle);
 
         _originalCaptions = plot.getCaptions();
-        StringBuffer captionsString = new StringBuffer();
-        for (Enumeration captions = _originalCaptions.elements(); captions
+        StringBuilder captionsString = new StringBuilder();
+        for (Enumeration<String> captions = _originalCaptions.elements(); captions
                 .hasMoreElements();) {
-            if (captionsString.length() > 0) {
+            if (!captionsString.isEmpty()) {
                 captionsString.append('\n');
             }
-            captionsString.append((String) captions.nextElement());
+            captionsString.append(captions.nextElement());
         }
         _wideQuery.addTextArea("caption", "Caption", captionsString.toString());
 
@@ -92,10 +90,10 @@ public class PlotFormatter extends JPanel {
         _wideQuery.addLine("ylabel", "Y Label", _originalYLabel);
         _originalXRange = plot.getXRange();
         _wideQuery.addLine("xrange", "X Range",
-                "" + _originalXRange[0] + ", " + _originalXRange[1]);
+                _originalXRange[0] + ", " + _originalXRange[1]);
         _originalYRange = plot.getYRange();
         _wideQuery.addLine("yrange", "Y Range",
-                "" + _originalYRange[0] + ", " + _originalYRange[1]);
+                _originalYRange[0] + ", " + _originalYRange[1]);
 
         String[] marks = { "none", "points", "dots", "various", "bigdots",
                 "pixels" };
@@ -110,12 +108,12 @@ public class PlotFormatter extends JPanel {
         _originalXTicksSpec = "";
 
         if (_originalXTicks != null) {
-            StringBuffer buffer = new StringBuffer();
-            Vector positions = _originalXTicks[0];
-            Vector labels = _originalXTicks[1];
+            StringBuilder buffer = new StringBuilder();
+            Vector<?> positions = _originalXTicks[0];
+            Vector<?> labels = _originalXTicks[1];
 
             for (int i = 0; i < labels.size(); i++) {
-                if (buffer.length() > 0) {
+                if (!buffer.isEmpty()) {
                     buffer.append(", ");
                 }
 
@@ -133,12 +131,12 @@ public class PlotFormatter extends JPanel {
         _originalYTicksSpec = "";
 
         if (_originalYTicks != null) {
-            StringBuffer buffer = new StringBuffer();
-            Vector positions = _originalYTicks[0];
-            Vector labels = _originalYTicks[1];
+            StringBuilder buffer = new StringBuilder();
+            Vector<?> positions = _originalYTicks[0];
+            Vector<?> labels = _originalYTicks[1];
 
             for (int i = 0; i < labels.size(); i++) {
-                if (buffer.length() > 0) {
+                if (!buffer.isEmpty()) {
                     buffer.append(", ");
                 }
 
@@ -195,89 +193,80 @@ public class PlotFormatter extends JPanel {
         //    _narrowQuery.setEnabled("ylog", false);
         //}
         // Attach listeners.
-        _wideQuery.addQueryListener(new QueryListener() {
-            @Override
-            public void changed(String name) {
-                if (name.equals("title")) {
-                    _plot.setTitle(_wideQuery.getStringValue("title"));
-                } else if (name.equals("caption")) {
-                    _plot.clearCaptions();
-                    String newCaption = _wideQuery.getStringValue("caption");
-                    String[] captionsArray = newCaption.split("\\n");
-                    for (String element : captionsArray) {
-                        _plot.read("captions: " + element);
-                    }
-                } else if (name.equals("xlabel")) {
-                    _plot.setXLabel(_wideQuery.getStringValue("xlabel"));
-                } else if (name.equals("ylabel")) {
-                    _plot.setYLabel(_wideQuery.getStringValue("ylabel"));
-                } else if (name.equals("xrange")) {
-                    _plot.read(
-                            "XRange: " + _wideQuery.getStringValue("xrange"));
-                } else if (name.equals("xticks")) {
-                    String spec = _wideQuery.getStringValue("xticks").trim();
-                    _plot.read("XTicks: " + spec);
+        _wideQuery.addQueryListener(name -> {
+			switch (name) {
+				case "title" -> _plot.setTitle(_wideQuery.getStringValue("title"));
+				case "caption" -> {
+					_plot.clearCaptions();
+					String newCaption = _wideQuery.getStringValue("caption");
+					String[] captionsArray = newCaption.split("\\n");
+					for (String element : captionsArray) {
+						_plot.read("captions: " + element);
+					}
+				}
+				case "xlabel" -> _plot.setXLabel(_wideQuery.getStringValue("xlabel"));
+				case "ylabel" -> _plot.setYLabel(_wideQuery.getStringValue("ylabel"));
+				case "xrange" -> _plot.read(
+						"XRange: " + _wideQuery.getStringValue("xrange"));
+				case "xticks" -> {
+					String spec = _wideQuery.getStringValue("xticks").trim();
+					_plot.read("XTicks: " + spec);
 
-                    // FIXME: log axis format temporarily
-                    // disabled, see above.
-                    // if (spec.equals("")) {
-                    //    _narrowQuery.setEnabled("xlog", true);
-                    // } else {
-                    //    _narrowQuery.setBoolean("xlog", false);
-                    //    _narrowQuery.setEnabled("xlog", false);
-                    // }
-                } else if (name.equals("yticks")) {
-                    String spec = _wideQuery.getStringValue("yticks").trim();
-                    _plot.read("YTicks: " + spec);
+					// FIXME: log axis format temporarily
+					// disabled, see above.
+					// if (spec.equals("")) {
+					//    _narrowQuery.setEnabled("xlog", true);
+					// } else {
+					//    _narrowQuery.setBoolean("xlog", false);
+					//    _narrowQuery.setEnabled("xlog", false);
+					// }
+				}
+				case "yticks" -> {
+					String spec = _wideQuery.getStringValue("yticks").trim();
+					_plot.read("YTicks: " + spec);
 
-                    // FIXME: log axis format temporarily
-                    // disabled, see above.
-                    // if (spec.equals("")) {
-                    //    _narrowQuery.setEnabled("ylog", true);
-                    // } else {
-                    //    _narrowQuery.setBoolean("ylog", false);
-                    //    _narrowQuery.setEnabled("ylog", false);
-                    // }
-                } else if (name.equals("yrange")) {
-                    _plot.read(
-                            "YRange: " + _wideQuery.getStringValue("yrange"));
-                } else if (name.equals("marks")) {
-                    ((Plot) _plot)
-                            .setMarksStyle(_wideQuery.getStringValue("marks"));
-                }
+					// FIXME: log axis format temporarily
+					// disabled, see above.
+					// if (spec.equals("")) {
+					//    _narrowQuery.setEnabled("ylog", true);
+					// } else {
+					//    _narrowQuery.setBoolean("ylog", false);
+					//    _narrowQuery.setEnabled("ylog", false);
+					// }
+				}
+				case "yrange" -> _plot.read(
+						"YRange: " + _wideQuery.getStringValue("yrange"));
+				case "marks" -> ((Plot) _plot)
+						.setMarksStyle(_wideQuery.getStringValue("marks"));
+			}
 
-                _plot.repaint();
-            }
-        });
+			_plot.repaint();
+		});
 
-        _narrowQuery.addQueryListener(new QueryListener() {
-            @Override
-            public void changed(String name) {
-                if (name.equals("grid")) {
-                    _plot.setGrid(_narrowQuery.getBooleanValue("grid"));
-                } else if (name.equals("stems")) {
-                    ((Plot) _plot)
-                            .setImpulses(_narrowQuery.getBooleanValue("stems"));
-                    _plot.repaint();
-                } else if (name.equals("color")) {
-                    _plot.setColor(_narrowQuery.getBooleanValue("color"));
+        _narrowQuery.addQueryListener(name -> {
+			switch (name) {
+				case "grid" -> _plot.setGrid(_narrowQuery.getBooleanValue("grid"));
+				case "stems" -> {
+					((Plot) _plot)
+							.setImpulses(_narrowQuery.getBooleanValue("stems"));
+					_plot.repaint();
+				}
+				case "color" -> _plot.setColor(_narrowQuery.getBooleanValue("color"));
 
-                    // FIXME: log axis format temporarily
-                    // disabled, see above.
-                    // } else if (name.equals("xlog")) {
-                    //    _plot.setXLog(_narrowQuery.getBooleanValue("xlog"));
-                    // } else if (name.equals("ylog")) {
-                    //    _plot.setYLog(_narrowQuery.getBooleanValue("ylog"));
-                } else if (name.equals("connected")) {
-                    _setConnected(_narrowQuery.getBooleanValue("connected"));
-                } else if (name.equals("lineStyles")) {
-                    ((Plot) _plot).setLineStyles(
-                            _narrowQuery.getBooleanValue("lineStyles"));
-                }
 
-                _plot.repaint();
-            }
-        });
+				// FIXME: log axis format temporarily
+				// disabled, see above.
+				// } else if (name.equals("xlog")) {
+				//    _plot.setXLog(_narrowQuery.getBooleanValue("xlog"));
+				// } else if (name.equals("ylog")) {
+				//    _plot.setYLog(_narrowQuery.getBooleanValue("ylog"));
+				case "connected" -> _setConnected(_narrowQuery.getBooleanValue("connected"));
+				case "lineStyles" -> ((Plot) _plot).setLineStyles(
+						_narrowQuery.getBooleanValue("lineStyles"));
+			}
+
+			_plot.repaint();
+		});
     }
 
     ///////////////////////////////////////////////////////////////////
@@ -475,24 +464,24 @@ public class PlotFormatter extends JPanel {
     ///////////////////////////////////////////////////////////////////
     ////                         private variables                 ////
     // Query widgets.
-    private Query _wideQuery;
+    private final Query _wideQuery;
 
     ///////////////////////////////////////////////////////////////////
     ////                         private variables                 ////
     // Query widgets.
-    private Query _narrowQuery;
+    private final Query _narrowQuery;
 
     // Original configuration of the plot.
-    private String _originalTitle;
+    private final String _originalTitle;
 
     // Original configuration of the plot.
-    private Vector _originalCaptions;
+    private final Vector<String> _originalCaptions;
 
     // Original configuration of the plot.
-    private String _originalXLabel;
+    private final String _originalXLabel;
 
     // Original configuration of the plot.
-    private String _originalYLabel;
+    private final String _originalYLabel;
 
     // Original configuration of the plot.
     private String _originalMarks;
@@ -503,21 +492,21 @@ public class PlotFormatter extends JPanel {
     // Original configuration of the plot.
     private String _originalYTicksSpec;
 
-    private double[] _originalXRange;
+    private final double[] _originalXRange;
 
-    private double[] _originalYRange;
+    private final double[] _originalYRange;
 
-    private Vector[] _originalXTicks;
+    private final Vector<?>[] _originalXTicks;
 
-    private Vector[] _originalYTicks;
+    private final Vector<?>[] _originalYTicks;
 
-    private boolean _originalGrid;
+    private final boolean _originalGrid;
 
     private boolean _originalLineStyles;
 
     private boolean _originalStems;
 
-    private boolean _originalColor;
+    private final boolean _originalColor;
 
     private boolean[][] _originalConnected;
 

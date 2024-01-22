@@ -7,15 +7,13 @@ import java.util.*;
 import lombok.Getter;
 import org.example.versioned.DtaFile8209;
 
-public abstract class DtaFile<T extends DtaFile.Entry> {
+public abstract class DtaFile {
 
 	protected final ByteBuffer data;
 	@Getter
 	private final int version;
 	@Getter
-	protected final List<T> entries = new ArrayList<>();
-	@Getter
-	protected Map<Integer, Map<String, Value<?>>> datapoints = new HashMap<>();
+	protected Collection<Map<String, Value<?>>> datapoints = new ArrayList<>();
 
 	public DtaFile(ByteBuffer data) {
 		this.data = data.order(ByteOrder.LITTLE_ENDIAN);
@@ -62,6 +60,10 @@ public abstract class DtaFile<T extends DtaFile.Entry> {
 		return i;
 	}
 
+	protected void skip(int i) {
+		data.position(data.position() + i);
+	}
+
 	public static class Entry {
 
 	}
@@ -103,20 +105,24 @@ public abstract class DtaFile<T extends DtaFile.Entry> {
 	}
 
 	public static <A> DtaFile8209.Value<A> of(A val) {
-		return new DtaFile8209.Value<>() {
-			@Override
-			public A get() {
-				return val;
-			}
-
-			@Override
-			public String toString() {
-				return "Value(" + val.toString() + ")";
-			}
-		};
+		return Value.of(val);
 	}
 
 	public interface Value<T> {
 		T get();
+
+		static <A> DtaFile8209.Value<A> of(A val) {
+			return new DtaFile8209.Value<>() {
+				@Override
+				public A get() {
+					return val;
+				}
+
+				@Override
+				public String toString() {
+					return "Value(" + val.toString() + ")";
+				}
+			};
+		}
 	}
 }
