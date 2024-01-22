@@ -5,7 +5,7 @@ import java.nio.ByteOrder;
 import java.util.*;
 
 import lombok.Getter;
-import org.example.versioned.DtaFile8209;
+import org.example.unused.DtaFile8209Old;
 
 public abstract class DtaFile {
 
@@ -104,15 +104,15 @@ public abstract class DtaFile {
 		}
 	}
 
-	public static <A> DtaFile8209.Value<A> of(A val) {
+	public static <A> DtaFile8209Old.Value<A> of(A val) {
 		return Value.of(val);
 	}
 
 	public interface Value<T> {
 		T get();
 
-		static <A> DtaFile8209.Value<A> of(A val) {
-			return new DtaFile8209.Value<>() {
+		static <A> DtaFile8209Old.Value<A> of(A val) {
+			return new DtaFile8209Old.Value<>() {
 				@Override
 				public A get() {
 					return val;

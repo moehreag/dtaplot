@@ -2909,12 +2909,6 @@ public class PlotBox extends JPanel implements Printable, PlotBoxInterface {
                 // Find the center position of the label.
                 xCoord1 = _ulx + (int) ((xpos - _xMin) * _xscale);
 
-                if (label.contains("\n")){
-                    String[] lines = label.split("\n");
-                    for (String line : lines){
-
-                    }
-                }
                 // Find  the start position of x label.
                 int labxpos = xCoord1
                         - _labelFontMetrics.stringWidth(label) / 2;
@@ -4631,6 +4625,7 @@ public class PlotBox extends JPanel implements Printable, PlotBoxInterface {
     private transient boolean _zooming = false;
 
     private transient boolean _moving = false;
+    private transient boolean _control = false;
 
     // NOTE: It is unfortunate to have to include the DTD here, but there
     // seems to be no other way to ensure that the generated data exactly
@@ -4987,7 +4982,9 @@ public class PlotBox extends JPanel implements Printable, PlotBoxInterface {
                 message += "    Scroll type: WHEEL_BLOCK_SCROLL\n";
             }
             // output for debugging
-            //System.out.println(message);
+            if (_control) {
+                factor *= 2;
+            }
 
             synchronized (this) {
                 // Mouse position - this is the center for zooming
@@ -5172,8 +5169,6 @@ public class PlotBox extends JPanel implements Printable, PlotBoxInterface {
         @Override
         public void keyTyped(KeyEvent e) {
         }
-
-        private boolean _control = false;
 
         private boolean _shift = false;
     }

@@ -1,15 +1,14 @@
 package org.example.versioned;
 
 import java.nio.ByteBuffer;
-import java.time.Instant;
 import java.util.*;
-import java.util.stream.Collectors;
 
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import org.example.DataField;
+import org.example.DataFieldContainer;
 import org.example.DtaFile;
 import org.example.LookUpTable;
+
+import static org.example.DataField.*;
 
 public class DtaFile8209 extends DtaFile {
 
@@ -98,163 +97,128 @@ public class DtaFile8209 extends DtaFile {
 					10 // precision
 			)
 	};
-	private static final Map<String, LookUpTable> tables = new HashMap<>();
-
-	static {
-		tables.put("TRL", lut[0]);
-		tables.put("TVL", lut[0]);
-		tables.put("TBW", lut[0]);
-		tables.put("TFB1", lut[0]);
-		tables.put("TRLext", lut[0]);
-		tables.put("TWQein", lut[1]);
-		tables.put("TWQaus", lut[1]);
-		tables.put("TA", lut[1]);
-		tables.put("THG", lut[2]);
-		tables.put("TSS", lut[3]);
-		tables.put("TSK", lut[3]);
-		tables.put("TFB2", lut[4]);
-		tables.put("TFB3", lut[4]);
-		tables.put("TEE", lut[4]);
-	}
 
 	public DtaFile8209(ByteBuffer data) {
 		super(data);
+
 		data.position(8);
 
 		System.out.println("File contains " + (data.limit() / getEntryLength()) + " data points!");
 
-		List<Entry> entries = new ArrayList<>();
+		List<Map<String, Value<?>>> entries = new ArrayList<>();
 		for (int i = 0; i < data.limit() / getEntryLength(); i++) {
 			entries.add(readEntry());
 		}
-		entries.sort(Comparator.comparingInt(Entry::getTime));
-		datapoints = entries.stream().map(Entry::calculateValues).toList();
-	}
 
-	private Entry readEntry() {
-		int time = data.getInt();
-		skip(4);
-		short statusA = data.getShort();
-		skip(34);
-		short statusE = data.getShort();
-		skip(6);
-		short tFB1 = data.getShort();
-		short tBW = data.getShort();
-		short tA = data.getShort();
-		short tRLext = data.getShort();
-		short tRL = data.getShort();
-		short tVL = data.getShort();
-		short tHG = data.getShort();
-		short tWQaus = data.getShort();
-		skip(2);
-		short tWQein = data.getShort();
-		skip(8);
-		short tRLsoll = data.getShort();
-		short tRLsoll_highbytes = data.getShort();
-		short tMK1soll = data.getShort();
-		short tMK1soll_highbytes = data.getShort();
-		skip(40);
-		short comfortPlatine = data.getShort();
-		skip(2);
-		short statusA_CP = data.getShort();
-		skip(2);
-		short aO1 = data.getShort();
-		short aO2 = data.getShort();
-		short statusE_CP = data.getShort();
-		skip(2);
-		short tSS = data.getShort();
-		short tSK = data.getShort();
-		short tFB2 = data.getShort();
-		short tFB3 = data.getShort();
-		short tEE = data.getShort();
-		skip(4);
-		short aI1 = data.getShort();
-		short tMK2soll = data.getShort();
-		short tMK2soll_highbytes = data.getShort();
-		short tMK3soll = data.getShort();
-		short tMK3soll_highbytes = data.getShort();
-		if (getVersion() != 0x2011) {
-			skip(20);
+		List<String> keys = new ArrayList<>();
+		entries.stream().map(Map::keySet).forEach(k -> k.stream().filter(s -> !keys.contains(s)).forEach(keys::add));
+		for (String key : keys) {
+			List<Double> values = new ArrayList<>();
+			for (Map<String, Value<?>> map : entries) {
+				if (!(map.get(key).get() instanceof Number)){
+					continue;
+				}
+				double val = ((Number) map.get(key).get()).doubleValue();
+				if (!values.contains(val)) {
+					values.add(val);
+				}
+			}
+			if (values.size() <= 1) {
+				for (Map<String, Value<?>> map : entries) {
+					map.remove(key);
+				}
+			}
 		}
-		return new Entry(time, readBits(statusA), readBits(statusE, 0, 1, 2, 3),
-				tFB1, tBW, tA, tRLext, tRL, tVL, tHG, tWQaus, tWQein, combine(tRLsoll, tRLsoll_highbytes),
-				combine(tMK1soll, tMK1soll_highbytes), comfortPlatine, readBits(statusA_CP), aO1, aO2, readBits(statusE_CP, 4),
-				tSS, tSK, tFB2, tFB3, tEE, aI1, combine(tMK2soll, tMK2soll_highbytes),
-				combine(tMK3soll, tMK3soll_highbytes));
+
+		entries.sort(Comparator.comparingInt(map -> (int) map.get("time").get()));
+		datapoints = entries.stream().toList();
 	}
-
-
 
 	private int getEntryLength() {
 		return getVersion() == 0x2011 ? 168 : 188;
 	}
 
-	@EqualsAndHashCode(callSuper = true)
-	@Getter
-	@RequiredArgsConstructor
-	public static class Entry extends DtaFile.Entry {
-		private final int time;
-		private final boolean[] statusOut, statusIn;
-		private final short tempFB1, tBW, tA, tRLext, tRL, tVL, tHG, tWQaus, tWQein;
-		private final int tRLsoll, tMK1soll;
-		private final short comfortPlatine;
-		private final boolean[] statusA_CP;
-		private final short aO1, aO2;
-		private final boolean[] statusE_CP;
-		private final short tSS, tSK, tFB2, tFB3, tEE, aI1;
-		private final int tMK2soll, tMK3soll;
-
-		public Map<String, Value<?>> calculateValues() {
-
-			Map<String, Value<?>> values = new HashMap<>();
-
-			values.put("time", of(time));
-
-			Object[] a = new Object[]{statusOut, statusIn, tempFB1, tBW, tA, tRLext,
-					tRL, tVL, tHG, tWQaus, tWQein, tRLsoll, tMK1soll, comfortPlatine,
-					statusA_CP, aO1, aO2, statusE_CP, tSS, tSK, tFB2, tFB3, tEE, aI1,
-					tMK2soll, tMK3soll
-			};
-			for (int i = 0; i < Math.min(a.length, Entries.values().length); i++) {
-				String id = Entries.values()[i].getShortName();
-				values.put(id, getLookUpValue(id, of(a[i])));
-			}
-
-			return values;
+	private Map<String, Value<?>> readEntry(){
+		List<DataFieldContainer> fields = List.of(
+				time(data),										// [0  :3  ] - Datum
+				unknown(4, data),							// [4  :7  ]
+				digital("Digitale Ausgänge", data,		// [8  :9  ] - Status Ausgaenge
+					bit("HUP", 0),				//   bit 0:  HUP  = Heizungsumwaelzpumpe
+					bit("ZUP", 1),					//   bit 1:  ZUP  = Zusatzumwaelzpumpe
+					bit("BUP", 2),					//   bit 2:  BUP  = Brauswarmwasserumwaelzpumpe oder Drei-Wege-Ventil auf Brauchwassererwaermung
+					bit("ZW2", 3),					//   bit 3:  ZW2  = Zusaetzlicher Waermeerzeuger 2 / Sammelstoerung
+					bit("MA1", 4),					//   bit 4:  MA1  = Mischer 1 auf
+					bit("MZ1", 5),					//   bit 5:  MZ1  = Mischer 1 zu
+					bit("ZIP", 6),					//   bit 6:  ZIP  = Zirkulationspumpe
+					bit("VD1", 7),					//   bit 7:  VD1  = Verdichter 1
+					bit("VD2", 8),					//   bit 8:  VD2  = Verdichter 2
+					bit("VENT", 9),					//   bit 9:  VENT = Ventilation des WP Gehaeses / 2. Stufe des Ventilators
+					bit("AV", 10),					//   bit 10: AV   = Abtauventil (Kreislaufumkehr)
+					bit("VBS", 11),					//   bit 11: VBS  = Ventilator, Brunnen- oder Soleumwaelzpumpe
+					bit("ZW1", 12)					//   bit 12: ZW1  = Zusaetzlicher Waermeerzeuger 1
+				),
+				unknown(34, data),						// [10 :43 ]
+				digital("Digitale Eingänge", data,		// [44 :45 ] - Status Eingaenge
+						bit("HD", 0, true),	//   bit 0:  HD_  = Hochdruckpressostat
+						bit("ND", 1, true),	//   bit 1:  ND_  = Niederdruckpressostat
+						bit("MOT", 2, true),	//   bit 2:  MOT_ = Motorschutz
+						bit("ASD", 3, true),	//   bit 3:  ASD_ = Abtau/Soledruck/Durchfluss
+						bit("EVU", 4)					//   bit 4:  EVU  = EVU Sperre
+				),
+				unknown(6, data),							// [46 :51 ]
+				lut(lut[0], "Heizkreis",   "TFB1", data),	// [52 :53 ] - TFB1
+				lut(lut[0], "Heizkreis",    "TBW", data),	// [54 :55 ] - TBW
+				lut(lut[1], "Heizkreis",     "TA", data),	// [56 :57 ] - TA
+				lut(lut[0], "Heizkreis", "TRLext", data),	// [58 :59 ] - TRLext
+				lut(lut[0], "Heizkreis",    "TRL", data),	// [60 :61 ] - TRL
+				lut(lut[0], "Heizkreis",    "TVL", data),	// [62 :63 ] - TVL
+				lut(lut[2], "Heizkreis",    "THG", data),	// [64 :65 ] - THG
+				lut(lut[1], "Heizkreis", "TWQaus", data),	// [66 :67 ] - TWQaus
+				unknown(2, data),									// [68 :69 ]
+				lut(lut[1], "Heizkreis", "TWQein", data),	// [70 :71 ] - TWQein
+				unknown(8, data),									// [72 :79 ]
+				analogue("Heizkreis",  "TRLsoll", 10.0, 10, data, true),	// [80 :83 ] - TRLsoll
+				analogue("Heizkreis", "TMK1soll", 10.0, 10, data, true),	// [84 :87 ] - TMK1soll
+				unknown(40, data),								// [88 :127]
+				unknown(2, data),									// [128:129] - ComfortPlatine indikator
+				unknown(2, data),									// [88 :131]
+				digital("Comfort-Platine EA", data,				// [132:133] - Status Ausgaenge ComfortPlatine
+						bit("AI1DIV", 6),						//    bit 6:  AI1DIV = Spannungsteiler an AI1: wann AI1DIV dann AI1 = AI1/2
+						bit("SUP", 7),						//    bit 7:  SUP = Schwimmbadumwaelzpumpe
+						bit("FUP2", 8),						//    bit 8:  FUP2 = Mischkreispumpe 2 / Kuehlsignal 2
+						bit("MA2", 9),						//    bit 9:  MA2 = Mischer 2 auf
+						bit("MZ2", 10),						//   bit 10:  MZ2 = Mischer 2 zu
+						bit("MA3", 11),						//   bit 11:  MA3 = Mischer 3 auf
+						bit("MZ3", 11),						//   bit 11:  MZ3 = Mischer 3 zu
+						bit("FUP3", 12),						//   bit 12:  FUP3 = Mischkreispumpe 3 / Kuehlsignal 3
+						bit("ZW3", 14),						//   bit 14:  ZW3 = Zusaetzlicher Waermeerzeuger 3
+						bit("SLP", 15)						//   bit 15:  SLP = Solarladepumpe
+				),
+				unknown(2, data),									// [134:135]
+				analogue("Comfort-Platine", "AO1", 381.825, 100, data),  // [136:137] - AO1
+				analogue("Comfort-Platine", "AO2", 381.825, 100, data),  // [138:139] - AO2
+				digital("Comfort-Platine EA", data,				// [140:141] - Status Eingaenge ComfortPlatine
+						bit("SWT", 4, true)			//    bit 4:  SWT_ = Schwimmbadthermostat
+				),
+				unknown(2, data),									// [142:143]
+				lut(lut[3], "Comfort-Platine",   "TSS", data),         // [144:145] - TSS
+				lut(lut[3], "Comfort-Platine",   "TSK", data),         // [146:147] - TSK
+				lut(lut[4], "Comfort-Platine",  "TFB2", data),         // [148:149] - TFB2
+				lut(lut[4], "Comfort-Platine",  "TFB3", data),         // [150:151] - TFB3
+				lut(lut[4], "Comfort-Platine",   "TEE", data),         // [152:153] - TEE
+				unknown(4, data),                                      // [154:157]
+				analogue("Comfort-Platine",  "AI1", 275.406, 100, data), // [158:159] - AI1
+				analogue("Comfort-Platine", "TMK2soll", 10.0, 10, data, true), // [160:163] - TMK2soll
+				analogue("Comfort-Platine", "TMK3soll", 10.0, 10, data, true) // [164:167] - TMK3soll
+		);
+		if (getVersion() == 0x2010){
+			skip(20);
 		}
 
-		private Value<?> getLookUpValue(String id, Value<?> v) {
-			if (v.get() instanceof Integer || v.get() instanceof Short) {
-				int value;
-				if (v.get() instanceof Short){
-					value = (int)(short)v.get();
-				} else {
-					value = (int) v.get();
-				}
-
-				LookUpTable m_lutInfo = tables.get(id);
-				if (m_lutInfo == null){
-					return v;
-				}
-				// Position in Tabelle
-				int idx = (value - m_lutInfo.getOffset()) / m_lutInfo.getDelta();
-				int size = (m_lutInfo.getData().length*4) / 2;
-				if (idx > (size - 2)) idx = size - 2;
-
-				// linear approximation
-				int x1 = idx * m_lutInfo.getDelta() + m_lutInfo.getOffset();
-				int x2 = (idx + 1) * m_lutInfo.getDelta() + m_lutInfo.getOffset();
-				int y1 = m_lutInfo.getData()[idx];
-				int y2 = m_lutInfo.getData()[idx + 1];
-
-				double m = (float)(y2 - y1) / (x2 - x1);
-				double n = y1 - m * x1;
-
-				// calc value
-				double res = m * value + n;
-				return of(Math.round(res) / (m_lutInfo.getPrecision()));
-			}
-			return v;
-		}
+		Map<String, Value<?>> map = new HashMap<>();
+		fields.stream().filter(f -> !f.isVoid())
+						.forEach(c -> c.get().stream().filter(DataField::isNumeric)
+								.forEach(d -> map.put(d.getName(), d.getValue())));
+		return map;
 	}
 }

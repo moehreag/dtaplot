@@ -5,9 +5,7 @@ import javax.swing.*;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
+import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -39,8 +37,6 @@ public class DtaPlot {
 	public void display() {
 		JFrame frame = new JFrame();
 		frame.setTitle("DtaPlot");
-
-
 
 		JMenuBar menuBar = new JMenuBar();
 		JMenu fileMenu = new JMenu("File");
@@ -154,18 +150,16 @@ public class DtaPlot {
 			}
 		});
 
-		frame.setLayout(new BorderLayout());
-
-		frame.add(plot, BorderLayout.CENTER);
 		frame.add(selections, BorderLayout.SOUTH);
 		frame.add(menuBar, BorderLayout.NORTH);
-
+		frame.add(plot, BorderLayout.CENTER);
 
 		frame.setSize(800, 580);
 		frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 		frame.setLocationRelativeTo(null);
 		plot.fillPlot();
 		plot.repaint();
+		plot.requestFocusInWindow();
 		frame.validate();
 		frame.setVisible(true);
 	}
@@ -230,8 +224,15 @@ public class DtaPlot {
 					if (value.get() instanceof Number) {
 						ZonedDateTime zTime = ZonedDateTime.ofInstant(Instant.ofEpochSecond(time),
 								ZoneId.systemDefault());
-						String label = zTime.getDayOfMonth()+"."+zTime.getMonthValue()+"\n"+
-								timeFormat.format(zTime.getHour())+":"+ timeFormat.format(zTime.getMinute());
+						String label = String.format("%s:%s (%s.%s.%s)",
+								timeFormat.format(zTime.getHour()),
+								timeFormat.format(zTime.getMinute()),
+								timeFormat.format(zTime.getDayOfMonth()),
+								timeFormat.format(zTime.getMonthValue()),
+								timeFormat.format(zTime.getYear())
+						);
+						/*String label = timeFormat.format(zTime.getHour())+":"+ timeFormat.format(zTime.getMinute())+
+								" ("+zTime.getDayOfMonth()+"."+zTime.getMonthValue()+")";*/
 						plot.addXTick(label, time);
 						plot.addPoint(0, time,
 								((Number) value.get()).doubleValue(), true);

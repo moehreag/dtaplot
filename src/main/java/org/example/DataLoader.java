@@ -29,14 +29,14 @@ public class DataLoader {
 					JsonObject o = jsonValue.asObject();
 					o.forEach((s, val) -> {
 						Object value;
-						if (val.isNumber() && val.getIntNumberValue() == val.getDoubleNumberValue()) {
-							value = val.getIntNumberValue();
+						if (val.isNumber()) {
+							value = val.getDoubleNumberValue();
 						} else if (val.isArray()) {
 							value = val.asArray().stream().map(JsonValue::getBooleanValue).toArray(Boolean[]::new);
 						} else {
 							value = val.getStringValue();
 						}
-						map.put(s, DtaFile.of(value));
+						map.put(s, DtaFile.Value.of(value));
 					});
 					list.add(map);
 				});

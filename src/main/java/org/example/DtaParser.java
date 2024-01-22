@@ -4,10 +4,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
 import lombok.RequiredArgsConstructor;
-import org.example.versioned.DtaFile8209;
-import org.example.versioned.DtaFile9000;
-import org.example.versioned.DtaFile9001;
-import org.example.versioned.DtaFile9003;
+import org.example.versioned.*;
 
 @RequiredArgsConstructor
 public class DtaParser {
