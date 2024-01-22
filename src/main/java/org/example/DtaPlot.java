@@ -144,13 +144,32 @@ public class DtaPlot {
 		});
 		menuBar.add(fileMenu);
 
-		selections.addItemListener(e -> {
+		/*selections.addItemListener(e -> {
 			if (e.getStateChange() == ItemEvent.SELECTED){
-				addPoints(data);
+				addPoints();
+			}
+		});*/
+
+		JButton set = new JButton("Display");
+		JButton add = new JButton("Add to graph");
+		set.addActionListener(new AbstractAction() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				addPoints();
+			}
+		});
+		add.addActionListener(new AbstractAction() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				addDataset((String) selections.getSelectedItem());
 			}
 		});
 
-		frame.add(selections, BorderLayout.SOUTH);
+		JPanel panel = new JPanel();
+		frame.add(panel, BorderLayout.SOUTH);
+		panel.add(selections);
+		panel.add(set);
+		panel.add(add);
 		frame.add(menuBar, BorderLayout.NORTH);
 		frame.add(plot, BorderLayout.CENTER);
 
@@ -166,7 +185,7 @@ public class DtaPlot {
 
 	public void addToGraph(byte[] bytes){
 		DtaFile dta = DtaParser.get(bytes);
-		addToGraph(dta.datapoints);
+		addToGraph(dta.getDatapoints());
 	}
 
 	public void addToGraph(Path file){
@@ -189,15 +208,11 @@ public class DtaPlot {
 		Set<Integer> times = this.data.stream().map(map -> (int)map.get("time").get()).collect(Collectors.toSet());
 		this.data.addAll(data.stream()
 				.filter(stringValueMap -> !times.contains((Integer) stringValueMap.get("time").get())).toList());
-		addPoints(this.data);
+		refreshSelection();
+		addPoints();
 	}
 
-	public void addPoints(Collection<Map<String, DtaFile.Value<?>>> data){
-		plot.clear(true);
-		plot.clearLegends();
-		plot.setXLabel("time");
-		plot.setYLabel("°C");
-		System.out.println("Plotting "+data.size()+" data points!");
+	private void refreshSelection(){
 		ItemListener[] listeners = selections.getItemListeners();
 		for (ItemListener i : listeners){
 			selections.removeItemListener(i);
@@ -210,17 +225,30 @@ public class DtaPlot {
 		if (prev != null){
 			selections.setSelectedItem(prev);
 		}
-		String selected = (String) selections.getSelectedItem();
 		for (ItemListener i : listeners){
 			selections.addItemListener(i);
 		}
-		plot.addLegend(0, selected);
+	}
+
+	public void addPoints(){
+		plot.clear(true);
+		plot.clearLegends();
+		plot.setXLabel("time");
+		plot.setYLabel("°C");
+		System.out.println("Plotting "+data.size()+" data points!");
+		String selected = (String) selections.getSelectedItem();
+		addDataset(selected);
+	}
+
+	private void addDataset(String setName){
+		int set = plot.getNumDataSets();
+		plot.addLegend(set, setName);
 		data.stream()
 				.sorted(Comparator.comparingInt(map -> (Integer) map.get("time").get()))
 				.forEachOrdered((stringValueMap) -> {
 					int time = (int) stringValueMap.get("time").get();
 
-					DtaFile.Value<?> value = stringValueMap.get(selected);
+					DtaFile.Value<?> value = stringValueMap.get(setName);
 					if (value.get() instanceof Number) {
 						ZonedDateTime zTime = ZonedDateTime.ofInstant(Instant.ofEpochSecond(time),
 								ZoneId.systemDefault());
@@ -231,10 +259,8 @@ public class DtaPlot {
 								timeFormat.format(zTime.getMonthValue()),
 								timeFormat.format(zTime.getYear())
 						);
-						/*String label = timeFormat.format(zTime.getHour())+":"+ timeFormat.format(zTime.getMinute())+
-								" ("+zTime.getDayOfMonth()+"."+zTime.getMonthValue()+")";*/
 						plot.addXTick(label, time);
-						plot.addPoint(0, time,
+						plot.addPoint(set, time,
 								((Number) value.get()).doubleValue(), true);
 					}
 

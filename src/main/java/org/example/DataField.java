@@ -72,12 +72,8 @@ public abstract class DataField<T> {
 
 		List<DataField<Boolean>> fields = new ArrayList<>();
 		for (DataFieldBit b : bits) {
-			/*if (Integer.bitCount(val) < b.bit) {
-				throw new IllegalArgumentException("Integer "+val+" does not contain bit at position " + b.bit+" (Only "+Integer.bitCount(val)+" bits)");
-			}*/
 			int value = (val >> b.bit) & 1;
 
-			//System.out.printf("Bit %s of %s: %s%n", bit, i, value);
 			fields.add(new DataField<>(category, b.name) {
 				@Override
 				public DtaFile.Value<Boolean> getValue() {

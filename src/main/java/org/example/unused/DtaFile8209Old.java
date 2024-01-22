@@ -126,7 +126,7 @@ public class DtaFile8209Old extends DtaFile {
 			entries.add(readEntry());
 		}
 		entries.sort(Comparator.comparingInt(Entry::getTime));
-		datapoints = entries.stream().map(Entry::calculateValues).toList();
+		setDatapoints(entries.stream().map(Entry::calculateValues).toList());
 	}
 
 	private Entry readEntry() {

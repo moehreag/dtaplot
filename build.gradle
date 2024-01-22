@@ -13,6 +13,10 @@ repositories {
     mavenCentral()
 }
 
+java {
+    withSourcesJar()
+}
+
 jar {
     manifest {
         attributes 'Main-Class': 'org.example.Main'

@@ -110,28 +110,7 @@ public class DtaFile8209 extends DtaFile {
 			entries.add(readEntry());
 		}
 
-		List<String> keys = new ArrayList<>();
-		entries.stream().map(Map::keySet).forEach(k -> k.stream().filter(s -> !keys.contains(s)).forEach(keys::add));
-		for (String key : keys) {
-			List<Double> values = new ArrayList<>();
-			for (Map<String, Value<?>> map : entries) {
-				if (!(map.get(key).get() instanceof Number)){
-					continue;
-				}
-				double val = ((Number) map.get(key).get()).doubleValue();
-				if (!values.contains(val)) {
-					values.add(val);
-				}
-			}
-			if (values.size() <= 1) {
-				for (Map<String, Value<?>> map : entries) {
-					map.remove(key);
-				}
-			}
-		}
-
-		entries.sort(Comparator.comparingInt(map -> (int) map.get("time").get()));
-		datapoints = entries.stream().toList();
+		setDatapoints(entries);
 	}
 
 	private int getEntryLength() {

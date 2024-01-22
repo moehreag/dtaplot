@@ -13,11 +13,34 @@ public abstract class DtaFile {
 	@Getter
 	private final int version;
 	@Getter
-	protected Collection<Map<String, Value<?>>> datapoints = new ArrayList<>();
+	private Collection<Map<String, Value<?>>> datapoints;
 
 	public DtaFile(ByteBuffer data) {
 		this.data = data.order(ByteOrder.LITTLE_ENDIAN);
 		this.version = data.getInt(0);
+	}
+
+	protected void setDatapoints(Collection<Map<String, Value<?>>> entries){
+		List<String> keys = new ArrayList<>();
+		entries.stream().map(Map::keySet).forEach(k -> k.stream().filter(s -> !keys.contains(s)).forEach(keys::add));
+		for (String key : keys) {
+			List<Double> values = new ArrayList<>();
+			for (Map<String, Value<?>> map : entries) {
+				if (!(map.get(key).get() instanceof Number)){
+					continue;
+				}
+				double val = ((Number) map.get(key).get()).doubleValue();
+				if (!values.contains(val)) {
+					values.add(val);
+				}
+			}
+			if (values.size() <= 1) {
+				for (Map<String, Value<?>> map : entries) {
+					map.remove(key);
+				}
+			}
+		}
+		datapoints = Collections.unmodifiableCollection(entries);
 	}
 
 	protected boolean readBit(int i, int bit) {
