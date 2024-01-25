@@ -28,6 +28,11 @@ public class DataLoader {
 					Map<String, DtaFile.Value<?>> map = new HashMap<>();
 					JsonObject o = jsonValue.asObject();
 					o.forEach((s, val) -> {
+
+						if (val.isNull()){
+							return;
+						}
+
 						Object value;
 						if (val.isNumber()) {
 							value = val.getDoubleNumberValue();
@@ -80,7 +85,23 @@ public class DataLoader {
 
 	public void append(Collection<Map<String, DtaFile.Value<?>>> data, Path file){
 		Collection<Map<String, DtaFile.Value<?>>> existing = load(file);
-		existing.addAll(data);
+
+		for (Map<String, DtaFile.Value<?>> map : data){
+			int time = ((Number)map.get("time").get()).intValue();
+
+			boolean in = false;
+			for (Map<String, DtaFile.Value<?>> e : existing){
+				if (((Number)e.get("time").get()).intValue() == time){
+					in = true;
+				}
+			}
+
+			if (!in){
+				existing.add(map);
+			}
+		}
+
+		//existing.addAll(data);
 		save(existing, file);
 	}
 

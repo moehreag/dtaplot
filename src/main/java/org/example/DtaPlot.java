@@ -28,14 +28,16 @@ public class DtaPlot {
 
 	private static final String HEATPUMP_LOCATION = "http://192.168.178.47/proclog";
 	private static final NumberFormat timeFormat = new DecimalFormat("00");
-	private static final NumberFormat degreeFormat = new DecimalFormat("#0.00");
 
 	private final Collection<Map<String, DtaFile.Value<?>>> data = new ArrayList<>();
 	private final Plot plot = new Plot();
+	private final Map<String, Integer> datasets = new HashMap<>();
+	private final List<String> displayedDatasets = new ArrayList<>();
 	private final Vector<String> selectionItems = new Vector<>();
 	private final JComboBox<String> selections = new JComboBox<>(selectionItems);
 
 	public void display() {
+
 		JFrame frame = new JFrame();
 		frame.setTitle("DtaPlot");
 
@@ -57,11 +59,14 @@ public class DtaPlot {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				JFileChooser chooser = new JFileChooser(new File("."));
+				chooser.setMultiSelectionEnabled(true);
 				addFileFilters(chooser);
 				if (chooser.showOpenDialog(frame) != JFileChooser.APPROVE_OPTION)
 					return;
-				System.out.println("Adding file "+chooser.getSelectedFile()+" to the graph!");
-				addToGraph(chooser.getSelectedFile().toPath());
+				for (File f : chooser.getSelectedFiles()) {
+					System.out.println("Adding file "+f+" to the graph!");
+					addToGraph(f.toPath());
+				}
 			}
 		});
 		fileMenu.add(new AbstractAction("Load from Heatpump..") {
@@ -147,16 +152,31 @@ public class DtaPlot {
 
 		JButton set = new JButton("Display");
 		JButton add = new JButton("Add to graph");
+		JButton remove = new JButton("Remove");
 		set.addActionListener(new AbstractAction() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				displayedDatasets.clear();
+				displayedDatasets.add((String) selections.getSelectedItem());
 				addPoints();
 			}
 		});
 		add.addActionListener(new AbstractAction() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				addDataset((String) selections.getSelectedItem());
+				if (!displayedDatasets.contains((String) selections.getSelectedItem())) {
+					displayedDatasets.add((String) selections.getSelectedItem());
+					addDataset((String) selections.getSelectedItem());
+				}
+			}
+		});
+		remove.addActionListener(new AbstractAction() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				int dataset = datasets.get((String) selections.getSelectedItem());
+				plot.clear(dataset);
+				plot.removeLegend(dataset);
+				displayedDatasets.remove((String) selections.getSelectedItem());
 			}
 		});
 
@@ -165,6 +185,7 @@ public class DtaPlot {
 		panel.add(selections);
 		panel.add(set);
 		panel.add(add);
+		panel.add(remove);
 		frame.add(menuBar, BorderLayout.NORTH);
 		frame.add(plot, BorderLayout.CENTER);
 
@@ -200,9 +221,13 @@ public class DtaPlot {
 
 	public void addToGraph(Collection<Map<String, DtaFile.Value<?>>> data){
 		System.out.println("Adding "+ data.size()+" points to the graph");
-		Set<Integer> times = this.data.stream().map(map -> (int)map.get("time").get()).collect(Collectors.toSet());
+		Set<Integer> times = this.data.stream().map(map -> ((Number) map.get("time").get()).intValue()).collect(Collectors.toSet());
 		this.data.addAll(data.stream()
-				.filter(stringValueMap -> !times.contains((Integer) stringValueMap.get("time").get())).toList());
+				.filter(stringValueMap -> !times.contains(((Number) stringValueMap.get("time").get()).intValue())).toList());
+		System.out.println("Available Datasets: "+data.stream().map(Map::keySet).reduce(new HashSet<>(), (strings, strings2) -> {
+			strings.addAll(strings2);
+			return strings;
+		}).stream().reduce((s, s2) -> String.join(", ", s, s2)).orElse(""));
 		refreshSelection();
 		addPoints();
 	}
@@ -216,9 +241,12 @@ public class DtaPlot {
 		selectionItems.clear();
 		data.stream().map(Map::keySet).forEach(strings -> strings.stream()
 				.filter(s -> !"time".equals(s)).distinct()
-				.filter(s -> !selectionItems.contains(s)).forEach(selections::addItem));
+				.filter(s -> !selectionItems.contains(s)).sorted().forEachOrdered(selections::addItem));
 		if (prev != null){
 			selections.setSelectedItem(prev);
+		}
+		if (displayedDatasets.isEmpty()) {
+			displayedDatasets.add((String) selections.getSelectedItem());
 		}
 		for (ItemListener i : listeners){
 			selections.addItemListener(i);
@@ -226,24 +254,34 @@ public class DtaPlot {
 	}
 
 	public void addPoints(){
+		datasets.clear();
 		plot.clear(true);
 		plot.clearLegends();
 		plot.setXLabel("time");
 		plot.setYLabel("°C");
 		System.out.println("Plotting "+data.size()+" data points!");
-		String selected = (String) selections.getSelectedItem();
-		addDataset(selected);
+		if (displayedDatasets.isEmpty()) {
+			displayedDatasets.add((String) selections.getSelectedItem());
+		}
+		for (String s : displayedDatasets) {
+			addDataset(s);
+		}
 	}
 
 	private void addDataset(String setName){
+		System.out.println("Adding dataset: "+setName);
 		int set = plot.getNumDataSets();
+		datasets.put(setName, set);
 		plot.addLegend(set, setName);
 		data.stream()
-				.sorted(Comparator.comparingInt(map -> (Integer) map.get("time").get()))
+				.sorted(Comparator.comparingInt(map -> ((Number) map.get("time").get()).intValue()))
 				.forEachOrdered((stringValueMap) -> {
-					int time = (int) stringValueMap.get("time").get();
+					int time = ((Number) stringValueMap.get("time").get()).intValue();
 
 					DtaFile.Value<?> value = stringValueMap.get(setName);
+					if (value == null){
+						return;
+					}
 					if (value.get() instanceof Number) {
 						ZonedDateTime zTime = ZonedDateTime.ofInstant(Instant.ofEpochSecond(time),
 								ZoneId.systemDefault());
@@ -256,7 +294,6 @@ public class DtaPlot {
 						);
 						double val = ((Number) value.get()).doubleValue();
 						plot.addXTick(label, time);
-						//plot.addYTick(degreeFormat.format(val), val);
 						plot.addPoint(set, time, val, true);
 					}
 
