@@ -27,8 +27,7 @@ public class DtaFile9003 extends DtaFile {
 			DataFieldContainer c = d.read();
 			if (!c.isVoid()){
 				Map<String, Value<?>> map = new HashMap<>();
-				c.get()//.stream().filter(DataField::isNumeric)
-						.forEach(val -> map.put(val.getName(), val.getValue()));
+				c.get().forEach(val -> map.put(val.getName(), val.getValue()));
 				if (!map.isEmpty()){
 					values.add(map);
 				}
@@ -50,7 +49,6 @@ public class DtaFile9003 extends DtaFile {
 					// Gruppe / Kategorie
 					category = readString();
 					list.add(new Category(category));
-					//_log(QString("0x%1, %2").arg(id, 2, 16, QChar('0')).arg(category));
 					break;
 				}
 				case 1: {
@@ -62,15 +60,10 @@ public class DtaFile9003 extends DtaFile {
 					if ((id & 0x80) == 0)
 						factor = data.getShort();
 					list.add(new Analogue(category, name, color, factor));
-					//DataFieldAnalog *f = new DataFieldAnalog(category, name, factor, 10, this);
-					//m_fields.append(f);
-					//_log(QString("0x%1, %2").arg(id, 2, 16, QChar('0')).arg(QString(*f)));
-					//dsLen += 2;
 					break;
 				}
 				case 2:
 				case 4: {
-					//DataFieldDigital *dig = new DataFieldDigital(this);
 					byte count = data.get();
 
 					// Sichtbarkeit fuer jedes Feld extra?
@@ -90,30 +83,14 @@ public class DtaFile9003 extends DtaFile {
 					else if ((id & 0x80) == 0)
 						ios = (short) 0xFFFF;
 
-					/*_log(QString("0x%1, IO with %2 items, visibility=0x%3, factoryOnly=0x%4, ios=0x%5")
-							/.arg(id, 2, 16, QChar('0'))
-							.arg(count)
-							.arg(visibility, 4, 16, QChar('0'))
-							.arg(factoryOnlyAll, 4, 16, QChar('0'))
-							.arg(ios, 4, 16, QChar('0')));*/
 					Digital.Bit[] bits = new Digital.Bit[count];
 					for (int i = 0; i < count; ++i) {
 						String name = readString();
 						int color = readColor();
 						//fcfg->setColor(name, color);
 						bits[i] = new Digital.Bit(name, color);
-						//DataFieldDigitalBit *bit = new DataFieldDigitalBit(category + " EA", name, i, DataField::Input, dig);
-//                bit->set_visible(visibility);
-//                bit->set_factoryOnly(factoryOnlyAll);
-						//bit->set_direction(ios);
-						//dig->addItem(bit);
-						//_log(QString("   %1, RGB=%2").arg(name).arg(DataField::color2str(color)));
 					}
 					list.add(new Digital(category, bits, visibility, factoryOnlyAll, ios));
-
-					//_log(QString("IO end"));
-					//m_fields.append(dig);
-					//dsLen += 2;
 					break;
 				}
 				case 3: {
@@ -121,21 +98,16 @@ public class DtaFile9003 extends DtaFile {
 					String name = readString();
 					byte count = data.get();
 
-					//DataFieldEnum *f = new DataFieldEnum(category, name, this);
-					//m_fields.append(f);
-					//_log(QString("0x%1, ENUM '%2' with %3 items").arg(id, 2, 16, QChar('0')).arg(name).arg(count));
 					String[] values = new String[count];
 					for (int i=0; i<count; ++i) {
 						String itemText = readString();
 						values[i] = itemText;
-						//_log(QString("   %1 = %2").arg(i).arg(itemText));
 					}
 					list.add(new Enum(category, name, values));
 					break;
 				}
 				// LCOV_EXCL_START
 				default: {
-					//_log(QString("DTA v9003 - unknown field type 0x%1!").arg(fieldType, 2, 16, QChar('0')));
 					throw new IllegalStateException(String.format("DTA v9003 - unknown field type 0x%08X!", type));
 				}
 			}

@@ -157,76 +157,76 @@ public class DtaFile8209 extends DtaFile {
 
 	private Map<String, Value<?>> readEntry(){
 		List<DataFieldContainer> fields = List.of(
-				DataField.time(data),										// [0  :3  ] - Datum
-				DataField.unknown(4, data),							// [4  :7  ]
-				DataField.digital("Digitale Ausgänge", data,		// [8  :9  ] - Status Ausgaenge
-					DataField.bit("HUP", 0),				//   bit 0:  HUP  = Heizungsumwaelzpumpe
-					DataField.bit("ZUP", 1),					//   bit 1:  ZUP  = Zusatzumwaelzpumpe
-					DataField.bit("BUP", 2),					//   bit 2:  BUP  = Brauswarmwasserumwaelzpumpe oder Drei-Wege-Ventil auf Brauchwassererwaermung
-					DataField.bit("ZW2", 3),					//   bit 3:  ZW2  = Zusaetzlicher Waermeerzeuger 2 / Sammelstoerung
-					DataField.bit("MA1", 4),					//   bit 4:  MA1  = Mischer 1 auf
-					DataField.bit("MZ1", 5),					//   bit 5:  MZ1  = Mischer 1 zu
-					DataField.bit("ZIP", 6),					//   bit 6:  ZIP  = Zirkulationspumpe
-					DataField.bit("VD1", 7),					//   bit 7:  VD1  = Verdichter 1
-					DataField.bit("VD2", 8),					//   bit 8:  VD2  = Verdichter 2
-					DataField.bit("VENT", 9),					//   bit 9:  VENT = Ventilation des WP Gehaeses / 2. Stufe des Ventilators
-					DataField.bit("AV", 10),					//   bit 10: AV   = Abtauventil (Kreislaufumkehr)
-					DataField.bit("VBS", 11),					//   bit 11: VBS  = Ventilator, Brunnen- oder Soleumwaelzpumpe
-					DataField.bit("ZW1", 12)					//   bit 12: ZW1  = Zusaetzlicher Waermeerzeuger 1
+				DataField.time(data),																					// [0  :3  ] - Datum
+				DataField.unknown(4, data),																		// [4  :7  ]
+				DataField.digital("Digitale Ausgänge", data,													// [8  :9  ] - Status Ausgaenge
+					DataField.bit("HUP", 0),																	//   bit 0:  HUP  = Heizungsumwaelzpumpe
+					DataField.bit("ZUP", 1),																	//   bit 1:  ZUP  = Zusatzumwaelzpumpe
+					DataField.bit("BUP", 2),																	//   bit 2:  BUP  = Brauswarmwasserumwaelzpumpe oder Drei-Wege-Ventil auf Brauchwassererwaermung
+					DataField.bit("ZW2", 3),																	//   bit 3:  ZW2  = Zusaetzlicher Waermeerzeuger 2 / Sammelstoerung
+					DataField.bit("MA1", 4),																	//   bit 4:  MA1  = Mischer 1 auf
+					DataField.bit("MZ1", 5),																	//   bit 5:  MZ1  = Mischer 1 zu
+					DataField.bit("ZIP", 6),																	//   bit 6:  ZIP  = Zirkulationspumpe
+					DataField.bit("VD1", 7),																	//   bit 7:  VD1  = Verdichter 1
+					DataField.bit("VD2", 8),																	//   bit 8:  VD2  = Verdichter 2
+					DataField.bit("VENT", 9),																	//   bit 9:  VENT = Ventilation des WP Gehaeses / 2. Stufe des Ventilators
+					DataField.bit("AV", 10),																	//   bit 10: AV   = Abtauventil (Kreislaufumkehr)
+					DataField.bit("VBS", 11),																	//   bit 11: VBS  = Ventilator, Brunnen- oder Soleumwaelzpumpe
+					DataField.bit("ZW1", 12)																	//   bit 12: ZW1  = Zusaetzlicher Waermeerzeuger 1
 				),
-				DataField.unknown(34, data),						// [10 :43 ]
-				DataField.digital("Digitale Eingänge", data,		// [44 :45 ] - Status Eingaenge
-						DataField.bit("HD", 0, true),	//   bit 0:  HD_  = Hochdruckpressostat
-						DataField.bit("ND", 1, true),	//   bit 1:  ND_  = Niederdruckpressostat
-						DataField.bit("MOT", 2, true),	//   bit 2:  MOT_ = Motorschutz
-						DataField.bit("ASD", 3, true),	//   bit 3:  ASD_ = Abtau/Soledruck/Durchfluss
-						DataField.bit("EVU", 4)					//   bit 4:  EVU  = EVU Sperre
+				DataField.unknown(34, data),																		// [10 :43 ]
+				DataField.digital("Digitale Eingänge", data,													// [44 :45 ] - Status Eingaenge
+						DataField.bit("HD", 0, true),													//   bit 0:  HD_  = Hochdruckpressostat
+						DataField.bit("ND", 1, true),													//   bit 1:  ND_  = Niederdruckpressostat
+						DataField.bit("MOT", 2, true),													//   bit 2:  MOT_ = Motorschutz
+						DataField.bit("ASD", 3, true),													//   bit 3:  ASD_ = Abtau/Soledruck/Durchfluss
+						DataField.bit("EVU", 4)																//   bit 4:  EVU  = EVU Sperre
 				),
-				DataField.unknown(6, data),							// [46 :51 ]
-				lut(lut[0], "Heizkreis",   "TFB1", data),	// [52 :53 ] - TFB1
-				lut(lut[0], "Heizkreis",    "TBW", data),	// [54 :55 ] - TBW
-				lut(lut[1], "Heizkreis",     "TA", data),	// [56 :57 ] - TA
-				lut(lut[0], "Heizkreis", "TRLext", data),	// [58 :59 ] - TRLext
-				lut(lut[0], "Heizkreis",    "TRL", data),	// [60 :61 ] - TRL
-				lut(lut[0], "Heizkreis",    "TVL", data),	// [62 :63 ] - TVL
-				lut(lut[2], "Heizkreis",    "THG", data),	// [64 :65 ] - THG
-				lut(lut[1], "Heizkreis", "TWQaus", data),	// [66 :67 ] - TWQaus
-				DataField.unknown(2, data),									// [68 :69 ]
-				lut(lut[1], "Heizkreis", "TWQein", data),	// [70 :71 ] - TWQein
-				DataField.unknown(8, data),									// [72 :79 ]
-				analogue("Heizkreis",  "TRLsoll", 10.0, 10, data, true),	// [80 :83 ] - TRLsoll
-				analogue("Heizkreis", "TMK1soll", 10.0, 10, data, true),	// [84 :87 ] - TMK1soll
-				DataField.unknown(40, data),								// [88 :127]
-				DataField.unknown(2, data),									// [128:129] - ComfortPlatine indikator
-				DataField.unknown(2, data),									// [88 :131]
-				DataField.digital("Comfort-Platine EA", data,				// [132:133] - Status Ausgaenge ComfortPlatine
-						DataField.bit("AI1DIV", 6),						//    bit 6:  AI1DIV = Spannungsteiler an AI1: wann AI1DIV dann AI1 = AI1/2
-						DataField.bit("SUP", 7),						//    bit 7:  SUP = Schwimmbadumwaelzpumpe
-						DataField.bit("FUP2", 8),						//    bit 8:  FUP2 = Mischkreispumpe 2 / Kuehlsignal 2
-						DataField.bit("MA2", 9),						//    bit 9:  MA2 = Mischer 2 auf
-						DataField.bit("MZ2", 10),						//   bit 10:  MZ2 = Mischer 2 zu
-						DataField.bit("MA3", 11),						//   bit 11:  MA3 = Mischer 3 auf
-						DataField.bit("MZ3", 11),						//   bit 11:  MZ3 = Mischer 3 zu
-						DataField.bit("FUP3", 12),						//   bit 12:  FUP3 = Mischkreispumpe 3 / Kuehlsignal 3
-						DataField.bit("ZW3", 14),						//   bit 14:  ZW3 = Zusaetzlicher Waermeerzeuger 3
-						DataField.bit("SLP", 15)						//   bit 15:  SLP = Solarladepumpe
+				DataField.unknown(6, data),																		// [46 :51 ]
+				lut(lut[0], "Heizkreis",   "TFB1", data),													// [52 :53 ] - TFB1
+				lut(lut[0], "Heizkreis",    "TBW", data),													// [54 :55 ] - TBW
+				lut(lut[1], "Heizkreis",     "TA", data),													// [56 :57 ] - TA
+				lut(lut[0], "Heizkreis", "TRLext", data),													// [58 :59 ] - TRLext
+				lut(lut[0], "Heizkreis",    "TRL", data),													// [60 :61 ] - TRL
+				lut(lut[0], "Heizkreis",    "TVL", data),													// [62 :63 ] - TVL
+				lut(lut[2], "Heizkreis",    "THG", data),													// [64 :65 ] - THG
+				lut(lut[1], "Heizkreis", "TWQaus", data),													// [66 :67 ] - TWQaus
+				DataField.unknown(2, data),																		// [68 :69 ]
+				lut(lut[1], "Heizkreis", "TWQein", data),													// [70 :71 ] - TWQein
+				DataField.unknown(8, data),																		// [72 :79 ]
+				analogue("Heizkreis",  "TRLsoll", 10.0, 10, data, true),			// [80 :83 ] - TRLsoll
+				analogue("Heizkreis", "TMK1soll", 10.0, 10, data, true),			// [84 :87 ] - TMK1soll
+				DataField.unknown(40, data),																		// [88 :127]
+				DataField.unknown(2, data),																		// [128:129] - ComfortPlatine indikator
+				DataField.unknown(2, data),																		// [88 :131]
+				DataField.digital("Comfort-Platine EA", data,													// [132:133] - Status Ausgaenge ComfortPlatine
+						DataField.bit("AI1DIV", 6),															//    bit 6:  AI1DIV = Spannungsteiler an AI1: wann AI1DIV dann AI1 = AI1/2
+						DataField.bit("SUP", 7),																//    bit 7:  SUP = Schwimmbadumwaelzpumpe
+						DataField.bit("FUP2", 8),																//    bit 8:  FUP2 = Mischkreispumpe 2 / Kuehlsignal 2
+						DataField.bit("MA2", 9),																//    bit 9:  MA2 = Mischer 2 auf
+						DataField.bit("MZ2", 10),																//   bit 10:  MZ2 = Mischer 2 zu
+						DataField.bit("MA3", 11),																//   bit 11:  MA3 = Mischer 3 auf
+						DataField.bit("MZ3", 11),																//   bit 11:  MZ3 = Mischer 3 zu
+						DataField.bit("FUP3", 12),															//   bit 12:  FUP3 = Mischkreispumpe 3 / Kuehlsignal 3
+						DataField.bit("ZW3", 14),																//   bit 14:  ZW3 = Zusaetzlicher Waermeerzeuger 3
+						DataField.bit("SLP", 15)																//   bit 15:  SLP = Solarladepumpe
 				),
-				DataField.unknown(2, data),									// [134:135]
-				analogue("Comfort-Platine", "AO1", 381.825, 100, data),  // [136:137] - AO1
-				analogue("Comfort-Platine", "AO2", 381.825, 100, data),  // [138:139] - AO2
-				DataField.digital("Comfort-Platine EA", data,				// [140:141] - Status Eingaenge ComfortPlatine
-						DataField.bit("SWT", 4, true)			//    bit 4:  SWT_ = Schwimmbadthermostat
+				DataField.unknown(2, data),																		// [134:135]
+				analogue("Comfort-Platine", "AO1", 381.825, 100, data), 					// [136:137] - AO1
+				analogue("Comfort-Platine", "AO2", 381.825, 100, data),  					// [138:139] - AO2
+				DataField.digital("Comfort-Platine EA", data,													// [140:141] - Status Eingaenge ComfortPlatine
+						DataField.bit("SWT", 4, true)													//    bit 4:  SWT_ = Schwimmbadthermostat
 				),
-				DataField.unknown(2, data),									// [142:143]
-				lut(lut[3], "Comfort-Platine",   "TSS", data),         // [144:145] - TSS
-				lut(lut[3], "Comfort-Platine",   "TSK", data),         // [146:147] - TSK
-				lut(lut[4], "Comfort-Platine",  "TFB2", data),         // [148:149] - TFB2
-				lut(lut[4], "Comfort-Platine",  "TFB3", data),         // [150:151] - TFB3
-				lut(lut[4], "Comfort-Platine",   "TEE", data),         // [152:153] - TEE
-				DataField.unknown(4, data),                                      // [154:157]
-				analogue("Comfort-Platine",  "AI1", 275.406, 100, data), // [158:159] - AI1
-				analogue("Comfort-Platine", "TMK2soll", 10.0, 10, data, true), // [160:163] - TMK2soll
-				analogue("Comfort-Platine", "TMK3soll", 10.0, 10, data, true) // [164:167] - TMK3soll
+				DataField.unknown(2, data),																		// [142:143]
+				lut(lut[3], "Comfort-Platine",   "TSS", data),											// [144:145] - TSS
+				lut(lut[3], "Comfort-Platine",   "TSK", data),											// [146:147] - TSK
+				lut(lut[4], "Comfort-Platine",  "TFB2", data),											// [148:149] - TFB2
+				lut(lut[4], "Comfort-Platine",  "TFB3", data),											// [150:151] - TFB3
+				lut(lut[4], "Comfort-Platine",   "TEE", data),											// [152:153] - TEE
+				DataField.unknown(4, data),																		// [154:157]
+				analogue("Comfort-Platine",  "AI1", 275.406, 100, data), 					// [158:159] - AI1
+				analogue("Comfort-Platine", "TMK2soll", 10.0, 10, data, true), 	// [160:163] - TMK2soll
+				analogue("Comfort-Platine", "TMK3soll", 10.0, 10, data, true) 		// [164:167] - TMK3soll
 		);
 		if (getVersion() == 0x2010){
 			skip(20);
@@ -234,8 +234,7 @@ public class DtaFile8209 extends DtaFile {
 
 		Map<String, Value<?>> map = new HashMap<>();
 		fields.stream().filter(f -> !f.isVoid())
-						.forEach(c -> c.get()//.stream().filter(DataField::isNumeric)
-								.forEach(d -> map.put(d.getName(), d.getValue())));
+						.forEach(c -> c.get().forEach(d -> map.put(d.getName(), d.getValue())));
 		return map;
 	}
 }
