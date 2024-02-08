@@ -1,4 +1,4 @@
-package org.example;
+package io.github.moehreag.dtaplot;
 
 import java.nio.file.Path;
 

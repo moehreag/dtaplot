@@ -1,4 +1,4 @@
-package org.example;
+package io.github.moehreag.dtaplot;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -25,46 +25,6 @@ public abstract class DataField<T> {
 		return DataFieldContainer.single("", "time", time);
 	}
 
-
-	public static DataFieldContainer lut(LookUpTable table, String category, String name, ByteBuffer buffer){
-		int value = buffer.getShort();
-
-		// Position in Tabelle
-		int idx = (value - table.getOffset()) / table.getDelta();
-		int size = (table.getData().length*4) / 2;
-		if (idx > (size - 2)) idx = size - 2;
-
-		// linear approximation
-		int x1 = idx * table.getDelta() + table.getOffset();
-		int x2 = (idx + 1) * table.getDelta() + table.getOffset();
-		int y1 = table.getData()[idx];
-		int y2 = table.getData()[idx + 1];
-
-		double m = (float)(y2 - y1) / (x2 - x1);
-		double n = y1 - m * x1;
-
-		// calc value
-		double res = m * value + n;
-		DtaFile.Value<Number> val = DtaFile.Value.of((res) / (table.getPrecision()));
-		return DataFieldContainer.single(category, name, val);
-	}
-
-	public static DataFieldContainer analogue(String category, String name, ByteBuffer buffer){
-		return analogue(category, name, 10, 10, buffer);
-	}
-
-	public static DataFieldContainer analogue(String category, String name, double factor, int precision, ByteBuffer buffer){
-		return analogue(category, name, factor, precision, buffer, false);
-	}
-
-	public static DataFieldContainer analogue(String category, String name, double factor, int precision, ByteBuffer buffer, boolean highbytes){
-
-		int val = highbytes ? buffer.getInt() : buffer.getShort();
-		double res = (val / factor * precision) / precision;
-
-		DtaFile.Value<Number> value = DtaFile.Value.of(res);
-		return DataFieldContainer.single(category, name, value);
-	}
 
 	public static DataFieldContainer digital(String category, ByteBuffer buffer, DataFieldBit... bits){
 		int val = buffer.getShort();

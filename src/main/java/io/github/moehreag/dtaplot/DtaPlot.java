@@ -1,9 +1,10 @@
-package org.example;
+package io.github.moehreag.dtaplot;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.swing.table.TableColumn;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
@@ -26,7 +27,17 @@ import ptolemy.plot.Plot;
 
 public class DtaPlot {
 
-	private static final String HEATPUMP_LOCATION = "http://192.168.178.47/proclog";
+	private static final String HEATPUMP_LOCATION = DotEnv.getOrDefault("PROCLOG_FILE", () -> {
+		String address = showAddressDialog();
+
+		// TODO save the address that was put in
+
+		if (!address.startsWith("http://")){
+			address = "http://"+address;
+		}
+
+		return address;
+	});
 	private static final NumberFormat timeFormat = new DecimalFormat("00");
 
 	private final Collection<Map<String, DtaFile.Value<?>>> data = new ArrayList<>();
@@ -35,6 +46,7 @@ public class DtaPlot {
 	private final List<String> displayedDatasets = new ArrayList<>();
 	private final Vector<String> selectionItems = new Vector<>();
 	private final JComboBox<String> selections = new JComboBox<>(selectionItems);
+	private final JTextPane infos = new JTextPane();
 
 	public void display() {
 
@@ -187,9 +199,12 @@ public class DtaPlot {
 		panel.add(add);
 		panel.add(remove);
 		frame.add(menuBar, BorderLayout.NORTH);
-		frame.add(plot, BorderLayout.CENTER);
+		frame.add(new JScrollPane(infos), BorderLayout.EAST);
+		infos.setContentType("text/html");
+		infos.setEditable(false);
+		frame.add(plot);
 
-		frame.setSize(800, 580);
+		frame.setSize(960, 580);
 		frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 		frame.setLocationRelativeTo(null);
 		plot.fillPlot();
@@ -230,6 +245,7 @@ public class DtaPlot {
 		}).stream().reduce((s, s2) -> String.join(", ", s, s2)).orElse(""));
 		refreshSelection();
 		addPoints();
+		addInfos();
 	}
 
 	private void refreshSelection(){
@@ -239,7 +255,7 @@ public class DtaPlot {
 		}
 		String prev = (String) selections.getSelectedItem();
 		selectionItems.clear();
-		data.stream().map(Map::keySet).forEach(strings -> strings.stream()
+		getValidData().stream().map(Map::keySet).forEach(strings -> strings.stream()
 				.filter(s -> !"time".equals(s)).distinct()
 				.filter(s -> !selectionItems.contains(s)).sorted().forEachOrdered(selections::addItem));
 		if (prev != null){
@@ -268,12 +284,41 @@ public class DtaPlot {
 		}
 	}
 
+	private Collection<Map<String, DtaFile.Value<?>>> getValidData(){
+		Collection<Map<String, DtaFile.Value<?>>> entries = new ArrayList<>();
+		for (Map<String, DtaFile.Value<?>> map : data) {
+			Map<String, DtaFile.Value<?>> clone = new HashMap<>(map);
+			entries.add(clone);
+		}
+		List<String> keys = new ArrayList<>();
+		entries.stream().map(Map::keySet).forEach(k -> k.stream().filter(s -> !keys.contains(s)).forEach(keys::add));
+		for (String key : keys) {
+			List<Double> values = new ArrayList<>();
+			for (Map<String, DtaFile.Value<?>> map : entries) {
+				if (!(map.get(key).get() instanceof Number)){
+					continue;
+				}
+				double val = ((Number) map.get(key).get()).doubleValue();
+				if (!values.contains(val)) {
+					values.add(val);
+				}
+			}
+			if (values.size() <= 1) {
+				for (Map<String, DtaFile.Value<?>> map : entries) {
+					map.remove(key);
+				}
+			}
+		}
+		return Collections.unmodifiableCollection(entries);
+	}
+
 	private void addDataset(String setName){
 		System.out.println("Adding dataset: "+setName);
 		int set = plot.getNumDataSets();
 		datasets.put(setName, set);
 		plot.addLegend(set, setName);
-		data.stream()
+
+		getValidData().stream()
 				.sorted(Comparator.comparingInt(map -> ((Number) map.get("time").get()).intValue()))
 				.forEachOrdered((stringValueMap) -> {
 					int time = ((Number) stringValueMap.get("time").get()).intValue();
@@ -296,10 +341,92 @@ public class DtaPlot {
 						plot.addXTick(label, time);
 						plot.addPoint(set, time, val, true);
 					}
-
 				});
 		plot.fillPlot();
 		plot.repaint();
+	}
+
+	private void addInfos(){
+		System.out.println("Adding further Information!");
+		System.out.print("Adding entries: ");
+		Collection<Map<String, DtaFile.Value<?>>> entries = new ArrayList<>();
+		for (Map<String, DtaFile.Value<?>> map : data) {
+			Map<String, DtaFile.Value<?>> clone = new HashMap<>(map);
+			entries.add(clone);
+		}
+		List<String> keys = new ArrayList<>();
+		entries.stream().map(Map::keySet).forEach(k -> k.stream().filter(s -> !keys.contains(s)).forEach(keys::add));
+		for (String key : keys) {
+			if ("time".equals(key)){
+				continue;
+			}
+			List<Double> values = new ArrayList<>();
+			for (Map<String, DtaFile.Value<?>> map : entries) {
+				if (!(map.get(key).get() instanceof Number)){
+					continue;
+				}
+				double val = ((Number) map.get(key).get()).doubleValue();
+				if (!values.contains(val)) {
+					values.add(val);
+				}
+			}
+			if (values.size() > 1) {
+				for (Map<String, DtaFile.Value<?>> map : entries) {
+					map.remove(key);
+				}
+			}
+		}
+		StringBuilder builder = new StringBuilder();
+		entries.stream().max(Comparator.
+				comparingInt(map -> ((Number) map.get("time").get()).intValue())).ifPresent(m -> m.forEach((s, value) -> {
+					if (value.get() instanceof Boolean){
+						builder.append("<p>")
+								.append(getFriendlyString(s))
+								.append(": ")
+								.append(getFriendlyString(value.get()))
+								.append("</p>");
+					}
+		}));
+		infos.setText("<html><body>"+builder+"</body></html>");
+	}
+
+	private String getFriendlyString(Object val){
+		String s = String.valueOf(val);
+		return switch (s){
+			case "true" -> "ON";
+			case "false" -> "OFF";
+			case "HUP" -> "Heizungsumwälzpumpe";
+			case "ZUP" -> "Zusatzumwälzpumpe";
+			case "BUP" -> "Brauswarmwasserumwaelzpumpe oder Drei-Wege-Ventil auf Brauchwassererwaermung";
+			case "ZW2" -> "Zusätzlicher Wärmeerzeuger 2 / Sammelstörung";
+			case "MA1" -> "Mischer 1 auf";
+			case "MZ1" -> "Mischer 1 zu";
+			case "ZIP" -> "Zirkulationspumpe";
+			case "VD1" -> "Verdichter 1";
+			case "VD2" -> "Verdichter 2";
+			case "VENT" -> "Ventilation des WP Gehäuses / 2. Stufe des Ventilators";
+			case "AV " -> "Abtauventil (Kreislaufumkehr)";
+			case "VBS" -> "Ventilator, Brunnen- oder Soleumwaelzpumpe";
+			case "ZW1" -> "Zusätzlicher Wärmeerzeuger 1";
+			case "HD" -> "Hochdruckpressostat";
+			case "ND" -> "Niederdruckpressostat";
+			case "MOT" -> "Motorschutz";
+			case "ASD" -> "Abtau/Soledruck/Durchfluss";
+			case "EVU" -> "EVU Sperre";
+			case "AI1DIV" -> "Spannungsteiler an AI1: wann AI1DIV dann AI1 = AI1/2";
+			case "SUP" -> "Schwimmbadumwälzpumpe";
+			case "FUP2" -> "Mischkreispumpe 2 / Kuehlsignal 2";
+			case "MA2" -> "Mischer 2 auf";
+			case "MZ2" -> "Mischer 2 zu";
+			case "MA3" -> "Mischer 3 auf";
+			case "MZ3" -> "Mischer 3 zu";
+			case "FUP3" -> "Mischkreispumpe 3 / Kühlsignal 3";
+			case "ZW3" -> "Zusätzlicher Wärmeerzeuger 3";
+			case "SLP" -> "Solarladepumpe";
+			case "AV" -> "Abtauventil (Kreislaufumkehr)";
+			case "SWT" -> "Schwimmbadthermostat";
+			default -> s;
+		};
 	}
 
 	private static void addFileFilters(JFileChooser chooser){
@@ -309,6 +436,58 @@ public class DtaPlot {
 		chooser.setFileFilter(supported);
 		chooser.addChoosableFileFilter(dta);
 		chooser.addChoosableFileFilter(json);
+	}
+
+	@SuppressWarnings("BusyWait")
+	private static String showAddressDialog(){
+
+		StringBuffer buffer = new StringBuffer();
+		JFrame dialog = new JFrame("Enter Address");
+		dialog.setSize(400, 200);
+
+		JLabel instruction = new JLabel("Enter the address of your heatpump's proclog file below:");
+
+		JTextField input = new JTextField();
+		input.setEditable(true);
+		dialog.add(input, BorderLayout.CENTER);
+
+		JPanel footer = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+
+		JButton cancel = new JButton(new AbstractAction("Cancel") {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				dialog.setVisible(false);
+			}
+		});
+
+		JButton done = new JButton("Done");
+		done.addActionListener(new AbstractAction() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				buffer.append(input.getText());
+				dialog.setVisible(false);
+				dialog.dispose();
+			}
+		});
+
+		footer.add(cancel);
+		footer.add(done);
+		dialog.add(footer, BorderLayout.SOUTH);
+		dialog.add(instruction, BorderLayout.NORTH);
+
+		dialog.setLocationRelativeTo(null);
+		dialog.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+		dialog.setVisible(true);
+
+		while (dialog.isShowing()){
+			try {
+				Thread.sleep(100);
+			} catch (InterruptedException e) {
+				throw new RuntimeException(e);
+			}
+		}
+
+		return buffer.toString();
 	}
 
 }

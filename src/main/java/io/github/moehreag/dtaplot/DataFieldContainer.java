@@ -1,11 +1,10 @@
-package org.example;
+package io.github.moehreag.dtaplot;
 
 import java.util.Collection;
 import java.util.List;
 
 public interface DataFieldContainer {
 
-	boolean isMulti();
 	Collection<DataField<?>> get();
 
 	default boolean isVoid(){
@@ -26,39 +25,15 @@ public interface DataFieldContainer {
 	}
 
 	static DataFieldContainer single(DataField<?> field){
-		return new DataFieldContainer() {
-			@Override
-			public boolean isMulti() {
-				return false;
-			}
-
-			@Override
-			public Collection<DataField<?>> get() {
-				return List.of(field);
-			}
-		};
+		return () -> List.of(field);
 	}
 
 	static DataFieldContainer multi(Collection<DataField<?>> fields){
-		return new DataFieldContainer() {
-			@Override
-			public boolean isMulti() {
-				return true;
-			}
-
-			@Override
-			public Collection<DataField<?>> get() {
-				return fields;
-			}
-		};
+		return () -> fields;
 	}
 
 	static DataFieldContainer empty(){
 		return new DataFieldContainer() {
-			@Override
-			public boolean isMulti() {
-				return false;
-			}
 
 			@Override
 			public Collection<DataField<?>> get() {

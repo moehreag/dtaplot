@@ -1,11 +1,10 @@
-package org.example;
+package io.github.moehreag.dtaplot;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.*;
 
 import lombok.Getter;
-import org.example.unused.DtaFile8209Old;
 
 public abstract class DtaFile {
 
@@ -21,25 +20,6 @@ public abstract class DtaFile {
 	}
 
 	protected void setDatapoints(Collection<Map<String, Value<?>>> entries){
-		List<String> keys = new ArrayList<>();
-		entries.stream().map(Map::keySet).forEach(k -> k.stream().filter(s -> !keys.contains(s)).forEach(keys::add));
-		for (String key : keys) {
-			List<Double> values = new ArrayList<>();
-			for (Map<String, Value<?>> map : entries) {
-				if (!(map.get(key).get() instanceof Number)){
-					continue;
-				}
-				double val = ((Number) map.get(key).get()).doubleValue();
-				if (!values.contains(val)) {
-					values.add(val);
-				}
-			}
-			if (values.size() <= 1) {
-				for (Map<String, Value<?>> map : entries) {
-					map.remove(key);
-				}
-			}
-		}
 		datapoints = Collections.unmodifiableCollection(entries);
 	}
 
@@ -52,7 +32,6 @@ public abstract class DtaFile {
 			throw new IllegalArgumentException("Integer does not contain bit at position " + bit);
 		}
 		int value = (i >> bit) & 1;;
-		//System.out.printf("Bit %s of %s: %s%n", bit, i, value);
 		return value == (inverted ? 0 : 1);
 	}
 
@@ -87,55 +66,15 @@ public abstract class DtaFile {
 		data.position(data.position() + i);
 	}
 
-	public static class Entry {
-
-	}
-
-	@Getter
-	public enum Entries {
-		STATUS_OUT("StatusA"),
-		STATUS_IN("StatusE"),
-		TEMP_FLOOR_1("TFB1"),
-		TEMP_USE_WARM("TBW"),
-		TEMP_OUTSIDE("TA"),
-		TEMP_BACK_EXT("TRLext"),
-		TEMP_BACK("TRL"),
-		TEMP_FRONT("TVL"),
-		TEMP_GAS("THG"),
-		TEMP_SOURCE_OUT("TWQaus"),
-		TEMP_SOURCE_IN("TWQein"),
-		TEMP_BACK_TARGET("TRLsoll"),
-		TEMP_MIX_C1_TARGET("TMK1soll"),
-		COMFORT_PLATINE("ComfortPlatine"),
-		CP_STATUS_OUT("StatusA_CP"),
-		CP_ANALOG_OUT_1("AO1"),
-		AP_ANALOG_OUT_2("AO2"),
-		CP_STATUS_IN("StatusE_CP"),
-		TEMP_SOLAR_STORAGE("TSS"),
-		TEMP_SOLAR_COLLECTOR("TSK"),
-		TEMP_FLOOR_2("TFB2"),
-		TEMP_FLOOR_3("TFB3"),
-		TEMP_EXTERN("TEE"),
-		CP_ANALOG_IN_1("AI1"),
-		TEMP_MIX_C2_TARGET("TMK2soll"),
-		TEMP_MIX_C3_TARGEt("TMK3soll")
-		;
-		final String shortName;
-
-		Entries(String shortName) {
-			this.shortName = shortName;
-		}
-	}
-
-	public static <A> DtaFile8209Old.Value<A> of(A val) {
+	public static <A> Value<A> of(A val) {
 		return Value.of(val);
 	}
 
 	public interface Value<T> {
 		T get();
 
-		static <A> DtaFile8209Old.Value<A> of(A val) {
-			return new DtaFile8209Old.Value<>() {
+		static <A> Value<A> of(A val) {
+			return new Value<>() {
 				@Override
 				public A get() {
 					return val;

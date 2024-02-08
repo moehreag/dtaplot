@@ -1,10 +1,13 @@
-package org.example;
+package io.github.moehreag.dtaplot;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
+import io.github.moehreag.dtaplot.versioned.DtaFile8209;
+import io.github.moehreag.dtaplot.versioned.DtaFile9000;
+import io.github.moehreag.dtaplot.versioned.DtaFile9001;
+import io.github.moehreag.dtaplot.versioned.DtaFile9003;
 import lombok.RequiredArgsConstructor;
-import org.example.versioned.*;
 
 @RequiredArgsConstructor
 public class DtaParser {
