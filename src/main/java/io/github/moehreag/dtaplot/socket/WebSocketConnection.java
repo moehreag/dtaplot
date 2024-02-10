@@ -32,16 +32,11 @@ import org.xml.sax.SAXException;
 
 public class WebSocketConnection implements AutoCloseable {
 
-	public WebSocketConnection() {
-
-	}
-
-	private Timer timer = new Timer();
+	private final Timer timer = new Timer();
 	private WebSocket socket;
 
 	public static void main(String[] args) {
-		try {
-			WebSocketConnection c = new WebSocketConnection();
+		try (WebSocketConnection c = new WebSocketConnection()) {
 			DataLoader.getInstance().save(Set.of(c.load()), Path.of("wsparams.json"));
 		} catch (Exception e) {
 			throw new RuntimeException(e);

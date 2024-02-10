@@ -30,48 +30,64 @@ public abstract class DataVector {
 		values.add(map);
 	}
 
-	protected static Datatype Unknown(String name) {
+	public Datatype get(String name){
+		for (Datatype type : data){
+			if (name.equals(type.getName())){
+				return type;
+			}
+		}
+		return null;
+	}
+
+	public Datatype get(int index){
+		if (index < 0 || index >= data.size()){
+			return null;
+		}
+		return data.get(index);
+	}
+
+	protected static Datatype unknown(String name) {
 		return Datatype.base(name, false);
 	}
 
-	protected static Datatype Celsius(String name, boolean writeable) {
+	protected static Datatype celsius(String name, boolean writeable) {
 		return Datatype.scaling(name, writeable, 0.1f).unit("°C");
 	}
 
-	protected static Datatype Celsius(String name) {
-		return Celsius(name, false);
+	protected static Datatype celsius(String name) {
+		return celsius(name, false);
 	}
 
 
-	protected static Datatype HeatingMode(String name, boolean writeable) {
+	protected static Datatype heatingMode(String name, boolean writeable) {
 		return Datatype.selection(name, writeable, "Automatic", "Second heatsource", "Party", "Holidays", "Off");
 	}
 
-	protected static Datatype HotWaterMode(String name, boolean writeable) {
+	protected static Datatype hotWaterMode(String name, boolean writeable) {
 		return Datatype.selection(name, writeable, "Automatic", "Second heatsource", "Party", "Holidays", "Off");
 	}
 
-	protected static Datatype Kelvin(String name, boolean writeable) {
+	protected static Datatype kelvin(String name, boolean writeable) {
 		return Datatype.scaling(name, writeable, 0.1f).unit("K");
 	}
 
-	protected static Datatype Kelvin(String name) {
-		return Kelvin(name, false);
+	protected static Datatype kelvin(String name) {
+		return kelvin(name, false);
 	}
 
-	protected static Datatype AccessLevel(String name, boolean writeable) {
+	protected static Datatype accessLevel(String name, boolean writeable) {
 		return Datatype.selection(name, writeable, "user", "after sales service", "manufacturer", "installer");
 	}
 
-	protected static Datatype CoolingMode(String name, boolean writeable) {
+	protected static Datatype coolingMode(String name, boolean writeable) {
 		return Datatype.selection(name, writeable, "Off", "Automatic");
 	}
 
-	protected static Datatype PoolMode(String name, boolean writeable) {
+	protected static Datatype poolMode(String name, boolean writeable) {
 		return Datatype.selection(name, writeable, "Automatic", "Party", "Holidays", "Off");
 	}
 
-	protected static Datatype TimeOfDay(String name, boolean writeable) {
+	protected static Datatype timeOfDay(String name, boolean writeable) {
 		return Datatype.custom(name, writeable, value -> {
 			int hours = Math.floorDiv(value, 3600);
 			int minutes = Math.floorDiv(value, 60) % 60;
@@ -94,35 +110,35 @@ public abstract class DataVector {
 		});
 	}
 
-	protected static Datatype TimeOfDay(String name) {
-		return TimeOfDay(name, false);
+	protected static Datatype timeOfDay(String name) {
+		return timeOfDay(name, false);
 	}
 
-	protected static Datatype TimerProgram(String name, boolean writeable) {
+	protected static Datatype timerProgram(String name, boolean writeable) {
 		return Datatype.selection(name, writeable, "week", "5+2", "days");
 	}
 
-	protected static Datatype TimerProgram(String name) {
-		return TimerProgram(name, false);
+	protected static Datatype timerProgram(String name) {
+		return timerProgram(name, false);
 	}
 
-	protected static Datatype Seconds(String name) {
+	protected static Datatype seconds(String name) {
 		return Datatype.base(name, false).unit("s");
 	}
 
-	protected static Datatype Count(String name) {
+	protected static Datatype count(String name) {
 		return Datatype.base(name, false);
 	}
 
-	protected static Datatype MixedCircuitMode(String name, boolean writeable) {
+	protected static Datatype mixedCircuitMode(String name, boolean writeable) {
 		return Datatype.selection(name, writeable, "Automatic", "Party", "Holidays", "Off");
 	}
 
-	protected static Datatype Hours(String name, boolean writeable) {
+	protected static Datatype hours(String name, boolean writeable) {
 		return Datatype.scaling(name, writeable, 0.1f).unit("h");
 	}
 
-	protected static Datatype Hours2(String name, boolean writeable) {
+	protected static Datatype hours2(String name, boolean writeable) {
 		return Datatype.custom(name, writeable, value -> Value.of(1 + value / 2), value -> {
 			if (value.get() instanceof Number num) {
 				return Math.round((num.floatValue() - 1) * 2);
@@ -131,29 +147,29 @@ public abstract class DataVector {
 		});
 	}
 
-	protected static Datatype Minutes(String name, boolean writeable) {
+	protected static Datatype minutes(String name, boolean writeable) {
 		return Datatype.base(name, writeable).unit("min");
 	}
 
-	protected static Datatype Energy(String name) {
+	protected static Datatype energy(String name) {
 		return Datatype.scaling(name, false, 0.1f).unit("kWh");
 	}
 
-	protected static Datatype Timestamp(String name) {
+	protected static Datatype timestamp(String name) {
 		return Datatype.base(name, false);
 	}
 
-	protected static Datatype SolarMode(String name, boolean writeable) {
+	protected static Datatype solarMode(String name, boolean writeable) {
 		return Datatype.selection(name, writeable, "Automatic", "Second heatsource", "Party", "Holidays", "Off");
 	}
 
-	protected static Datatype VentilationMode(String name, boolean writeable) {
+	protected static Datatype ventilationMode(String name, boolean writeable) {
 		return Datatype.selection(name, writeable, "Automatic", "Party", "Holidays", "Off");
 	}
 
 	private static final NumberFormat timeFormat = new DecimalFormat("00");
 
-	protected static Datatype TimeOfDay2(String name) {
+	protected static Datatype timeOfDay2(String name) {
 		return Datatype.custom(name, false,
 				value -> {
 					int value_low = value & 0xFFFF;
@@ -180,19 +196,19 @@ public abstract class DataVector {
 		);
 	}
 
-	protected static Datatype Bool(String name) {
+	protected static Datatype bool(String name) {
 		return Datatype.bool(name, false);
 	}
 
-	protected static Datatype Bool(String name, boolean writeable) {
+	protected static Datatype bool(String name, boolean writeable) {
 		return Datatype.bool(name, writeable);
 	}
 
-	protected static Datatype HeatpumpCode(String name) {
-		return HeatpumpCode(name, false);
+	protected static Datatype heatpumpCode(String name) {
+		return heatpumpCode(name, false);
 	}
 
-	protected static Datatype HeatpumpCode(String name, boolean writeable) {
+	protected static Datatype heatpumpCode(String name, boolean writeable) {
 		return Datatype.selection(name, writeable,
 				"ERC",
 				"SW1",
@@ -286,11 +302,11 @@ public abstract class DataVector {
 		);
 	}
 
-	protected static Datatype BivalenceLevel(String name) {
-		return BivalenceLevel(name, false);
+	protected static Datatype bivalenceLevel(String name) {
+		return bivalenceLevel(name, false);
 	}
 
-	protected static Datatype BivalenceLevel(String name, boolean writeable) {
+	protected static Datatype bivalenceLevel(String name, boolean writeable) {
 		return Datatype.selection(name, writeable,
 				"one compressor allowed to run",
 				"two compressors allowed to run",
@@ -298,7 +314,7 @@ public abstract class DataVector {
 		);
 	}
 
-	protected static Datatype OperationMode(String name) {
+	protected static Datatype operationMode(String name) {
 		return Datatype.selection(name, false,
 				"heating",
 				"hot water",
@@ -311,11 +327,11 @@ public abstract class DataVector {
 		);
 	}
 
-	protected static Datatype Character(String name) {
+	protected static Datatype character(String name) {
 		return Datatype.custom(name, integer -> Value.of((char)(int)integer));
 	}
 
-	protected static Datatype IPv4Address(String name) {
+	protected static Datatype ipv4Address(String name) {
 		return Datatype.custom(name, false, value -> {
 			ByteBuffer buf = ByteBuffer.wrap(new byte[4]);
 			buf.putInt(value);
@@ -335,11 +351,11 @@ public abstract class DataVector {
 		});
 	}
 
-	protected static Datatype Errorcode(String name) {
+	protected static Datatype errorcode(String name) {
 		return Datatype.base(name, false);
 	}
 
-	protected static Datatype SwitchoffFile(String name) {
+	protected static Datatype switchoffFile(String name) {
 		return Datatype.selection(name, false,
 				"heatpump error",
 				"system error",
@@ -355,7 +371,7 @@ public abstract class DataVector {
 		);
 	}
 
-	protected static Datatype MainMenuStatusLine1(String name) {
+	protected static Datatype mainMenuStatusLine1(String name) {
 		return Datatype.selection(name, false, "heatpump running",
 				"heatpump idle",
 				"heatpump coming",
@@ -367,12 +383,12 @@ public abstract class DataVector {
 		);
 	}
 
-	protected static Datatype MainMenuStatusLine2(String name) {
+	protected static Datatype mainMenuStatusLine2(String name) {
 		return Datatype.selection(name, false,
 				"since", "in");
 	}
 
-	protected static Datatype MainMenuStatusLine3(String name) {
+	protected static Datatype mainMenuStatusLine3(String name) {
 		return Datatype.selection(name, false,
 				"heating",
 				"no request",
@@ -393,35 +409,35 @@ public abstract class DataVector {
 		);
 	}
 
-	protected static Datatype Level(String name) {
+	protected static Datatype level(String name) {
 		return Datatype.base(name, false);
 	}
 
-	protected static Datatype Icon(String name) {
+	protected static Datatype icon(String name) {
 		return Datatype.base(name, false);
 	}
 
-	protected static Datatype Voltage(String name) {
+	protected static Datatype voltage(String name) {
 		return Datatype.scaling(name, false, 0.1f).unit("V");
 	}
 
-	protected static Datatype Flow(String name) {
+	protected static Datatype flow(String name) {
 		return Datatype.base(name, false).unit("l/h");
 	}
 
-	protected static Datatype Pressure(String name) {
+	protected static Datatype pressure(String name) {
 		return Datatype.scaling(name, false, 0.1f).unit("%");
 	}
 
-	protected static Datatype Percent2(String name) {
+	protected static Datatype percent2(String name) {
 		return Datatype.base(name, false).unit("%");
 	}
 
-	protected static Datatype Speed(String name) {
+	protected static Datatype speed(String name) {
 		return Datatype.base(name, false).unit("rpm");
 	}
 
-	protected static Datatype SecOperationMode(String name) {
+	protected static Datatype secOperationMode(String name) {
 		return Datatype.selection(name, false,
 				"off",
 				"cooling",
@@ -439,15 +455,15 @@ public abstract class DataVector {
 	);
 	}
 
-	protected static Datatype Frequency(String name) {
+	protected static Datatype frequency(String name) {
 		return Datatype.base(name, false).unit("Hz");
 	}
 
-	protected static Datatype Power(String name) {
+	protected static Datatype power(String name) {
 		return Datatype.base(name, false).unit("W");
 	}
 
-	protected static Datatype MajorMinorVersion(String name) {
+	protected static Datatype majorMinorVersion(String name) {
 		return Datatype.custom(name, value -> {
 			if (value > 0) {
 				int major = Math.floorDiv(value, 100);
