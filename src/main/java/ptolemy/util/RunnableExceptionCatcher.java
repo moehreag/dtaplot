@@ -1,5 +1,4 @@
-/* A wrapper class that delegates exceptions caused by a Runnable to the MessageHandler
-
+/*
  Copyright (c) 2008-2014 The Regents of the University of California.
  All rights reserved.
  Permission is hereby granted, without written agreement and without
@@ -30,6 +29,9 @@ package ptolemy.util;
 
 ///////////////////////////////////////////////////////////////////
 ////RunnableExceptionCatcher
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
 A class (that implements the proxy design pattern) that encapsulates a
@@ -63,8 +65,7 @@ public class RunnableExceptionCatcher implements Runnable {
         try {
             _runnable.run();
         } catch (Throwable e) {
-            ptolemy.util.MessageHandler
-                    .error(ptolemy.util.MessageHandler.shortDescription(e), e);
+            LOGGER.error(e.getClass().getSimpleName(), e);
         }
     }
 
@@ -72,5 +73,6 @@ public class RunnableExceptionCatcher implements Runnable {
     ////                         private variables                 ////
 
     // The runnable.
-    private Runnable _runnable;
+    private final Runnable _runnable;
+    private static final Logger LOGGER = LoggerFactory.getLogger(RunnableExceptionCatcher.class);
 }

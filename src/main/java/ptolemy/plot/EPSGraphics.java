@@ -26,15 +26,7 @@
  */
 package ptolemy.plot;
 
-import java.awt.Color;
-import java.awt.Font;
-import java.awt.FontMetrics;
-import java.awt.Graphics;
-import java.awt.Image;
-import java.awt.Point;
-import java.awt.Rectangle;
-import java.awt.Shape;
-import java.awt.Toolkit;
+import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.awt.image.ImageObserver;
@@ -42,8 +34,6 @@ import java.io.BufferedOutputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.util.Hashtable;
-
-import ptolemy.util.StringUtilities;
 
 ///////////////////////////////////////////////////////////////////
 //// EPSGraphics
@@ -240,11 +230,11 @@ public class EPSGraphics extends Graphics {
         _buffer.append(start.x).append(" ").append(start.y).append(" moveto\n");
 
         if (str.contains("(") && !str.contains("\\(")) {
-            str = StringUtilities.substitute(str, "(", "\\(");
+            str = str.replaceAll("\\(", "\\\\(");
         }
 
         if (str.contains(")") && !str.contains("\\)")) {
-            str = StringUtilities.substitute(str, ")", "\\)");
+            str = str.replaceAll("\\)", "\\\\)");
         }
 
         _buffer.append("(").append(str).append(") show\n");

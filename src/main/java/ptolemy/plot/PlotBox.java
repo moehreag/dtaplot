@@ -27,70 +27,18 @@
  */
 package ptolemy.plot;
 
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.EventQueue;
-import java.awt.FlowLayout;
-import java.awt.Font;
-import java.awt.FontMetrics;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.Rectangle;
-import java.awt.RenderingHints;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.InputEvent;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.event.MouseMotionListener;
-import java.awt.event.MouseWheelEvent;
-import java.awt.event.MouseWheelListener;
+import javax.imageio.ImageIO;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.awt.print.PageFormat;
 import java.awt.print.Printable;
 import java.awt.print.PrinterException;
-import java.awt.print.PrinterJob;
-import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.DataInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.PrintStream;
-import java.io.PrintWriter;
-import java.io.Writer;
-import java.net.MalformedURLException;
+import java.io.*;
 import java.net.URL;
-import java.util.Enumeration;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.Locale;
-import java.util.Set;
 import java.util.Timer;
-import java.util.TimerTask;
-import java.util.Vector;
-
-import javax.imageio.ImageIO;
-import javax.print.attribute.HashPrintRequestAttributeSet;
-import javax.print.attribute.PrintRequestAttributeSet;
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
-import javax.swing.UIManager;
-
-import ptolemy.util.FileUtilities;
-import ptolemy.util.StringUtilities;
+import java.util.*;
 
 // TO DO:
 //   - Augment getColorByName to support a full complement of colors
@@ -1860,29 +1808,6 @@ public class PlotBox extends JPanel implements Printable, PlotBoxInterface {
 
         if (!_usecolor) {
             output.println("<noColor/>");
-        }
-    }
-
-    /** Write the current data and plot configuration to the
-     *  specified stream in the old PtPlot syntax.
-     *  The output is buffered, and is flushed and
-     *  closed before exiting.  Derived classes should override
-     *  _writeOldSyntax() rather than this method.
-     *  @param out An output stream.
-     *  @deprecated
-     */
-    @Deprecated
-    @Override
-    public synchronized void writeOldSyntax(OutputStream out) {
-        // Auto-flush is disabled.
-        PrintWriter output = new PrintWriter(new BufferedOutputStream(out),
-                false);
-        _writeOldSyntax(output);
-        output.flush();
-
-        // Avoid closing standard out.
-        if (out != System.out) {
-            output.close();
         }
     }
 
@@ -4578,7 +4503,7 @@ public class PlotBox extends JPanel implements Printable, PlotBoxInterface {
 
                 if (_control) {
                     // xgraph and many other Unix apps use Control-D to exit
-                    StringUtilities.exit(1);
+                    System.exit(1);
                 }
 
                 break;
@@ -4617,7 +4542,7 @@ public class PlotBox extends JPanel implements Printable, PlotBoxInterface {
 
                 if (!_control) {
                     // xv uses q to quit.
-                    StringUtilities.exit(1);
+                    System.exit(1);
                 }
 
                 break;

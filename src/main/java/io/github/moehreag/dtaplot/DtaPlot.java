@@ -261,7 +261,7 @@ public class DtaPlot {
 		in.setContentType("text/html");
 		in.setEditable(false);
 		in.setFont(new Font(in.getFont().getName(), in.getFont().getStyle(), 18));
-		in.setText("<h1><center>"+tr("text.welcome.title")+"</center></h1><br><p>"+tr("text.welcome.text")+"</p><br>");
+		in.setText("<h1><center>"+tr("text.welcome.title")+"</center></h1><br><p>"+tr("text.welcome.text")+"</p>");
 
 		view.add(Box.createVerticalGlue());
 		text.add(in);
@@ -419,7 +419,7 @@ public class DtaPlot {
 		datasets.clear();
 		plot.clear(true);
 		plot.clearLegends();
-		plot.setXLabel("time");
+		plot.setXLabel(tr("label.time"));
 		plot.setYLabel("°C");
 		LOGGER.info("Plotting " + data.size() + " data points!");
 		if (displayedDatasets.isEmpty()) {

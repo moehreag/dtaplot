@@ -605,17 +605,6 @@ public interface PlotBoxInterface {
      */
 	void writeFormat(PrintWriter output);
 
-    /** Write the current data and plot configuration to the
-     *  specified stream in the old PtPlot syntax.
-     *  The output is buffered, and is flushed and
-     *  closed before exiting.  Derived classes should override
-     *  _writeOldSyntax() rather than this method.
-     *  @param out An output stream.
-     *  @deprecated
-     */
-    @Deprecated
-	void writeOldSyntax(OutputStream out);
-
     /** Zoom in or out to the specified rectangle.
      *  This method calls repaint().
      *  @param lowx The low end of the new X range.
