@@ -48,5 +48,5 @@ public interface QueryListener extends EventListener {
      *  The name of the entry is passed as an argument.
      *  @param name The name of the entry.
      */
-    public abstract void changed(String name);
+	void changed(String name);
 }

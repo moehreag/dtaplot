@@ -57,5 +57,5 @@ public interface CloseListener {
      *  @param window The window that closed.
      *  @param button The name of the button that was used to close the window.
      */
-    public void windowClosed(Window window, String button);
+	void windowClosed(Window window, String button);
 }

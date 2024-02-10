@@ -31,35 +31,8 @@ public abstract class DtaFile {
 		if (Integer.bitCount(i) < bit) {
 			throw new IllegalArgumentException("Integer does not contain bit at position " + bit);
 		}
-		int value = (i >> bit) & 1;;
+		int value = (i >> bit) & 1;
 		return value == (inverted ? 0 : 1);
-	}
-
-	protected boolean[] readBits(int bits) {
-		boolean[] b = new boolean[Integer.bitCount(bits)];
-		for (int i = 0; i < b.length; i++) {
-			b[i] = readBit(bits, i);
-		}
-		return b;
-	}
-
-	protected boolean[] readBits(int bits, int... invertedBits) {
-		boolean[] b = new boolean[Integer.bitCount(bits)];
-		Integer[] in = new Integer[invertedBits.length];
-		for (int i = 0; i < invertedBits.length; i++) {
-			in[i] = invertedBits[i];
-		}
-		Collection<Integer> inverted = Arrays.asList(in);
-		for (int i = 0; i < b.length; i++) {
-			b[i] = readBit(bits, i, inverted.contains(i));
-		}
-		return b;
-	}
-
-	protected int combine(short low, short high) {
-		int i = high << 4;
-		i += low;
-		return i;
 	}
 
 	protected void skip(int i) {

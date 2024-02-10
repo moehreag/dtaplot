@@ -106,7 +106,6 @@ import javax.swing.JTextArea;
  @Pt.ProposedRating Yellow (eal)
  @Pt.AcceptedRating Yellow (janneck)
  */
-@SuppressWarnings("serial")
 public class ComponentDialog extends JDialog {
     /** Construct a dialog with the specified owner, title, and component.
      *  An "OK" and a "Cancel" button are added to the dialog.

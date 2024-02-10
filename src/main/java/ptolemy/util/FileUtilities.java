@@ -102,8 +102,8 @@ public class FileUtilities {
         // If the sourceURL is not a jar URL, then check to see if we
         // have the same file.
         // FIXME: should we check for !/ and !\ everywhere?
-        if (sourceFile.getPath().indexOf("!/") == -1
-                && sourceFile.getPath().indexOf("!\\") == -1) {
+        if (!sourceFile.getPath().contains("!/")
+                && !sourceFile.getPath().contains("!\\")) {
             try {
                 if (sourceFile.getCanonicalFile().toURI().toURL()
                         .sameFile(destinationURL)) {
@@ -549,7 +549,7 @@ public class FileUtilities {
      *  @see #nameToURL(String, URI, ClassLoader)
      */
     public static File nameToFile(String name, URI base) {
-        if (name == null || name.trim().equals("")) {
+        if (name == null || name.trim().isEmpty()) {
             return null;
         }
 
@@ -622,7 +622,7 @@ public class FileUtilities {
      */
     public static URL nameToURL(String name, URI baseDirectory,
             ClassLoader classLoader) throws IOException {
-        if (name == null || name.trim().equals("")) {
+        if (name == null || name.trim().isEmpty()) {
             return null;
         }
 
@@ -695,7 +695,7 @@ public class FileUtilities {
 
             URL result = file.toURI().toURL();
             if (fragment != null) {
-                result = new URL(result.toString() + "#" + fragment);
+                result = new URL(result + "#" + fragment);
             }
             return result;
         } else {
@@ -837,7 +837,7 @@ public class FileUtilities {
      */
     public static BufferedReader openForReading(String name, URI base,
             ClassLoader classLoader) throws IOException {
-        if (name == null || name.trim().equals("")) {
+        if (name == null || name.trim().isEmpty()) {
             return null;
         }
 
@@ -918,7 +918,7 @@ public class FileUtilities {
      */
     public static Writer openForWriting(String name, URI base, boolean append)
             throws IOException {
-        if (name == null || name.trim().equals("")) {
+        if (name == null || name.trim().isEmpty()) {
             return null;
         }
 
@@ -1027,7 +1027,7 @@ public class FileUtilities {
             reader = new BufferedReader(new InputStreamReader(stream,
                     java.nio.charset.Charset.defaultCharset()));
 
-            String lineBreak = System.getProperty("line.separator");
+            String lineBreak = System.lineSeparator();
             while ((line = reader.readLine()) != null) {
                 response.append(line);
                 if (!line.endsWith(lineBreak)) {

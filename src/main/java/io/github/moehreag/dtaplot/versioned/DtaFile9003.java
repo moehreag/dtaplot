@@ -206,7 +206,7 @@ public class DtaFile9003 extends DtaFile {
 	}
 
 	@AllArgsConstructor
-	private class Enum implements FieldDef {
+	private static class Enum implements FieldDef {
 
 		private final String category;
 		private final String name;

@@ -1268,7 +1268,7 @@ public class Query extends JPanel {
                     if (toReturn == null) {
                         toReturn = new StringBuffer(button.getText());
                     } else {
-                        toReturn.append(", " + button.getText());
+                        toReturn.append(", ").append(button.getText());
                     }
                 }
             }
@@ -1431,8 +1431,8 @@ public class Query extends JPanel {
             Boolean flag = Boolean.parseBoolean(value);
             setBoolean(name, flag.booleanValue());
         } else if (result instanceof JSlider) {
-            Integer parsed = Integer.parseInt(value);
-            ((JSlider) result).setValue(parsed.intValue());
+            int parsed = Integer.parseInt(value);
+            ((JSlider) result).setValue((int) parsed);
         } else if (result instanceof JComboBox) {
             ((JComboBox) result).setSelectedItem(value);
         } else if (result instanceof JToggleButton[]) {
@@ -1771,7 +1771,7 @@ public class Query extends JPanel {
             int i = 0;
 
             // Ignore any blank strings that this simple parsing produces.
-            while (specArray[i].trim().equals("")) {
+            while (specArray[i].trim().isEmpty()) {
                 i++;
             }
 
@@ -1781,7 +1781,7 @@ public class Query extends JPanel {
 
             i++;
 
-            while (specArray[i].trim().equals("")) {
+            while (specArray[i].trim().isEmpty()) {
                 i++;
             }
 
@@ -1791,7 +1791,7 @@ public class Query extends JPanel {
 
             i++;
 
-            while (specArray[i].trim().equals("")) {
+            while (specArray[i].trim().isEmpty()) {
                 i++;
             }
 
@@ -1801,7 +1801,7 @@ public class Query extends JPanel {
 
             i++;
 
-            while (specArray[i].trim().equals("")) {
+            while (specArray[i].trim().isEmpty()) {
                 i++;
             }
 
@@ -1889,7 +1889,7 @@ public class Query extends JPanel {
      */
     protected JLabel _constructLabel(String label) {
         JLabel lbl;
-        if (!label.trim().equals("")) {
+        if (!label.trim().isEmpty()) {
             lbl = new JLabel(label + ": ");
         } else {
             lbl = new JLabel("");
@@ -2356,7 +2356,7 @@ public class Query extends JPanel {
             }
 
             String fileName = getSelectedFileName().trim();
-            if (!fileName.equals("")) {
+            if (!fileName.isEmpty()) {
                 fileDialog.setFile(fileName);
             }
 
@@ -2382,7 +2382,7 @@ public class Query extends JPanel {
                     fileDialog.setFilenameFilter(_filter);
                 }
 
-                fileDialog.show();
+                fileDialog.setVisible(true);
             } finally {
                 // Revert to the default, which is to allow the selection of files.
                 System.setProperty("apple.awt.fileDialogForDirectories",
@@ -2521,7 +2521,7 @@ public class Query extends JPanel {
                     }
                 };
                 String fileName = getSelectedFileName().trim();
-                if (!fileName.equals("")) {
+                if (!fileName.isEmpty()) {
                     fileChooser.setSelectedFile(new File(fileName));
                 }
                 fileChooser.setApproveButtonText("Select");

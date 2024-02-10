@@ -38,6 +38,8 @@ public class DataLoader {
 							value = val.getDoubleNumberValue();
 						} else if (val.isArray()) {
 							value = val.asArray().stream().map(JsonValue::getBooleanValue).toArray(Boolean[]::new);
+						} else if (val.isBoolean()) {
+							value = val.getBooleanValue();
 						} else {
 							value = val.getStringValue();
 						}

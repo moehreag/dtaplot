@@ -485,5 +485,5 @@ public class MessageHandler implements Thread.UncaughtExceptionHandler {
     private static MessageHandler _handler = new MessageHandler();
 
     /** The status handlers, if any. */
-    private static transient WeakReference<StatusHandler> _statusHandler;
+    private static WeakReference<StatusHandler> _statusHandler;
 }

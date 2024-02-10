@@ -44,5 +44,5 @@ public interface EditableParametersDialog {
 
     /** Do the layout and then pack.
      */
-    public void doLayoutAndPack();
+	void doLayoutAndPack();
 }

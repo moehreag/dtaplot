@@ -44,12 +44,12 @@ public interface SettableQueryChooser {
      * @param value the string value
      * @see #getQueryValue()
      */
-    public void setQueryValue(String value);
+	void setQueryValue(String value);
 
     /**
      * Return a string representation of the query.
      * @return the string value
      * @see #setQueryValue(String)
      */
-    public String getQueryValue();
+	String getQueryValue();
 }

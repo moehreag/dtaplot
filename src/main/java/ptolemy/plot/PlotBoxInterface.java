@@ -510,14 +510,14 @@ public interface PlotBoxInterface {
      *  java.awt.Font.decode().
      *  @param name A font name.
      */
-    public void setLabelFont(String name);
+	void setLabelFont(String name);
 
     /** Set the plot rectangle inside the axes.  This method
      *  can be used to create two plots that share the same axes.
      *  @param rectangle Rectangle space inside axes.
      *  @see #getPlotRectangle()
      */
-    public void setPlotRectangle(Object rectangle);
+	void setPlotRectangle(Object rectangle);
 
     /** Set the size of the plot.  This overrides the base class to make
      *  it work.  In particular, it records the specified size so that

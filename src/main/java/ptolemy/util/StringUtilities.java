@@ -131,7 +131,7 @@ public class StringUtilities {
             libraryPaths.add(directoryName);
             unsafe.putObjectVolatile(ClassLoader.class,
                     unsafe.staticFieldOffset(usrPathsField),
-                    libraryPaths.toArray(new String[libraryPaths.size()]));
+                    libraryPaths.toArray(new String[0]));
             System.setProperty("java.library.path",
                     System.getProperty("java.library.path") + File.pathSeparator
                             + directoryName);
@@ -733,7 +733,7 @@ public class StringUtilities {
                 '/');
 
         // Inner classes: Get rid of everything past the first $
-        if (sourceFileNameBase.indexOf("$") != -1) {
+        if (sourceFileNameBase.contains("$")) {
             sourceFileNameBase = sourceFileNameBase.substring(0,
                     sourceFileNameBase.indexOf("$"));
         }
@@ -774,7 +774,7 @@ public class StringUtilities {
         File preferencesDirectory = new File(preferencesDirectoryName);
 
         if (!preferencesDirectory.isDirectory()) {
-            if (preferencesDirectory.mkdirs() == false) {
+            if (!preferencesDirectory.mkdirs()) {
                 throw new IOException("Could not create user preferences "
                         + "directory '" + preferencesDirectoryName + "'");
             }
@@ -932,12 +932,10 @@ public class StringUtilities {
 
                 if (lastSpaceIndex < 0) {
                     // No space found, just insert a new line after length
-                    results.append(token.substring(mark, mark + length)
-                            + LINE_SEPARATOR);
+                    results.append(token.substring(mark, mark + length)).append(LINE_SEPARATOR);
                     mark += length;
                 } else {
-                    results.append(token.substring(mark, mark + lastSpaceIndex)
-                            + LINE_SEPARATOR);
+                    results.append(token.substring(mark, mark + lastSpaceIndex)).append(LINE_SEPARATOR);
                     mark += lastSpaceIndex + 1;
                 }
             }
@@ -1155,7 +1153,7 @@ public class StringUtilities {
             }
         }
 
-        return commandList.toArray(new String[commandList.size()]);
+        return commandList.toArray(new String[0]);
     }
 
     /** Return a string with a maximum line length of <i>lineLength</i>
@@ -1217,7 +1215,7 @@ public class StringUtilities {
      *  @return A new string with special characters replaced.
      */
     public static String unescapeForXML(String string) {
-        if (string.indexOf("&") != -1) {
+        if (string.contains("&")) {
             string = substitute(string, "&amp;", "&");
             string = substitute(string, "&quot;", "\"");
             string = substitute(string, "&lt;", "<");
@@ -1281,9 +1279,9 @@ public class StringUtilities {
         int i;
 
         for (i = 0; i < commandOptions.length; i++) {
-            result.append(" " + commandOptions[i][0]);
+            result.append(" ").append(commandOptions[i][0]);
             if (commandOptions[i][1].length() > 0) {
-                result.append(" " + commandOptions[i][1]);
+                result.append(" ").append(commandOptions[i][1]);
             }
             result.append("\n");
         }
@@ -1291,9 +1289,9 @@ public class StringUtilities {
         result.append("\nBoolean flags:\n");
 
         for (i = 0; i < commandFlagsWithDescriptions.length; i++) {
-            result.append(" " + commandFlagsWithDescriptions[i][0]);
+            result.append(" ").append(commandFlagsWithDescriptions[i][0]);
             if (commandFlagsWithDescriptions[i][1].length() > 0) {
-                result.append("\t" + commandFlagsWithDescriptions[i][1]);
+                result.append("\t").append(commandFlagsWithDescriptions[i][1]);
             }
             result.append("\n");
         }
@@ -1324,8 +1322,7 @@ public class StringUtilities {
     /** The line separator string.  Under Windows, this would
      *  be "\r\n"; under Unix, "\n"; Under Macintosh, "\r".
      */
-    public static final String LINE_SEPARATOR = System
-            .getProperty("line.separator");
+    public static final String LINE_SEPARATOR = System.lineSeparator();
 
     /** Location of Application preferences such as the user library.
      *  This field is not final in case other applications want to

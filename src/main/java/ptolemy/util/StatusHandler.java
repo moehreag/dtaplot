@@ -46,5 +46,5 @@ public interface StatusHandler {
     /** Display a status message.
      *  @param message The message.
      */
-    public void status(String message);
+	void status(String message);
 }

@@ -44,7 +44,7 @@ import java.net.URL;
  */
 public interface PlotInterface extends PlotBoxInterface {
     @Override
-    public void addLegend(int dataset, String legend);
+	void addLegend(int dataset, String legend);
 
     /** In the specified data set, add the specified x, y point to the
      *  plot.  Data set indices begin with zero.  If the data set
@@ -68,8 +68,8 @@ public interface PlotInterface extends PlotBoxInterface {
      *  @param connected If true, a line is drawn to connect to the previous
      *   point.
      */
-    public default void addPoint(final int dataset, final double x,
-            final double y, final boolean connected) {
+    default void addPoint(final int dataset, final double x,
+						  final double y, final boolean connected) {
         addPoint(dataset, x, y, null, connected);
     }
 
@@ -98,8 +98,8 @@ public interface PlotInterface extends PlotBoxInterface {
      *  @param connected If true, a line is drawn to connect to the previous
      *   point.
      */
-    public void addPoint(final int dataset, final double x, final double y,
-            final double[] derivatives, final boolean connected);
+	void addPoint(final int dataset, final double x, final double y,
+				  final double[] derivatives, final boolean connected);
 
     /** In the specified data set, add the specified x, y point to the
      *  plot with error bars.  Data set indices begin with zero.  If
@@ -131,9 +131,9 @@ public interface PlotInterface extends PlotBoxInterface {
      *  @param connected If true, a line is drawn to connect to the previous
      *   point.
      */
-    public void addPointWithErrorBars(final int dataset, final double x,
-            final double y, final double[] derivatives, final double yLowEB,
-            final double yHighEB, final boolean connected);
+	void addPointWithErrorBars(final int dataset, final double x,
+							   final double y, final double[] derivatives, final double yLowEB,
+							   final double yHighEB, final boolean connected);
 
     /** Clear the plot of all data points.  If the argument is true, then
      *  reset all parameters to their initial conditions, including
@@ -150,7 +150,7 @@ public interface PlotInterface extends PlotBoxInterface {
      *  called them.
      */
     @Override
-    public void clear(final boolean format);
+	void clear(final boolean format);
 
     /** Clear the plot of data points in the specified dataset.
      *  This calls repaint() to request an update of the display.
@@ -165,7 +165,7 @@ public interface PlotInterface extends PlotBoxInterface {
      *
      *  @param dataset The dataset to clear.
      */
-    public void clear(final int dataset);
+	void clear(final int dataset);
 
     /** Erase the point at the given index in the given dataset.  If
      * lines are being drawn, these lines are erased and if necessary new
@@ -184,7 +184,7 @@ public interface PlotInterface extends PlotBoxInterface {
      *  @param dataset The data set index.
      *  @param index The index of the point to erase.
      */
-    public void erasePoint(final int dataset, final int index);
+	void erasePoint(final int dataset, final int index);
 
     /** Rescale so that the data that is currently plotted just fits.
      *  This overrides the base class method to ensure that the protected
@@ -201,7 +201,7 @@ public interface PlotInterface extends PlotBoxInterface {
      *  called them.
      */
     @Override
-    public void fillPlot();
+	void fillPlot();
 
     /** Return whether the default is to connect
      *  subsequent points with a line.  If the result is false, then
@@ -212,7 +212,7 @@ public interface PlotInterface extends PlotBoxInterface {
      *  @return True if points will be connected by default
      * @see #setConnected
      */
-    public boolean getConnected();
+	boolean getConnected();
 
     /** Return whether a line will be drawn from any
      *  plotted point down to the x axis.
@@ -220,7 +220,7 @@ public interface PlotInterface extends PlotBoxInterface {
      *  @return True if this is an impulse plot
      *  @see #setImpulses(boolean)
      */
-    public boolean getImpulses();
+	boolean getImpulses();
 
     /** Return false if setLineStyles() has not yet been called or if
      *  setLineStyles(false) has been called, which signifies that
@@ -228,14 +228,14 @@ public interface PlotInterface extends PlotBoxInterface {
      *  @return True if line styles are to be used.
      *  @see #setLineStyles(boolean)
      */
-    public boolean getLineStyles();
+	boolean getLineStyles();
 
     /** Get the marks style, which is one of
      *  "none", "points", "dots", or "various".
      *  @return A string specifying the style for points.
      *  @see #setMarksStyle
      */
-    public String getMarksStyle();
+	String getMarksStyle();
 
     /** Return the maximum number of data sets.
      *  This method is deprecated, since there is no longer an upper bound.
@@ -243,12 +243,12 @@ public interface PlotInterface extends PlotBoxInterface {
      *  @deprecated
      */
     @Deprecated
-    public int getMaxDataSets();
+	int getMaxDataSets();
 
     /** Return the actual number of data sets.
      *  @return The number of data sets that have been created.
      */
-    public int getNumDataSets();
+	int getNumDataSets();
 
     /** Return false if setReuseDatasets() has not yet been called
      *  or if setReuseDatasets(false) has been called.
@@ -257,7 +257,7 @@ public interface PlotInterface extends PlotBoxInterface {
      *  @since Ptolemy II 10.0
      *  @see #setReuseDatasets(boolean)
      */
-    public boolean getReuseDatasets();
+	boolean getReuseDatasets();
 
     /** Override the base class to indicate that a new data set is being read.
      *  This method is deprecated.  Use read() instead (to read the old
@@ -267,13 +267,13 @@ public interface PlotInterface extends PlotBoxInterface {
      */
     @Override
     @Deprecated
-    public void parseFile(String filespec, URL documentBase);
+	void parseFile(String filespec, URL documentBase);
 
     /** Mark the disconnections with a Dot in case value equals true, otherwise these
      *  points are not marked.
      *  @param value True when disconnections should be marked.
      */
-    public void markDisconnections(boolean value);
+	void markDisconnections(boolean value);
 
     /** Read a file with the old syntax (non-XML).
      *  Override the base class to register that we are reading a new
@@ -282,7 +282,7 @@ public interface PlotInterface extends PlotBoxInterface {
      *  @exception IOException If the stream cannot be read.
      */
     @Override
-    public void read(InputStream inputStream) throws IOException;
+	void read(InputStream inputStream) throws IOException;
 
     /** Create a sample plot.  This is not actually done immediately
      *  unless the calling thread is the event dispatch thread.
@@ -292,13 +292,13 @@ public interface PlotInterface extends PlotBoxInterface {
      *  calling thread is the event dispatch thread).
      */
     @Override
-    public void samplePlot();
+	void samplePlot();
 
     /** Turn bars on or off (for bar charts).  Note that this is a global
      *  property, not per dataset.
      *  @param on If true, turn bars on.
      */
-    public void setBars(boolean on);
+	void setBars(boolean on);
 
     /** Turn bars on and set the width and offset.  Both are specified
      *  in units of the x axis.  The offset is the amount by which the
@@ -307,7 +307,7 @@ public interface PlotInterface extends PlotBoxInterface {
      *  @param width The width of the bars.
      *  @param offset The offset per data set.
      */
-    public void setBars(double width, double offset);
+	void setBars(double width, double offset);
 
     /** If the argument is true, then the default is to connect
      *  subsequent points with a line.  If the argument is false, then
@@ -323,7 +323,7 @@ public interface PlotInterface extends PlotBoxInterface {
      *  @see #setConnected(boolean, int)
      *  @see #getConnected
      */
-    public void setConnected(boolean on);
+	void setConnected(boolean on);
 
     /** If the first argument is true, then by default for the specified
      *  dataset, points will be connected by a line.  Otherwise, the
@@ -338,7 +338,7 @@ public interface PlotInterface extends PlotBoxInterface {
      *  @see #setConnected(boolean)
      *  @see #getConnected
      */
-    public void setConnected(boolean on, int dataset);
+	void setConnected(boolean on, int dataset);
 
     /** If the argument is true, then a line will be drawn from any
      *  plotted point down to the x axis.  Otherwise, this feature is
@@ -346,7 +346,7 @@ public interface PlotInterface extends PlotBoxInterface {
      *  @param on If true, draw a stem plot.
      *  @see #getImpulses()
      */
-    public void setImpulses(boolean on);
+	void setImpulses(boolean on);
 
     /** If the first argument is true, then a line will be drawn from any
      *  plotted point in the specified dataset down to the x axis.
@@ -356,7 +356,7 @@ public interface PlotInterface extends PlotBoxInterface {
      *  @param dataset The dataset to which this should apply.
      *  @see #getImpulses()
      */
-    public void setImpulses(boolean on, int dataset);
+	void setImpulses(boolean on, int dataset);
 
     /** Set the style of the lines joining marks.
      *  @param styleString A string specifying the color for points.
@@ -364,7 +364,7 @@ public interface PlotInterface extends PlotBoxInterface {
      *  "dashed", "dotdashed", "dotdotdashed".
      *  @param dataset The data set index.
      */
-    public void setLineStyle(String styleString, int dataset);
+	void setLineStyle(String styleString, int dataset);
 
     /** If the argument is true, draw the data sets with different line
      *  styles.  Otherwise, use one line style.
@@ -372,7 +372,7 @@ public interface PlotInterface extends PlotBoxInterface {
      *  line styles.
      *  @see #getLineStyles()
      */
-    public void setLineStyles(boolean lineStyles);
+	void setLineStyles(boolean lineStyles);
 
     /** Set the marks style to "none", "points", "dots", or "various".
      *  In the last case, unique marks are used for the first ten data
@@ -381,7 +381,7 @@ public interface PlotInterface extends PlotBoxInterface {
      *  @param style A string specifying the style for points.
      *  @see #getMarksStyle
      */
-    public void setMarksStyle(String style);
+	void setMarksStyle(String style);
 
     /** Set the marks style to "none", "points", "dots", "various",
      *  or "pixels" for the specified dataset.
@@ -391,7 +391,7 @@ public interface PlotInterface extends PlotBoxInterface {
      *  @param dataset The dataset to which this should apply.
      *  @see #getMarksStyle
      */
-    public void setMarksStyle(String style, int dataset);
+	void setMarksStyle(String style, int dataset);
 
     /** Specify the number of data sets to be plotted together.
      *  This method is deprecated, since it is no longer necessary to
@@ -400,7 +400,7 @@ public interface PlotInterface extends PlotBoxInterface {
      *  @deprecated
      */
     @Deprecated
-    public void setNumSets(int numSets);
+	void setNumSets(int numSets);
 
     /** Calling this method with a positive argument sets the
      *  persistence of the plot to the given number of points.  Calling
@@ -419,14 +419,14 @@ public interface PlotInterface extends PlotBoxInterface {
      *  on the next call to addPoint().
      *  @param persistence Number of points to persist for.
      */
-    public void setPointsPersistence(int persistence);
+	void setPointsPersistence(int persistence);
 
     /** If the argument is true, then datasets with the same name
      *  are merged into a single dataset.
      *  @param on If true, then merge datasets.
      *  @see #getReuseDatasets()
      */
-    public void setReuseDatasets(boolean on);
+	void setReuseDatasets(boolean on);
 
     /** Calling this method with a positive argument sets the
      *  persistence of the plot to the given width in units of the
@@ -447,18 +447,18 @@ public interface PlotInterface extends PlotBoxInterface {
      *  on the next call to addPoint().
      *  @param persistence Persistence in units of the horizontal axis.
      */
-    public void setXPersistence(double persistence);
+	void setXPersistence(double persistence);
 
     /** Write plot data information to the specified output stream in PlotML.
      *  @param output A buffered print writer.
      */
     @Override
-    public void writeData(PrintWriter output);
+	void writeData(PrintWriter output);
 
     /** Write plot format information to the specified output stream in
      *  PlotML, an XML scheme.
      *  @param output A buffered print writer.
      */
     @Override
-    public void writeFormat(PrintWriter output);
+	void writeFormat(PrintWriter output);
 }

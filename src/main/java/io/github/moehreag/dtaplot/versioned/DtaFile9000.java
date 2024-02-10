@@ -4,11 +4,10 @@ import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import io.github.moehreag.dtaplot.DataField;
 import io.github.moehreag.dtaplot.DataFieldContainer;
 import io.github.moehreag.dtaplot.DtaFile;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
 import static io.github.moehreag.dtaplot.DataField.*;
 
