@@ -129,7 +129,7 @@ public class DtaPlot {
 						JFileChooser chooser = new JFileChooser(new File("."));
 						FileFilter json = new FileNameExtensionFilter(tr("filter.json"), "json");
 						chooser.setFileFilter(json);
-						if (chooser.showOpenDialog(frame) != JFileChooser.APPROVE_OPTION)
+						if (chooser.showSaveDialog(frame) != JFileChooser.APPROVE_OPTION)
 							return;
 						DataLoader.getInstance().save(data, chooser.getSelectedFile().toPath());
 					});
@@ -142,12 +142,12 @@ public class DtaPlot {
 					chooser.setApproveButtonText(tr("chooser.select"));
 					FileFilter json = new FileNameExtensionFilter(tr("filter.json"), "json");
 					chooser.setFileFilter(json);
-					if (chooser.showOpenDialog(frame) != JFileChooser.APPROVE_OPTION)
+					if (chooser.showSaveDialog(frame) != JFileChooser.APPROVE_OPTION)
 						return;
 					DataLoader.getInstance().append(data, chooser.getSelectedFile().toPath());
 				}
 			});
-			fileMenu.add(new AbstractAction("action.export") {
+			fileMenu.add(new AbstractAction(tr("action.export")) {
 				@Override
 				public void actionPerformed(ActionEvent e) {
 					JFileChooser chooser = new JFileChooser(new File("."));
@@ -158,7 +158,7 @@ public class DtaPlot {
 					for (String s : supported) {
 						chooser.addChoosableFileFilter(new FileNameExtensionFilter(s.toUpperCase(Locale.ROOT) + tr("filter.formatImage"), s));
 					}
-					if (chooser.showOpenDialog(frame) != JFileChooser.APPROVE_OPTION)
+					if (chooser.showSaveDialog(frame) != JFileChooser.APPROVE_OPTION)
 						return;
 					String fileName = chooser.getSelectedFile().getName();
 					if (supported.stream().noneMatch(fileName::endsWith)) {
@@ -176,7 +176,7 @@ public class DtaPlot {
 					}
 				}
 			});
-			fileMenu.add(new AbstractAction("action.quit") {
+			fileMenu.add(new AbstractAction(tr("action.quit")) {
 				@Override
 				public void actionPerformed(ActionEvent e) {
 					frame.dispose();
@@ -240,10 +240,12 @@ public class DtaPlot {
 			plot.requestFocusInWindow();
 		}
 
-		LOGGER.info("Opening view");
-		frame.setSize(960, 580);
-		frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-		frame.setLocationRelativeTo(null);
+		if (!frame.isVisible()) {
+			LOGGER.info("Opening view");
+			frame.setSize(960, 580);
+			frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+			frame.setLocationRelativeTo(null);
+		}
 
 		frame.repaint();
 		frame.setVisible(true);
@@ -311,7 +313,7 @@ public class DtaPlot {
 		bottomText.setEditable(false);
 		bottomText.setFont(new Font(bottomText.getFont().getName(), bottomText.getFont().getStyle(), 10));
 
-		bottomText.setText("<a href=\""+Main.URL+"\">"+Main.NAME+" "+Main.VERSION+"</a>");
+		bottomText.setText("<a href=\""+ Constants.URL+"\">"+ Constants.NAME+" "+ Constants.VERSION+"</a>");
 		bottomText.addHyperlinkListener(e -> {
 			try {
 				if (e.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {

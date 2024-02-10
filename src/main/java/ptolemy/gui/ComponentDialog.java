@@ -107,17 +107,6 @@ import javax.swing.JTextArea;
  @Pt.AcceptedRating Yellow (janneck)
  */
 public class ComponentDialog extends JDialog {
-    /** Construct a dialog with the specified owner, title, and component.
-     *  An "OK" and a "Cancel" button are added to the dialog.
-     *  The dialog is placed relative to the owner.
-     *  @param owner The object that, per the user, appears to be
-     *   generating the dialog.
-     *  @param title The title of the dialog.
-     *  @param component The component to insert in the dialog.
-     */
-    public ComponentDialog(Frame owner, String title, Component component) {
-        this(owner, title, component, null, null);
-    }
 
     /** Construct a dialog with the specified owner, title, component,
      *  and buttons.  The first button is the "default" in that

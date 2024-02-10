@@ -517,20 +517,6 @@ public class Plot extends PlotBox implements PlotInterface {
 		return _reuseDatasets;
 	}
 
-	/** Override the base class to indicate that a new data set is being read.
-	 *  This method is deprecated.  Use read() instead (to read the old
-	 *  file format) or one of the classes in the plotml package to read
-	 *  the new (XML) file format.
-	 *  @deprecated
-	 */
-	@Override
-	@Deprecated
-	public void parseFile(String filespec, URL documentBase) {
-		_firstInSet = true;
-		_sawFirstDataSet = false;
-		super.parseFile(filespec, documentBase);
-	}
-
 	/** Mark the disconnections with a Dot in case value equals true, otherwise these
 	 *  points are not marked.
 	 *  @param value True when disconnections should be marked.
@@ -538,19 +524,6 @@ public class Plot extends PlotBox implements PlotInterface {
 	@Override
 	public void markDisconnections(boolean value) {
 		_markDisconnections = value;
-	}
-
-	/** Read a file with the old syntax (non-XML).
-	 *  Override the base class to register that we are reading a new
-	 *  data set.
-	 *  @param inputStream The input stream.
-	 *  @exception IOException If the stream cannot be read.
-	 */
-	@Override
-	public synchronized void read(InputStream inputStream) throws IOException {
-		super.read(inputStream);
-		_firstInSet = true;
-		_sawFirstDataSet = false;
 	}
 
 	/** Create a sample plot.  This is not actually done immediately
@@ -1898,133 +1871,6 @@ public class Plot extends PlotBox implements PlotInterface {
 			} else {
 				((Graphics2D) graphics).setStroke(new BasicStroke(width,
 						BasicStroke.CAP_BUTT, BasicStroke.JOIN_ROUND));
-			}
-		}
-	}
-
-	/** Write plot information to the specified output stream in
-	 *  the "old syntax," which predates PlotML.
-	 *  Derived classes should override this method to first call
-	 *  the parent class method, then add whatever additional information
-	 *  they wish to add to the stream.
-	 *  It is not synchronized, so its caller should be.
-	 *  @param output A buffered print writer.
-	 *  @deprecated
-	 */
-	@Override
-	@Deprecated
-	protected void _writeOldSyntax(PrintWriter output) {
-		super._writeOldSyntax(output);
-
-		// NOTE: NumSets is obsolete, so we don't write it.
-		if (_reuseDatasets) {
-			output.println("ReuseDatasets: on");
-		}
-
-		if (!_connected) {
-			output.println("Lines: off");
-		}
-
-		if (_bars) {
-			output.println("Bars: " + _barWidth + ", " + _barOffset);
-		}
-
-		// Write the defaults for formats that can be controlled by dataset
-		if (_impulses) {
-			output.println("Impulses: on");
-		}
-
-		switch (_marks) {
-			case 0:
-				//Ignore: Marks: none
-				break;
-			case 1:
-				output.println("Marks: points");
-				break;
-
-			case 2:
-				output.println("Marks: dots");
-				break;
-
-			case 3:
-				output.println("Marks: various");
-				break;
-
-			case 4:
-				output.println("Marks: bigdots");
-				break;
-
-			case 5:
-				output.println("Marks: pixelss");
-				break;
-			default:
-				throw new RuntimeException("Internal Error.  Mark " + "style "
-						+ _marks + " not supported.");
-		}
-
-		for (int dataset = 0; dataset < _points.size(); dataset++) {
-			// Write the dataset directive
-			String legend = getLegend(dataset);
-
-			if (legend != null) {
-				output.println("DataSet: " + getLegend(dataset));
-			} else {
-				output.println("DataSet:");
-			}
-
-			// Write dataset-specific format information
-			Format fmt = _formats.get(dataset);
-
-			if (!fmt.impulsesUseDefault) {
-				if (fmt.impulses) {
-					output.println("Impulses: on");
-				} else {
-					output.println("Impulses: off");
-				}
-			}
-
-			if (!fmt.lineStyleUseDefault) {
-				output.println("lineStyle: " + fmt.lineStyle);
-			}
-
-			if (!fmt.marksUseDefault) {
-				switch (fmt.marks) {
-					case 0:
-						output.println("Marks: none");
-						break;
-
-					case 1:
-						output.println("Marks: points");
-						break;
-
-					case 2:
-						output.println("Marks: dots");
-						break;
-
-					case 3:
-						output.println("Marks: various");
-						break;
-
-					case 4:
-						output.println("Marks: pixels");
-						break;
-				}
-			}
-
-			// Write the data
-			ArrayList<PlotPoint> pts = _points.get(dataset);
-
-			for (PlotPoint pt : pts) {
-				if (!pt.connected) {
-					output.print("move: ");
-				}
-
-				if (pt.errorBar) {
-					output.println(pt.x + ", " + pt.y + ", " + pt.yLowEB + ", "
-							+ pt.yHighEB);
-				} else {
-					output.println(pt.x + ", " + pt.y);
-				}
 			}
 		}
 	}

@@ -123,15 +123,6 @@ public class MessageHandler implements Thread.UncaughtExceptionHandler {
         }
     }
 
-    /** Return the message handler instance that is used by the static
-     *  methods in this class.
-     *  @return The message handler.
-     *  @see #setMessageHandler(MessageHandler)
-     */
-    public static MessageHandler getMessageHandler() {
-        return _handler;
-    }
-
     /** Return true if the current process is a non-interactive session.
      *  If the nightly build is running, then return true.
      *
@@ -166,36 +157,6 @@ public class MessageHandler implements Thread.UncaughtExceptionHandler {
         return false;
     }
 
-    /** Defer to the set message handler to show the specified
-     *  message.  An implementation may block, for example with a modal dialog.
-     *  @param info The message.
-     *  @see #status(String)
-     */
-    public static void message(String info) {
-        _handler._message(info);
-    }
-
-    /** Set the message handler instance that is used by the static
-     *  methods in this class.  If the given handler is null, then
-     *  do nothing.
-     *  @param handler The message handler.
-     *  @see #getMessageHandler()
-     */
-    public static void setMessageHandler(MessageHandler handler) {
-        if (handler != null) {
-            _handler = handler;
-        }
-    }
-
-    /** Set the specified status handler, replacing any previously
-     *  set handler.
-     *  @param handler The handler, or null to set no handler.
-     *  @see #status(String)
-     */
-    public static void setStatusHandler(StatusHandler handler) {
-        _statusHandler = new WeakReference<>(handler);
-    }
-
     /** Return a short description of the throwable.
      *  @param throwable The throwable
      *  @return If the throwable is an Exception, return "Exception",
@@ -203,7 +164,7 @@ public class MessageHandler implements Thread.UncaughtExceptionHandler {
      *  "Throwable".
      */
     public static String shortDescription(Throwable throwable) {
-        String throwableType = null;
+        String throwableType;
 
         if (throwable instanceof Exception) {
             throwableType = "Exception";
@@ -216,25 +177,6 @@ public class MessageHandler implements Thread.UncaughtExceptionHandler {
         return throwableType;
     }
 
-    /** Display a status message to the user.
-     *  This method is intended for keeping users informed of what is being done.
-     *  The message may be displayed for a very short time and may be cleared after some time.
-     *  This method is not intended for logging or for persistent messages, nor for messages
-     *  that require some acknowledgement from the user.
-     *  If a StatusHandler has been registered using #addStatusHandler(StatusHandler),
-     *  then delegate displaying the message to that status handler.
-     *  Otherwise, display on standard out.
-     *  @param message The message to display.
-     *  @see #message(String)
-     */
-    public static void status(String message) {
-        if (_statusHandler != null && _statusHandler.get() != null) {
-            _statusHandler.get().status(message);
-        } else {
-            System.out.println(message);
-        }
-    }
-
     /** Handle uncaught exceptions in a standard way.
      *  @param thread The thread throwing the exception.
      *  @param exception The exception.
@@ -242,101 +184,6 @@ public class MessageHandler implements Thread.UncaughtExceptionHandler {
     @Override
     public void uncaughtException(Thread thread, Throwable exception) {
         _error("UNCAUGHT EXCEPTION: " + exception.getMessage(), exception);
-    }
-
-    /** Defer to the set message handler to
-     *  show the specified message in a modal dialog.  If the user
-     *  clicks on the "Cancel" button, then throw an exception.
-     *  This gives the user the option of not continuing the
-     *  execution, something that is particularly useful if continuing
-     *  execution will result in repeated warnings.
-     *
-     *  <p>Note that within Ptolemy, most user code should not call
-     *  this method directly.  Instead, throw an exception, which will
-     *  be caught by the system elsewhere and include information
-     *  about what object caused the warning.
-     *
-     *  @param info The message.
-     *  @exception CancelException If the user clicks on the "Cancel" button.
-     */
-    public static void warning(String info) throws CancelException {
-        _handler._warning(info);
-    }
-
-    /** Show the specified message and throwable information
-     *  in a modal dialog.  If the user
-     *  clicks on the "Cancel" button, then throw an exception.
-     *  This gives the user the option of not continuing the
-     *  execution, something that is particularly useful if continuing
-     *  execution will result in repeated warnings.
-     *  By default, only the message of the throwable
-     *  is thrown.  The stack trace information is only shown if the
-     *  user clicks on the "Display Stack Trace" button.
-     *
-     *  <p>Note that within Ptolemy, most user code should not call
-     *  this method directly.  Instead, throw an exception, which will
-     *  be caught by the system elsewhere and include information
-     *  about what object caused the warning.
-     *
-     *  @param info The message.
-     *  @param throwable The throwable associated with this warning.
-     *  @exception CancelException If the user clicks on the "Cancel" button.
-     */
-    public static void warning(String info, Throwable throwable)
-            throws CancelException {
-        _handler._warning(info + ": " + throwable.getMessage(), throwable);
-    }
-
-    /** Ask the user a yes/no question, and return true if the answer
-     *  is yes. This method returns true without asking the user if
-     *  the property "ptolemy.ptII.isRunningNightlyBuild" is set.
-     *  In the regression tests, there is no user to answer the question.
-     *  @param question The yes/no question.
-     *  @return True if the answer is yes.
-     */
-    public static boolean yesNoQuestion(String question) {
-        if (!isNonInteractive()) {
-            return _handler._yesNoQuestion(question);
-        } else {
-            return true;
-        }
-    }
-
-    /** Ask the user a yes/no/cancel question, and return true if the
-     *  answer is yes.  If the user clicks on the "Cancel" button,
-     *  then throw an exception.
-     *
-     *  @param question The yes/no/cancel question.
-     *  @return True if the answer is yes.
-     *  @exception ptolemy.util.CancelException If the user clicks on
-     *  the "Cancel" button.
-     */
-    public static boolean yesNoCancelQuestion(String question)
-            throws ptolemy.util.CancelException {
-        return yesNoCancelQuestion(question, "Yes", "No", "Cancel");
-    }
-
-    /** Ask the user a question with three possible answers;
-     *  return true if the answer is the first one and false if
-     *  the answer is the second one; throw an exception if the
-     *  user selects the third one.
-     *
-     *  @param question The question.
-     *  @param trueOption The option for which to return true.
-     *  @param falseOption The option for which to return false.
-     *  @param exceptionOption The option for which to throw an exception.
-     *  @return True if the answer is the first option, false if it is the second.
-     *  @exception ptolemy.util.CancelException If the user selects the third option.
-     */
-    public static boolean yesNoCancelQuestion(String question,
-            String trueOption, String falseOption, String exceptionOption)
-            throws ptolemy.util.CancelException {
-        if (!isNonInteractive()) {
-            return _handler._yesNoCancelQuestion(question, trueOption,
-                    falseOption, exceptionOption);
-        } else {
-            return true;
-        }
     }
 
     ///////////////////////////////////////////////////////////////////
@@ -376,114 +223,9 @@ public class MessageHandler implements Thread.UncaughtExceptionHandler {
         System.err.println(info);
     }
 
-    /** Show the specified message.  In this base class, the message
-     *  is printed to standard error.
-     *  <p>Derived classes might show the specified message in a modal
-     *  dialog.  If the user clicks on the "Cancel" button, then throw
-     *  an exception.  This gives the user the option of not
-     *  continuing the execution, something that is particularly
-     *  useful if continuing execution will result in repeated
-     *  warnings.
-     *  @param info The message.
-     *  @exception CancelException If the user clicks on the "Cancel" button.
-     */
-    protected void _warning(String info) throws CancelException {
-        _error(info);
-    }
-
-    /** Display the warning message and throwable information.  In
-     *  this base class, the the default handler merely prints the
-     *  warning to stderr.  If the user clicks on the "Cancel" button,
-     *  then throw an exception.  This gives the user the option of
-     *  not continuing the execution, something that is particularly
-     *  useful if continuing execution will result in repeated
-     *  warnings.  By default, only the message of the throwable is
-     *  thrown.  The stack trace information is only shown if the user
-     *  clicks on the "Display Stack Trace" button.
-     *  @param info The message.
-     *  @param throwable The Throwable.
-     *  @exception CancelException If the user clicks on the "Cancel" button.
-     */
-    protected void _warning(String info, Throwable throwable)
-            throws CancelException {
-        _error(info, throwable);
-    }
-
-    /** Ask the user a yes/no question, and return true if the answer
-     *  is yes.  In this base class, this prints the question on standard
-     *  output and looks for the reply on standard input.
-     *  @param question The yes/no question to be asked.
-     *  @return True if the answer is yes.
-     */
-    protected boolean _yesNoQuestion(String question) {
-        System.out.print(question);
-        System.out.print(" (yes or no) ");
-
-        BufferedReader stdIn = new BufferedReader(
-                new InputStreamReader(System.in));
-
-        try {
-            String reply = stdIn.readLine();
-
-            if (reply == null) {
-                return false;
-            } else if (reply.trim().toLowerCase(Locale.getDefault())
-                    .equals("yes")) {
-                return true;
-            }
-        } catch (IOException ex) {
-        }
-
-        return false;
-    }
-
-    /** Ask the user a question with three possible answers;
-     *  return true if the answer is the first one and false if
-     *  the answer is the second one; throw an exception if the
-     *  user selects the third one.
-     *  @param question The question.
-     *  @param trueOption The option for which to return true.
-     *  @param falseOption The option for which to return false.
-     *  @param exceptionOption The option for which to throw an exception.
-     *  @return True if the answer is the first option, false if it is the second.
-     *  @exception ptolemy.util.CancelException If the user selects the third option.
-     */
-    protected boolean _yesNoCancelQuestion(String question, String trueOption,
-            String falseOption, String exceptionOption)
-            throws ptolemy.util.CancelException {
-        System.out.print(question + " (" + trueOption + " or " + falseOption
-                + " or " + exceptionOption + ") ");
-
-        BufferedReader stdIn = new BufferedReader(
-                new InputStreamReader(System.in));
-
-        try {
-            String reply = stdIn.readLine();
-
-            if (reply == null) {
-                return false;
-            } else {
-                if (reply.trim().toLowerCase(Locale.getDefault())
-                        .equals(trueOption.toLowerCase(Locale.getDefault()))) {
-                    return true;
-                } else if (reply.trim().toLowerCase(Locale.getDefault()).equals(
-                        exceptionOption.toLowerCase(Locale.getDefault()))) {
-                    throw new ptolemy.util.CancelException(
-                            "Cancelled: " + question);
-                }
-            }
-        } catch (IOException ex) {
-        }
-
-        return false;
-    }
-
     ///////////////////////////////////////////////////////////////////
     ////                         private variables                 ////
 
     /** The message handler. */
     private static MessageHandler _handler = new MessageHandler();
-
-    /** The status handlers, if any. */
-    private static WeakReference<StatusHandler> _statusHandler;
 }

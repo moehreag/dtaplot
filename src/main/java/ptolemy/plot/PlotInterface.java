@@ -259,30 +259,11 @@ public interface PlotInterface extends PlotBoxInterface {
      */
 	boolean getReuseDatasets();
 
-    /** Override the base class to indicate that a new data set is being read.
-     *  This method is deprecated.  Use read() instead (to read the old
-     *  file format) or one of the classes in the plotml package to read
-     *  the new (XML) file format.
-     *  @deprecated
-     */
-    @Override
-    @Deprecated
-	void parseFile(String filespec, URL documentBase);
-
     /** Mark the disconnections with a Dot in case value equals true, otherwise these
      *  points are not marked.
      *  @param value True when disconnections should be marked.
      */
 	void markDisconnections(boolean value);
-
-    /** Read a file with the old syntax (non-XML).
-     *  Override the base class to register that we are reading a new
-     *  data set.
-     *  @param inputStream The input stream.
-     *  @exception IOException If the stream cannot be read.
-     */
-    @Override
-	void read(InputStream inputStream) throws IOException;
 
     /** Create a sample plot.  This is not actually done immediately
      *  unless the calling thread is the event dispatch thread.

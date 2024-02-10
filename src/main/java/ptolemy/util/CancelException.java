@@ -45,13 +45,7 @@ package ptolemy.util;
  @Pt.ProposedRating Green (eal)
  @Pt.AcceptedRating Green (janneck)
  */
-@SuppressWarnings("serial")
 public class CancelException extends Exception {
-    /** Construct an exception with a default message.
-     */
-    public CancelException() {
-        super("Operation cancelled by the user");
-    }
 
     /** Construct an exception with the specified message.
      *  @param message The message.

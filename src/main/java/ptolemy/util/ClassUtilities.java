@@ -27,15 +27,8 @@
  */
 package ptolemy.util;
 
-import java.io.File;
 import java.io.IOException;
-import java.net.JarURLConnection;
 import java.net.URL;
-import java.util.Enumeration;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
 
 ///////////////////////////////////////////////////////////////////
 //// ClassUtilities
@@ -59,47 +52,6 @@ public class ClassUtilities {
 
     ///////////////////////////////////////////////////////////////////
     ////                         public methods                    ////
-
-    /** Return the directories in a jar URI, relative to the jar entry,
-     *  if any.   .
-     *  Jar URLS have several forms, the most common being:
-     *  <code>jar:file:///foo/bar.jar/!/bif/baz</code>, which means that
-     *  the jar file /foo/bar.jar has a directory or file name bif/baz.
-     *  If such a file is passed to this method, then any directories
-     *  in the jar file directory bif/baz will be returned.
-     *  @param jarURL The Jar URL for which we are to look for directories.
-     *  @return An list of Strings that name the directories
-     *  @exception IOException If opening the connection fails or if
-     *  getting the jar file from the connection fails
-     */
-    public static List<String> jarURLDirectories(URL jarURL) throws IOException {
-        List<String> directories = new LinkedList<>();
-        JarURLConnection connection = (JarURLConnection) jarURL
-                .openConnection();
-        String jarEntryName = connection.getEntryName();
-        if (jarEntryName.endsWith("/")) {
-            jarEntryName = jarEntryName.substring(0, jarEntryName.length() - 1);
-        }
-        JarFile jarFile = connection.getJarFile();
-        Enumeration<JarEntry> entries = jarFile.entries();
-        while (entries.hasMoreElements()) {
-            JarEntry entry = entries.nextElement();
-            String name = entry.getName();
-            int jarEntryIndex = name.indexOf(jarEntryName + "/");
-            int jarEntrySlashIndex = jarEntryIndex + jarEntryName.length() + 1;
-
-            int nextSlashIndex = name.indexOf("/", jarEntrySlashIndex);
-            int lastSlashIndex = name.indexOf("/", jarEntrySlashIndex);
-
-            if (jarEntryIndex > -1 && jarEntrySlashIndex > -1
-                    && nextSlashIndex > -1 && nextSlashIndex == lastSlashIndex
-                    && nextSlashIndex == name.length() - 1
-                    && entry.isDirectory()) {
-                directories.add(name);
-            }
-        }
-        return directories;
-    }
 
     /** Lookup a jar URL and return the resource.
 
@@ -177,70 +129,6 @@ public class ClassUtilities {
         }
     }
 
-    /** Lookup a URL in the classpath, but search up the classpath
-     *  for directories named src.
-     *  This method is useful for IDEs such as Eclipse where
-     *  the default is to place .class files in a separate directory
-     *  from the .java files.
-     *
-     *  <p>Before calling this method, call ClassLoader.getResource()
-     *  because ClassLoader.getResource() is presumably faster.</p>
-     *
-     *  @param sourceURLString The string containing the URL.
-     *  @return The resource, if any.  If the spec string does not
-     *  contain <code>!/</code>, then return null.
-     *  @exception IOException If this method cannot convert the specification
-     *  to a URL.
-     *  @see java.net.JarURLConnection
-     */
-    public static URL sourceResource(String sourceURLString)
-            throws IOException {
-        // FIXME: Maybe only allow relative paths?
-
-        // Hmm.  Might be Eclipse, where sadly the
-        // .class files are often in a separate directory
-        // than the .java files.  So, we look at the CLASSPATH
-        // and for each element that names a directory, traverse
-        // the parents directories and look for adjacent directories
-        // that contain a "src" directory.  For example if
-        // the classpath contains "kepler/ptolemy/target/classes/",
-        // then we will find kepler/ptolemy/src and return it
-        // as a URL.
-
-        // First time through, search each element of the CLASSPATH that names
-        // a directory
-        if (_sourceDirectories == null) {
-            List<File> sourceDirectories = new LinkedList<File>();
-            String classPath[] = StringUtilities.getProperty("java.class.path")
-                    .split(StringUtilities.getProperty("path.separator"));
-            for (String element : classPath) {
-                File directory = new File(element);
-                if (directory.isDirectory()) {
-                    // We have a potential winner.
-                    while (directory != null) {
-                        File sourceDirectory = new File(directory, "src");
-                        if (sourceDirectory.isDirectory()) {
-                            sourceDirectories.add(sourceDirectory);
-                            break;
-                        }
-                        directory = directory.getParentFile();
-                    }
-                }
-            }
-            // Avoid FindBugs: LI: Incorrect lazy initialization and update of static field.
-            _sourceDirectories = sourceDirectories;
-        }
-
-        // Search _sourceDirectories for sourceURLString
-        for (File sourceDirectory : _sourceDirectories) {
-            File sourceFile = new File(sourceDirectory, sourceURLString);
-            if (sourceFile.exists()) {
-                return sourceFile.getCanonicalFile().toURI().toURL();
-            }
-        }
-        return null;
-    }
-
     /** Get the resource.
      *  If the current thread has a non-null context class loader,
      *  then use it to get the resource.  Othewise, get the
@@ -281,67 +169,4 @@ public class ClassUtilities {
         }
         return url;
     }
-
-    /** Given a dot separated classname, return the jar file or directory
-     *  where the class can be found.
-     *  @param necessaryClass  The dot separated class name, for example
-     *  "ptolemy.util.ClassUtilities"
-     *  @return If the class can be found as a resource, return the
-     *  directory or jar file where the necessary class can be found.
-     *  otherwise, return null.  If the resource is found in a directory,
-     *  then the return value will always have forward slashes, it will
-     *  never use backslashes.
-     */
-    public static String lookupClassAsResource(String necessaryClass) {
-        // This method is called from copernicus.kernel.GeneratorAttribute
-        // and actor.lib.python.PythonScript.  We moved it here
-        // to avoid dependencies.
-        String necessaryResource = StringUtilities.substitute(necessaryClass,
-                ".", "/") + ".class";
-
-        URL necessaryURL = ClassUtilities.getResource(necessaryResource);
-
-        if (necessaryURL == null) {
-            necessaryResource = StringUtilities.substitute(necessaryClass, ".",
-                    "/") + ".xml";
-            necessaryURL = ClassUtilities.getResource(necessaryResource);
-        }
-        if (necessaryURL != null) {
-            String resourceResults = necessaryURL.getFile();
-
-            // Strip off the file:/ and the necessaryResource.
-            if (resourceResults.startsWith("file:/")) {
-                resourceResults = resourceResults.substring(6);
-            }
-
-            // Strip off the name of the resource we were looking for
-            // so that we are left with the directory or jar file
-            // it is in
-            resourceResults = resourceResults.substring(0,
-                    resourceResults.length() - necessaryResource.length());
-
-            // Strip off the trailing !/
-            if (resourceResults.endsWith("!/")) {
-                resourceResults = resourceResults.substring(0,
-                        resourceResults.length() - 2);
-            }
-
-            // Unfortunately, under Windows, URL.getFile() may
-            // return things like /c:/ptII, so we create a new
-            // File and get its path, which will return c:\ptII
-            File resourceFile = new File(resourceResults);
-
-            // Convert backslashes
-            String sanitizedResourceName = StringUtilities
-                    .substitute(resourceFile.getPath(), "\\", "/");
-            return sanitizedResourceName;
-        }
-
-        return null;
-    }
-
-    /** A list of directories that end with "src" that are found in
-     *  in the paths of individual elements in the classpath.
-     */
-    private static List<File> _sourceDirectories = null;
 }

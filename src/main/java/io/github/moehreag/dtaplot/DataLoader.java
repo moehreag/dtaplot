@@ -103,7 +103,6 @@ public class DataLoader {
 			}
 		}
 
-		//existing.addAll(data);
 		save(existing, file);
 	}
 

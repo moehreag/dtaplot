@@ -333,63 +333,6 @@ public interface PlotBoxInterface {
      */
 	Vector<?>[] getYTicks();
 
-    /** Initialize the component, creating the fill button and parsing
-     *  an input file, if one has been specified.  This is deprecated.
-     *  Call setButtons() and read() instead.
-     *  @deprecated
-     */
-    @Deprecated
-	void init();
-
-    /** Syntactic sugar for parseFile(filespec, documentBase).
-     *  @param filespec The file to be read.
-     *  @deprecated  Use read() to read the old file
-     *  format, or use one of the classes in the plotml package to
-     *  read the XML-based file format.
-     */
-    @Deprecated
-	void parseFile(String filespec);
-
-    /** Open up the input file, which could be stdin, a URL, or a file.
-     *  @param filespec The file to be read.
-     *  @param documentBase The base of the URL
-     *  @deprecated Use read() instead.
-     */
-    @Deprecated
-	void parseFile(String filespec, URL documentBase);
-
-    /** Read commands and/or plot data from an input stream in the old
-     *  (non-XML) file syntax.
-     *  To update the display, call repaint(), or make the plot visible with
-     *  setVisible(true).
-     *  <p>
-     *  To read from standard input, use:
-     *  <pre>
-     *     read(System.in);
-     *  </pre>
-     *  To read from a url, use:
-     *  <pre>
-     *     read(url.openStream());
-     *  </pre>
-     *  To read a URL from within an applet, use:
-     *  <pre>
-     *     URL url = new URL(getDocumentBase(), urlSpec);
-     *     read(url.openStream());
-     *  </pre>
-     *  Within an application, if you have an absolute URL, use:
-     *  <pre>
-     *     URL url = new URL(urlSpec);
-     *     read(url.openStream());
-     *  </pre>
-     *  To read from a file, use:
-     *  <pre>
-     *     read(new FileInputStream(filename));
-     *  </pre>
-     *  @param in The input stream.
-     *  @exception IOException If the stream cannot be read.
-     */
-	void read(InputStream in) throws IOException;
-
     /** Read a single line command provided as a string.
      *  The commands can be any of those in the ASCII file format.
      *  @param command A command.
@@ -440,20 +383,6 @@ public interface PlotBoxInterface {
      *  @param background The background color.
      */
 	void setBackground(Object background);
-
-    /** If the argument is true, make a fill button visible at the upper
-     *  right.  This button auto-scales the plot.
-     *  NOTE: The button may infringe on the title space,
-     *  if the title is long.  In an application, it is preferable to provide
-     *  a menu with the fill command.  This way, when printing the plot,
-     *  the printed plot will not have a spurious button.  Thus, this method
-     *  should be used only by applets, which normally do not have menus.
-     *  This method should only be called from within the event dispatch
-     *  thread, since it interacts with swing.
-     *  @param visible If true, make the fill button appear.
-     *  @see #destroy()
-     */
-	void setButtons(boolean visible);
 
     /** Set the strings of the caption.
      *  @param captionStrings A Vector where each element contains a String

@@ -18,19 +18,6 @@ import org.slf4j.LoggerFactory;
  */
 public class Discovery {
 
-
-	// List of ports that are known to respond to discovery packets
-	private static final int[] LUXTRONIK_DISCOVERY_PORTS = new int[]{4444, 47808};
-
-	// Time (in milliseconds) to wait for response after sending discovery broadcast
-	private static final int LUXTRONIK_DISCOVERY_TIMEOUT = 750;
-
-	// Content of packet that will be sent for discovering heat pumps
-	private static final String LUXTRONIK_DISCOVERY_MAGIC_PACKET = "2000;111;1;\u0000";
-
-	// Content of response that is contained in responses to discovery broadcast
-	private static final String LUXTRONIK_DISCOVERY_RESPONSE_PREFIX = "2500;111;";
-
 	private static final Logger LOGGER = LoggerFactory.getLogger(Discovery.class.getSimpleName());
 
 	public static void main(String[] args){
@@ -43,12 +30,12 @@ public class Discovery {
 
 		// Broadcast discovery for Luxtronik heat pumps.
 
-		for (int port : LUXTRONIK_DISCOVERY_PORTS) {
+		for (int port : Constants.LUXTRONIK_DISCOVERY_PORTS) {
 
 			try (DatagramSocket socket = new DatagramSocket(port)) {
 				socket.setBroadcast(true);
 				sendBroadcast(socket, port);
-				socket.setSoTimeout(LUXTRONIK_DISCOVERY_TIMEOUT);
+				socket.setSoTimeout(Constants.LUXTRONIK_DISCOVERY_TIMEOUT);
 
 				while (true) {
 					try {
@@ -58,14 +45,14 @@ public class Discovery {
 						String res = new String(data, StandardCharsets.US_ASCII);
 
                 		// if we receive what we just sent, continue
-						if (res.startsWith(LUXTRONIK_DISCOVERY_MAGIC_PACKET)) {
+						if (res.startsWith(Constants.LUXTRONIK_DISCOVERY_MAGIC_PACKET)) {
 							continue;
 						}
 						res = res.trim();
 						String ip_address = rec.getAddress().getHostAddress();//con[0];
                 		// if the response starts with the magic nonsense
 						Integer res_port;
-						if (res.startsWith(LUXTRONIK_DISCOVERY_RESPONSE_PREFIX)) {
+						if (res.startsWith(Constants.LUXTRONIK_DISCOVERY_RESPONSE_PREFIX)) {
 							String[] res_list = res.split(";");
 							LOGGER.debug(
 									"Received response from {} {}", ip_address, Arrays.toString(res_list)
@@ -108,7 +95,7 @@ public class Discovery {
 
 	private static void sendBroadcastMessage(DatagramSocket socket, InetAddress address, int port) throws IOException {
 		LOGGER.debug("Sending broadcast: "+address+" "+port);
-		byte[] message = LUXTRONIK_DISCOVERY_MAGIC_PACKET.getBytes(StandardCharsets.UTF_8);
+		byte[] message = Constants.LUXTRONIK_DISCOVERY_MAGIC_PACKET.getBytes(StandardCharsets.UTF_8);
 		DatagramPacket packet = new DatagramPacket(message, message.length, address, port);
 		socket.send(packet);
 	}
