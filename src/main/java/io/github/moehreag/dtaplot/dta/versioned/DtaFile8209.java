@@ -1,12 +1,13 @@
-package io.github.moehreag.dtaplot.versioned;
+package io.github.moehreag.dtaplot.dta.versioned;
 
 import java.nio.ByteBuffer;
 import java.util.*;
 
-import io.github.moehreag.dtaplot.DataField;
-import io.github.moehreag.dtaplot.DtaFile;
-import io.github.moehreag.dtaplot.DataFieldContainer;
-import io.github.moehreag.dtaplot.LookUpTable;
+import io.github.moehreag.dtaplot.*;
+import io.github.moehreag.dtaplot.dta.DataField;
+import io.github.moehreag.dtaplot.dta.DataFieldContainer;
+import io.github.moehreag.dtaplot.dta.DtaFile;
+import io.github.moehreag.dtaplot.dta.LookUpTable;
 
 public class DtaFile8209 extends DtaFile {
 

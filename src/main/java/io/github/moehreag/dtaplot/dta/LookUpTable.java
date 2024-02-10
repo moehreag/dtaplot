@@ -1,4 +1,4 @@
-package io.github.moehreag.dtaplot;
+package io.github.moehreag.dtaplot.dta;
 
 import lombok.Data;
 

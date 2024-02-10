@@ -1,7 +1,9 @@
-package io.github.moehreag.dtaplot;
+package io.github.moehreag.dtaplot.dta;
 
 import java.util.Collection;
 import java.util.List;
+
+import io.github.moehreag.dtaplot.Value;
 
 public interface DataFieldContainer {
 
@@ -12,13 +14,13 @@ public interface DataFieldContainer {
 	}
 
 	static <T> DataFieldContainer single(String category, String name, T value){
-		return single(category, name, DtaFile.Value.of(value));
+		return single(category, name, Value.of(value));
 	}
 
-	static <T> DataFieldContainer single(String category, String name, DtaFile.Value<T> value){
+	static <T> DataFieldContainer single(String category, String name, Value<T> value){
 		return single(new DataField<T>(category, name) {
 			@Override
-			public DtaFile.Value<T> getValue() {
+			public Value<T> getValue() {
 				return value;
 			}
 		});

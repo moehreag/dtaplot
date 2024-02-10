@@ -19,13 +19,13 @@ public class DataLoader {
 	@Getter
 	private static final DataLoader instance = new DataLoader();
 
-	public Collection<Map<String, DtaFile.Value<?>>> load(Path file){
+	public Collection<Map<String, Value<?>>> load(Path file){
 		try {
-			List<Map<String, DtaFile.Value<?>>> list = new ArrayList<>();
+			List<Map<String, Value<?>>> list = new ArrayList<>();
 			JsonArray object = JsonDeserializer.read(Files.newBufferedReader(file)).asArrayOrNull();
 			if (object != null){
 				object.forEach(jsonValue -> {
-					Map<String, DtaFile.Value<?>> map = new HashMap<>();
+					Map<String, Value<?>> map = new HashMap<>();
 					JsonObject o = jsonValue.asObject();
 					o.forEach((s, val) -> {
 
@@ -43,7 +43,7 @@ public class DataLoader {
 						} else {
 							value = val.getStringValue();
 						}
-						map.put(s, DtaFile.Value.of(value));
+						map.put(s, Value.of(value));
 					});
 					list.add(map);
 				});
@@ -54,7 +54,7 @@ public class DataLoader {
 		}
 	}
 
-	public void save(Collection<Map<String, DtaFile.Value<?>>> data, Path file){
+	public void save(Collection<Map<String, Value<?>>> data, Path file){
 		JsonArray object = new JsonArray();
 		data.forEach((map) -> {
 			JsonObject val = new JsonObject();
@@ -77,7 +77,9 @@ public class DataLoader {
 		});
 
 		try {
-			Files.createDirectories(file.getParent());
+			if (file.getParent() != null) {
+				Files.createDirectories(file.getParent());
+			}
 			BufferedWriter writer = Files.newBufferedWriter(file);
 			JsonSerializer.write(object, writer);
 		} catch (IOException e) {
@@ -85,14 +87,14 @@ public class DataLoader {
 		}
 	}
 
-	public void append(Collection<Map<String, DtaFile.Value<?>>> data, Path file){
-		Collection<Map<String, DtaFile.Value<?>>> existing = load(file);
+	public void append(Collection<Map<String, Value<?>>> data, Path file){
+		Collection<Map<String, Value<?>>> existing = load(file);
 
-		for (Map<String, DtaFile.Value<?>> map : data){
+		for (Map<String, Value<?>> map : data){
 			int time = ((Number)map.get("time").get()).intValue();
 
 			boolean in = false;
-			for (Map<String, DtaFile.Value<?>> e : existing){
+			for (Map<String, Value<?>> e : existing){
 				if (((Number)e.get("time").get()).intValue() == time){
 					in = true;
 				}

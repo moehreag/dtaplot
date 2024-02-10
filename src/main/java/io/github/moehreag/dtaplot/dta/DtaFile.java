@@ -1,9 +1,10 @@
-package io.github.moehreag.dtaplot;
+package io.github.moehreag.dtaplot.dta;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.*;
 
+import io.github.moehreag.dtaplot.Value;
 import lombok.Getter;
 
 public abstract class DtaFile {
@@ -41,23 +42,5 @@ public abstract class DtaFile {
 
 	public static <A> Value<A> of(A val) {
 		return Value.of(val);
-	}
-
-	public interface Value<T> {
-		T get();
-
-		static <A> Value<A> of(A val) {
-			return new Value<>() {
-				@Override
-				public A get() {
-					return val;
-				}
-
-				@Override
-				public String toString() {
-					return "Value(" + val.toString() + ")";
-				}
-			};
-		}
 	}
 }

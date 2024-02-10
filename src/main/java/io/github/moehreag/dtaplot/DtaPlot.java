@@ -27,6 +27,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import io.github.moehreag.dtaplot.dta.DtaFile;
+import io.github.moehreag.dtaplot.dta.DtaParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ptolemy.plot.Plot;
@@ -38,7 +40,7 @@ public class DtaPlot {
 	private static final Supplier<String> HEATPUMP_LOCATION = () -> DotEnv.getOrDefault("PROCLOG_FILE", DtaPlot::showAddressDialog);
 	private static final NumberFormat timeFormat = new DecimalFormat("00");
 
-	private final Collection<Map<String, DtaFile.Value<?>>> data = new ArrayList<>();
+	private final Collection<Map<String, Value<?>>> data = new ArrayList<>();
 	private final Plot plot = new Plot();
 	private final Map<String, Integer> datasets = new HashMap<>();
 	private final List<String> displayedDatasets = new ArrayList<>();
@@ -356,7 +358,7 @@ public class DtaPlot {
 		}
 	}
 
-	public void addToGraph(Collection<Map<String, DtaFile.Value<?>>> data) {
+	public void addToGraph(Collection<Map<String, Value<?>>> data) {
 		LOGGER.info("Adding " + data.size() + " points to the graph");
 		Set<Integer> times = this.data.stream().map(map -> ((Number) map.get("time").get()).intValue()).collect(Collectors.toSet());
 		this.data.addAll(data.stream()
@@ -430,17 +432,17 @@ public class DtaPlot {
 		}
 	}
 
-	private Collection<Map<String, DtaFile.Value<?>>> getValidData() {
-		Collection<Map<String, DtaFile.Value<?>>> entries = new ArrayList<>();
-		for (Map<String, DtaFile.Value<?>> map : data) {
-			Map<String, DtaFile.Value<?>> clone = new HashMap<>(map);
+	private Collection<Map<String, Value<?>>> getValidData() {
+		Collection<Map<String, Value<?>>> entries = new ArrayList<>();
+		for (Map<String, Value<?>> map : data) {
+			Map<String, Value<?>> clone = new HashMap<>(map);
 			entries.add(clone);
 		}
 		List<String> keys = new ArrayList<>();
 		entries.stream().map(Map::keySet).forEach(k -> k.stream().filter(s -> !keys.contains(s)).forEach(keys::add));
 		for (String key : keys) {
 			List<Double> values = new ArrayList<>();
-			for (Map<String, DtaFile.Value<?>> map : entries) {
+			for (Map<String, Value<?>> map : entries) {
 				if (!map.containsKey(key) || !(map.get(key).get() instanceof Number)) {
 					continue;
 				}
@@ -450,7 +452,7 @@ public class DtaPlot {
 				}
 			}
 			if (values.size() <= 1) {
-				for (Map<String, DtaFile.Value<?>> map : entries) {
+				for (Map<String, Value<?>> map : entries) {
 					map.remove(key);
 				}
 			}
@@ -469,7 +471,7 @@ public class DtaPlot {
 				.forEachOrdered((stringValueMap) -> {
 					int time = ((Number) stringValueMap.get("time").get()).intValue();
 
-					DtaFile.Value<?> value = stringValueMap.get(setName);
+					Value<?> value = stringValueMap.get(setName);
 					if (value == null) {
 						return;
 					}
@@ -569,14 +571,14 @@ public class DtaPlot {
 		dialog.add(inputPanel);
 		JLabel loading = new JLabel(tr("dialog.loading"));
 		loading.setFont(new Font(loading.getFont().getName(), Font.ITALIC, loading.getFont().getSize()));
-		inputPanel.add(loading, BorderLayout.CENTER);
+		inputPanel.add(loading);
 
 		JPanel footer = new JPanel(new FlowLayout(FlowLayout.RIGHT));
 
 		JButton cancel = new JButton(new AbstractAction(tr("action.cancel")) {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				dialog.setVisible(false);
+				dialog.dispose();
 			}
 		});
 

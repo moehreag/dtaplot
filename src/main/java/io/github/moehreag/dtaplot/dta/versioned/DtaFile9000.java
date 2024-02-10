@@ -1,15 +1,16 @@
-package io.github.moehreag.dtaplot.versioned;
+package io.github.moehreag.dtaplot.dta.versioned;
 
 import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import io.github.moehreag.dtaplot.DataFieldContainer;
-import io.github.moehreag.dtaplot.DtaFile;
+import io.github.moehreag.dtaplot.dta.DataFieldContainer;
+import io.github.moehreag.dtaplot.dta.DtaFile;
+import io.github.moehreag.dtaplot.Value;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
-import static io.github.moehreag.dtaplot.DataField.*;
+import static io.github.moehreag.dtaplot.dta.DataField.*;
 
 public class DtaFile9000 extends DtaFile {
 

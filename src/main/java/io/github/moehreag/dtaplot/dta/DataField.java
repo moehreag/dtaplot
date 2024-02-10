@@ -1,10 +1,11 @@
-package io.github.moehreag.dtaplot;
+package io.github.moehreag.dtaplot.dta;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import io.github.moehreag.dtaplot.Value;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -14,7 +15,7 @@ public abstract class DataField<T> {
 
 	private final String category, name;
 
-	public abstract DtaFile.Value<T> getValue();
+	public abstract Value<T> getValue();
 
 	public boolean isNumeric(){
 		return true;
@@ -35,8 +36,8 @@ public abstract class DataField<T> {
 
 			fields.add(new DataField<>(category, b.name) {
 				@Override
-				public DtaFile.Value<Boolean> getValue() {
-					return DtaFile.Value.of(value == (b.inverted ? 0 : 1));
+				public Value<Boolean> getValue() {
+					return Value.of(value == (b.inverted ? 0 : 1));
 				}
 
 				@Override

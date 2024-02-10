@@ -24,6 +24,9 @@ jar {
         attributes 'Implementation-Version': project.version
         attributes 'Implementation-Date': new Date()
     }
+    filesMatching('LICENSE') {
+        rename '^(LICENSE.*?)(\\..*)?$', "\$1_${archivesBaseName}\$2"
+    }
 }
 
 dependencies {
@@ -37,6 +40,7 @@ tasks.build.dependsOn shadowJar
 
 shadowJar {
     archiveClassifier.set("")
+    mergeServiceFiles()
 }
 
 test {

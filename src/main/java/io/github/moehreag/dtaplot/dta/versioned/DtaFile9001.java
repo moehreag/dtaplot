@@ -1,4 +1,4 @@
-package io.github.moehreag.dtaplot.versioned;
+package io.github.moehreag.dtaplot.dta.versioned;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -6,9 +6,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import io.github.moehreag.dtaplot.DataField;
-import io.github.moehreag.dtaplot.DataFieldContainer;
-import io.github.moehreag.dtaplot.DtaFile;
+import io.github.moehreag.dtaplot.dta.DataField;
+import io.github.moehreag.dtaplot.dta.DataFieldContainer;
+import io.github.moehreag.dtaplot.dta.DtaFile;
+import io.github.moehreag.dtaplot.Value;
 
 public class DtaFile9001 extends DtaFile {
 
