@@ -1,11 +1,16 @@
 package io.github.moehreag.dtaplot;
 
+import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import java.awt.*;
+import java.awt.event.ActionEvent;
 import java.io.IOException;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.*;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,6 +26,114 @@ public class Discovery {
 	private static final Logger LOGGER = LoggerFactory.getLogger(Discovery.class.getSimpleName());
 
 	private static List<InetSocketAddress> adresses;
+	private static InetSocketAddress remembered;
+
+	public static InetSocketAddress getHeatpump(){
+
+		if (remembered != null){
+			return remembered;
+		}
+
+		return showAddressDialog();
+	}
+
+	@SuppressWarnings("BusyWait")
+	private static InetSocketAddress showAddressDialog() {
+		Map<String, InetSocketAddress> entryMap = new HashMap<>();
+
+		JFrame dialog = new JFrame(tr("dialog.title"));
+		dialog.setSize(400, 150);
+
+		JTextPane instruction = new JTextPane();
+		instruction.setContentType("text/html");
+		instruction.setText(tr("dialog.message"));
+		instruction.setEditable(false);
+		dialog.add(instruction, BorderLayout.NORTH);
+
+		JComboBox<String> input = new JComboBox<>();
+
+		input.setEditable(false);
+		input.setEnabled(false);
+
+		JCheckBox remember = new JCheckBox("action.remember");
+
+		JPanel inputPanel = new JPanel(new FlowLayout());
+		dialog.add(inputPanel);
+		JLabel loading = new JLabel(tr("dialog.loading"));
+		loading.setFont(new Font(loading.getFont().getName(), Font.ITALIC, loading.getFont().getSize()));
+		inputPanel.add(loading);
+
+		JPanel footer = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+
+		JButton cancel = new JButton(new AbstractAction(tr("action.cancel")) {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				dialog.dispose();
+			}
+		});
+
+		JButton done = new JButton(tr("action.select"));
+		done.addActionListener(new AbstractAction() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				dialog.setVisible(false);
+				dialog.dispose();
+			}
+		});
+
+		footer.add(done);
+		footer.add(cancel);
+		dialog.add(footer, BorderLayout.SOUTH);
+
+		dialog.setLocationRelativeTo(null);
+		dialog.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+		dialog.setVisible(true);
+
+		CompletableFuture<Void> c = CompletableFuture.runAsync(() -> {
+			List<InetSocketAddress> addresses = Discovery.discover();
+			if (!addresses.isEmpty()) {
+				addresses.forEach(a -> {
+					String repr = a.getHostString();
+					entryMap.put(repr, a);
+					input.addItem(repr);
+				});
+			}
+			inputPanel.remove(loading);
+			inputPanel.add(input);
+			inputPanel.add(remember);
+			input.setEditable(true);
+			input.setEnabled(true);
+		});
+
+		while (!c.isDone()){
+			loading.setText(loading.getText()+tr("dialog.loading.indicator"));
+			try {
+				Thread.sleep(500);
+			} catch (InterruptedException ignored) {
+			}
+		}
+
+		while (dialog.isShowing()) {
+			try {
+				Thread.sleep(100);
+			} catch (InterruptedException ignored) {
+			}
+		}
+
+		InetSocketAddress selected = entryMap.get((String) input.getSelectedItem());
+
+		if (remember.isSelected()){
+			remembered  = selected;
+		} else {
+			remembered = null;
+		}
+
+		return selected;
+	}
+
+	private static String tr(String key, Object... args){
+		return Translations.translate(key, args);
+	}
 
 	public static List<InetSocketAddress> discover(){
 

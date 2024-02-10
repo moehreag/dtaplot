@@ -37,7 +37,9 @@ public class DtaPlot {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(DtaPlot.class.getSimpleName());
 
-	private static final Supplier<String> HEATPUMP_LOCATION = () -> DotEnv.getOrDefault("PROCLOG_FILE", DtaPlot::showAddressDialog);
+	private static final Supplier<String> HEATPUMP_LOCATION = () -> DotEnv.getOrDefault("PROCLOG_FILE",
+			() -> "http://"+Discovery.getHeatpump().getHostString()+"/proclog");
+
 	private static final NumberFormat timeFormat = new DecimalFormat("00");
 
 	private final Collection<Map<String, Value<?>>> data = new ArrayList<>();
@@ -550,84 +552,7 @@ public class DtaPlot {
 		chooser.addChoosableFileFilter(json);
 	}
 
-	@SuppressWarnings("BusyWait")
-	private static String showAddressDialog() {
 
-		StringBuffer buffer = new StringBuffer();
-		JFrame dialog = new JFrame(tr("dialog.title"));
-		dialog.setSize(400, 150);
-
-		JTextPane instruction = new JTextPane();
-		instruction.setContentType("text/html");
-		instruction.setText(tr("dialog.message"));
-		instruction.setEditable(false);
-		dialog.add(instruction, BorderLayout.NORTH);
-
-		JComboBox<String> input = new JComboBox<>();
-
-		input.setEditable(false);
-		input.setEnabled(false);
-		JPanel inputPanel = new JPanel(new FlowLayout());
-		dialog.add(inputPanel);
-		JLabel loading = new JLabel(tr("dialog.loading"));
-		loading.setFont(new Font(loading.getFont().getName(), Font.ITALIC, loading.getFont().getSize()));
-		inputPanel.add(loading);
-
-		JPanel footer = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-
-		JButton cancel = new JButton(new AbstractAction(tr("action.cancel")) {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				dialog.dispose();
-			}
-		});
-
-		JButton done = new JButton(tr("action.select"));
-		done.addActionListener(new AbstractAction() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				buffer.append(input.getSelectedItem());
-				dialog.setVisible(false);
-				dialog.dispose();
-			}
-		});
-
-		footer.add(done);
-		footer.add(cancel);
-		dialog.add(footer, BorderLayout.SOUTH);
-
-		dialog.setLocationRelativeTo(null);
-		dialog.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-		dialog.setVisible(true);
-
-		CompletableFuture<Void> c = CompletableFuture.runAsync(() -> {
-			List<InetSocketAddress> addresses = Discovery.discover();
-			if (!addresses.isEmpty()) {
-				addresses.forEach(a -> input.addItem("http://" + a.getHostString() + "/proclog "));
-			}
-			inputPanel.removeAll();
-			inputPanel.add(input);
-			input.setEditable(true);
-			input.setEnabled(true);
-		});
-
-		while (!c.isDone()){
-			loading.setText(loading.getText()+tr("dialog.loading.indicator"));
-			try {
-				Thread.sleep(500);
-			} catch (InterruptedException ignored) {
-			}
-		}
-
-		while (dialog.isShowing()) {
-			try {
-				Thread.sleep(100);
-			} catch (InterruptedException ignored) {
-			}
-		}
-
-		return buffer.toString().trim();
-	}
 
 	private static String tr(String key, Object... args){
 		return Translations.translate(key, args);

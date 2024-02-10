@@ -7,7 +7,6 @@ import java.nio.ByteOrder;
 import java.nio.channels.SocketChannel;
 import java.nio.file.Path;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 
 import io.github.moehreag.dtaplot.DataLoader;
@@ -34,19 +33,18 @@ public class TcpSocket implements AutoCloseable {
 	private final ByteBuffer READ_BUFFER = ByteBuffer.allocateDirect(4);
 	private final ByteBuffer WRITE_BUFFER = ByteBuffer.allocateDirect(8);
 
-	private SocketChannel socket;
+	private final SocketChannel socket;
 
 	public TcpSocket() {
-		List<InetSocketAddress> addresses = Discovery.discover();
+		InetSocketAddress address = Discovery.getHeatpump();
 
-		for (InetSocketAddress a : addresses) {
-			System.out.println("Connecting to: " + a.getHostString() + ":" + a.getPort());
-			try {
-				socket = SocketChannel.open(a);
-			} catch (IOException e) {
-				throw new RuntimeException(e);
-			}
+		System.out.println("Connecting to: " + address.getHostString() + ":" + address.getPort());
+		try {
+			socket = SocketChannel.open(address);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
 		}
+
 	}
 
 	public static void main(String[] args) {
@@ -85,7 +83,7 @@ public class TcpSocket implements AutoCloseable {
 				try {
 					writeInts(socket, PARAMETERS_WRITE, i, type.write(val));
 				} catch (IOException e) {
-					LOGGER.error("Failed to write parameter: "+type.getName()+" with value: "+ val.get());
+					LOGGER.error("Failed to write parameter: " + type.getName() + " with value: " + val.get());
 				}
 
 			}

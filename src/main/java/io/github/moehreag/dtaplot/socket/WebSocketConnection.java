@@ -13,9 +13,10 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.WebSocket;
 import java.nio.file.Path;
-import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.Timer;
-import java.util.*;
+import java.util.TimerTask;
 import java.util.concurrent.CompletionStage;
 
 import io.github.moehreag.dtaplot.DataLoader;
@@ -24,6 +25,8 @@ import io.github.moehreag.dtaplot.Translations;
 import io.github.moehreag.dtaplot.Value;
 import io.github.moehreag.dtaplot.socket.ws.Storage;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -31,6 +34,7 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 public class WebSocketConnection implements AutoCloseable {
+	private static final Logger LOGGER = LoggerFactory.getLogger(WebSocketConnection.class.getSimpleName());
 
 	private final Timer timer = new Timer();
 	private WebSocket socket;
@@ -43,20 +47,18 @@ public class WebSocketConnection implements AutoCloseable {
 		}
 	}
 
+	@SuppressWarnings("BusyWait")
 	public Map<String, Value<?>> load() {
-		List<InetSocketAddress> addresses = Discovery.discover();
+		InetSocketAddress a = Discovery.getHeatpump();
+		System.out.println(a);
+		socket = HttpClient.newHttpClient().newWebSocketBuilder().subprotocols("Lux_WS")
+				.buildAsync(URI.create("ws://" + a.getHostString() + ":" + 8214), new WebSocketClient(this))
+				.join();
 
-		for (InetSocketAddress a : addresses) {
-			System.out.println(a);
-			socket = HttpClient.newHttpClient().newWebSocketBuilder().subprotocols("Lux_WS")
-					.buildAsync(URI.create("ws://" + a.getHostString() + ":" + 8214), new WebSocketClient(this))
-					.join();
-		}
-		while (socket != null && !socket.isOutputClosed()){
+		while (socket != null && !socket.isOutputClosed()) {
 			try {
 				Thread.sleep(100);
-			} catch (InterruptedException e) {
-				throw new RuntimeException(e);
+			} catch (InterruptedException ignored) {
 			}
 		}
 		return Storage.getMerged();
@@ -164,7 +166,6 @@ public class WebSocketConnection implements AutoCloseable {
 
 	public void parseResponse(CharSequence message) {
 		try {
-			//System.out.println(message);
 			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 			DocumentBuilder builder = factory.newDocumentBuilder();
 			InputSource source = new InputSource();
@@ -172,7 +173,6 @@ public class WebSocketConnection implements AutoCloseable {
 			Document doc = builder.parse(source);
 
 			String rootName = doc.getDocumentElement().getTagName();
-			//System.out.println(rootName);
 
 			switch (rootName) {
 				case "values":
@@ -221,8 +221,7 @@ public class WebSocketConnection implements AutoCloseable {
 			}
 
 		} catch (ParserConfigurationException | IOException | SAXException e) {
-			e.printStackTrace();
-			throw new RuntimeException(e);
+			LOGGER.error("Failed to parse XML", e);
 		}
 	}
 
