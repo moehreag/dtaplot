@@ -1,32 +1,27 @@
 package io.github.moehreag.dtaplot.socket;
 
+import javax.swing.*;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.SocketChannel;
-import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Map;
 
-import io.github.moehreag.dtaplot.DataLoader;
+import io.github.moehreag.dtaplot.Constants;
 import io.github.moehreag.dtaplot.Discovery;
 import io.github.moehreag.dtaplot.Value;
 import io.github.moehreag.dtaplot.socket.tcp.Calculations;
 import io.github.moehreag.dtaplot.socket.tcp.Datatype;
 import io.github.moehreag.dtaplot.socket.tcp.Parameters;
-import io.github.moehreag.dtaplot.socket.tcp.Visibility;
+import io.github.moehreag.dtaplot.socket.tcp.Visibilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class TcpSocket implements AutoCloseable {
-
-	private static final int WRITE_TIMEOUT = 2;
-
-	private static final int PARAMETERS_WRITE = 3002;
-	private static final int PARAMETERS_READ = 3003;
-	private static final int CALCULATIONS_READ = 3004;
-	private static final int VISIBILITIES_READ = 3005;
 
 	private static final Logger LOGGER = LoggerFactory.getLogger("TcpSocket");
 
@@ -36,7 +31,7 @@ public class TcpSocket implements AutoCloseable {
 	private final SocketChannel socket;
 
 	public TcpSocket() {
-		InetSocketAddress address = Discovery.getHeatpump();
+		InetSocketAddress address = Discovery.getHeatpump(null);
 
 		System.out.println("Connecting to: " + address.getHostString() + ":" + address.getPort());
 		try {
@@ -44,13 +39,17 @@ public class TcpSocket implements AutoCloseable {
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
-
 	}
 
-	public static void main(String[] args) {
+	public static Collection<Map<String, Value<?>>> readAll(){
 		try (TcpSocket socket = new TcpSocket()) {
 			Parameters p = socket.readParameters();
-			DataLoader.getInstance().save(p.getValues(), Path.of("tcpparams.json"));
+			Collection<Map<String, Value<?>>> data = new ArrayList<>(p.getValues());
+			Calculations c = socket.readCalculations();
+			data.addAll(c.getValues());
+			Visibilities v = socket.readVisibilities();
+			data.addAll(v.getValues());
+			return data;
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
@@ -58,19 +57,57 @@ public class TcpSocket implements AutoCloseable {
 
 	public Parameters readParameters() {
 		Parameters parameters = new Parameters();
-		parameters.read(read(PARAMETERS_READ));
+		try {
+			System.out.println("Connected!");
+			writeInts(socket, Constants.PARAMETERS_READ, 0);
+			int cmd = readInt(socket);
+			int length = readInt(socket);
+			System.out.println("CMD: " + cmd + " Length: " + length);
+			int[] data = read(socket, length);
+			System.out.println(Arrays.toString(data));
+			System.out.println();
+			parameters.read(data);
+		} catch (IOException e) {
+			LOGGER.error("Failed to read: ", e);
+		}
+
 		return parameters;
 	}
 
-	public Visibility readVisibility() {
-		Visibility visibility = new Visibility();
-		visibility.read(read(VISIBILITIES_READ));
+	public Visibilities readVisibilities() {
+		Visibilities visibility = new Visibilities();
+		try {
+			System.out.println("Connected!");
+			writeInts(socket, Constants.VISIBILITIES_READ, 0);
+			int cmd = readInt(socket);
+			int length = readInt(socket);
+			System.out.println("CMD: " + cmd + " Length: " + length);
+			int[] data = readChars(socket, length);
+			System.out.println(Arrays.toString(data));
+			System.out.println();
+			visibility.read(data);
+		} catch (IOException e) {
+			LOGGER.error("Failed to read: ", e);
+		}
 		return visibility;
 	}
 
 	public Calculations readCalculations() {
 		Calculations calculations = new Calculations();
-		calculations.read(read(CALCULATIONS_READ));
+		try {
+			System.out.println("Connected!");
+			writeInts(socket, Constants.CALCULATIONS_READ, 0);
+			int cmd = readInt(socket);
+			int stat = readInt(socket);
+			int length = readInt(socket);
+			System.out.println("CMD: " + cmd + " Length: " + length);
+			int[] data = read(socket, length);
+			System.out.println(Arrays.toString(data));
+			System.out.println();
+			calculations.read(data);
+		} catch (IOException e) {
+			LOGGER.error("Failed to read: ", e);
+		}
 		return calculations;
 	}
 
@@ -81,7 +118,7 @@ public class TcpSocket implements AutoCloseable {
 				Value<?> val = map.get(type.getName());
 
 				try {
-					writeInts(socket, PARAMETERS_WRITE, i, type.write(val));
+					writeInts(socket, Constants.PARAMETERS_WRITE, i, type.write(val));
 				} catch (IOException e) {
 					LOGGER.error("Failed to write parameter: " + type.getName() + " with value: " + val.get());
 				}
@@ -90,31 +127,11 @@ public class TcpSocket implements AutoCloseable {
 		}
 
 		try {
-			Thread.sleep(WRITE_TIMEOUT);
+			Thread.sleep(Constants.WRITE_TIMEOUT);
 		} catch (InterruptedException ignored) {
 		}
 
 		return readParameters();
-	}
-
-	private int[] read(int command) {
-
-		try {
-			System.out.println("Connected!");
-			writeInts(socket, command, 0);
-			int cmd = readInt(socket);
-			int length = readInt(socket);
-			System.out.println("CMD: " + cmd + " Length: " + length);
-			int[] data = read(socket, length);
-			System.out.println(Arrays.toString(data));
-			System.out.println();
-			return data;
-
-		} catch (IOException e) {
-			LOGGER.error("Failed to read: ", e);
-		}
-
-		return new int[0];
 	}
 
 	private int[] read(SocketChannel c, int length) throws IOException {
@@ -122,6 +139,16 @@ public class TcpSocket implements AutoCloseable {
 
 		for (int i = 0; i < length; i++) {
 			data[i] = readInt(c);
+		}
+
+		return data;
+	}
+
+	private int[] readChars(SocketChannel c, int length) throws IOException {
+		int[] data = new int[length];
+
+		for (int i = 0; i < length; i++) {
+			data[i] = readChar(c);
 		}
 
 		return data;
@@ -142,10 +169,20 @@ public class TcpSocket implements AutoCloseable {
 
 	private int readInt(SocketChannel in) throws IOException {
 		ByteBuffer buf = READ_BUFFER.clear();
+		buf.limit(4);
 		buf.order(ByteOrder.BIG_ENDIAN);
 		in.read(buf);
 		buf.flip();
 		return buf.getInt();
+	}
+
+	private char readChar(SocketChannel in) throws IOException {
+		ByteBuffer buf = READ_BUFFER.clear();
+		buf.limit(1);
+		buf.order(ByteOrder.BIG_ENDIAN);
+		in.read(buf);
+		buf.flip();
+		return (char) buf.get();
 	}
 
 	@Override

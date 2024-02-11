@@ -32,8 +32,8 @@ jar {
 dependencies {
     implementation files("libs/jfgjds-0.0.1-SNAPSHOT.jar")
     implementation("com.formdev:flatlaf:3.0")
-    implementation 'org.slf4j:slf4j-simple:2.0.9'
-    implementation 'org.slf4j:slf4j-api:2.0.9'
+    implementation 'org.slf4j:slf4j-api:2.0.10'
+    implementation 'org.slf4j:slf4j-simple:2.0.10'
 }
 
 tasks.build.dependsOn shadowJar

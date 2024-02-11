@@ -12,7 +12,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.InetSocketAddress;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -29,6 +28,9 @@ import java.util.stream.Collectors;
 
 import io.github.moehreag.dtaplot.dta.DtaFile;
 import io.github.moehreag.dtaplot.dta.DtaParser;
+import io.github.moehreag.dtaplot.socket.SocketViewer;
+import io.github.moehreag.dtaplot.socket.TcpSocket;
+import io.github.moehreag.dtaplot.socket.WebSocket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ptolemy.plot.Plot;
@@ -37,8 +39,8 @@ public class DtaPlot {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(DtaPlot.class.getSimpleName());
 
-	private static final Supplier<String> HEATPUMP_LOCATION = () -> DotEnv.getOrDefault("PROCLOG_FILE",
-			() -> "http://"+Discovery.getHeatpump().getHostString()+"/proclog");
+	private final Supplier<String> HEATPUMP_LOCATION = () -> DotEnv.getOrDefault("PROCLOG_FILE",
+			() -> "http://"+Discovery.getHeatpump(this.frame).getHostString()+"/proclog");
 
 	private static final NumberFormat timeFormat = new DecimalFormat("00");
 
@@ -48,17 +50,19 @@ public class DtaPlot {
 	private final List<String> displayedDatasets = new ArrayList<>();
 	private final Vector<String> selectionItems = new Vector<>();
 	private final JComboBox<String> selections = new JComboBox<>(selectionItems);
-	private final JTextPane infos = new JTextPane();
+	private final JTable infos = new JTable(new KeyValueTableModel());
 	private final JSlider timeSlider = new JSlider();
 	private final JFrame frame = new JFrame();
 	private final JPanel side = new JPanel();
+	private View currentView = View.WELCOME;
 
 	public void display() {
 
 		frame.setTitle("DtaPlot");
 		frame.getContentPane().removeAll();
 		side.removeAll();
-		if (data.isEmpty()) {
+		LOGGER.info("Loading view: "+currentView);
+		if (currentView == View.WELCOME) {
 			addPlaceholder();
 		} else {
 			JMenuBar menuBar = new JMenuBar();
@@ -143,7 +147,6 @@ public class DtaPlot {
 				@Override
 				public void actionPerformed(ActionEvent e) {
 					JFileChooser chooser = new JFileChooser(new File("."));
-					chooser.setApproveButtonText(tr("chooser.select"));
 					FileFilter json = new FileNameExtensionFilter(tr("filter.json"), "json");
 					chooser.setFileFilter(json);
 					if (chooser.showSaveDialog(frame) != JFileChooser.APPROVE_OPTION)
@@ -155,7 +158,6 @@ public class DtaPlot {
 				@Override
 				public void actionPerformed(ActionEvent e) {
 					JFileChooser chooser = new JFileChooser(new File("."));
-					chooser.setApproveButtonText(tr("chooser.select"));
 					List<String> supported = new ArrayList<>(Arrays.asList(ImageIO.getWriterFileSuffixes()));
 					supported.add("eps");
 					chooser.setFileFilter(new FileNameExtensionFilter(tr("filter.supported"), supported.toArray(String[]::new)));
@@ -188,60 +190,90 @@ public class DtaPlot {
 			});
 			menuBar.add(fileMenu);
 
-			JButton set = new JButton(tr("button.display"));
-			JButton add = new JButton(tr("button.add"));
-			JButton remove = new JButton(tr("button.remove"));
-			set.addActionListener(new AbstractAction() {
+			JMenu viewMenu = new JMenu(tr("menu.view"));
+
+			viewMenu.add(new AbstractAction(tr("view.plot")) {
 				@Override
 				public void actionPerformed(ActionEvent e) {
-					displayedDatasets.clear();
-					displayedDatasets.add((String) selections.getSelectedItem());
-					addPoints();
+					currentView = View.PLOT;
+					display();
 				}
 			});
-			add.addActionListener(new AbstractAction() {
+			viewMenu.add(new AbstractAction(tr("view.tcp")) {
 				@Override
 				public void actionPerformed(ActionEvent e) {
+					currentView = View.TCP;
+					display();
+				}
+			});
+			viewMenu.add(new AbstractAction(tr("view.ws")) {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					currentView = View.WS;
+					display();
+				}
+			});
+			menuBar.add(viewMenu);
+			frame.add(menuBar, BorderLayout.NORTH);
+
+			if (currentView == View.PLOT) {
+
+				JButton set = new JButton(tr("button.display"));
+				JButton add = new JButton(tr("button.add"));
+				JButton remove = new JButton(tr("button.remove"));
+				set.addActionListener(e -> {
+							displayedDatasets.clear();
+							displayedDatasets.add((String) selections.getSelectedItem());
+							addPoints();
+						}
+				);
+				add.addActionListener(e -> {
 					if (!displayedDatasets.contains((String) selections.getSelectedItem())) {
 						displayedDatasets.add((String) selections.getSelectedItem());
 						addDataset((String) selections.getSelectedItem());
 					}
-				}
-			});
-			remove.addActionListener(new AbstractAction() {
-				@Override
-				public void actionPerformed(ActionEvent e) {
+				});
+				remove.addActionListener(e -> {
 					int dataset = datasets.get((String) selections.getSelectedItem());
 					plot.clear(dataset);
 					plot.removeLegend(dataset);
 					displayedDatasets.remove((String) selections.getSelectedItem());
-				}
-			});
 
-			JPanel panel = new JPanel();
-			frame.add(panel, BorderLayout.SOUTH);
-			panel.add(selections);
-			panel.add(set);
-			panel.add(add);
-			panel.add(remove);
-			frame.add(menuBar, BorderLayout.NORTH);
+				});
 
-			side.setLayout(new BoxLayout(side, BoxLayout.Y_AXIS));
-			side.add(timeSlider);
-			timeSlider.addChangeListener(e -> addInfos());
-			timeSlider.setVisible(false);
+				JPanel panel = new JPanel();
+				frame.add(panel, BorderLayout.SOUTH);
+				panel.add(selections);
+				panel.add(set);
+				panel.add(add);
+				panel.add(remove);
+
+				side.setLayout(new BoxLayout(side, BoxLayout.Y_AXIS));
+				side.add(timeSlider);
+				timeSlider.addChangeListener(e -> addInfos());
 
 
-			side.add(new JScrollPane(infos));
-			side.setVisible(false);
-			frame.add(side, BorderLayout.EAST);
-			infos.setContentType("text/html");
-			infos.setEditable(false);
-			frame.add(plot);
+				side.add(new JScrollPane(infos));
+				frame.add(side, BorderLayout.EAST);
+				frame.add(plot);
 
-			plot.fillPlot();
-			plot.repaint();
-			plot.requestFocusInWindow();
+				plot.fillPlot();
+				plot.repaint();
+				plot.requestFocusInWindow();
+				frame.revalidate();
+			} else if (currentView == View.WS) {
+				JScrollPane pane = new JScrollPane();
+				CompletableFuture.runAsync(() -> {
+					SocketViewer.displayWs(pane);
+				});
+				frame.add(pane, BorderLayout.CENTER);
+			} else if (currentView == View.TCP) {
+				JScrollPane pane = new JScrollPane();
+				CompletableFuture.runAsync(() -> {
+					SocketViewer.displayTcp(pane);
+				});
+				frame.add(pane, BorderLayout.CENTER);
+			}
 		}
 
 		if (!frame.isVisible()) {
@@ -256,6 +288,7 @@ public class DtaPlot {
 	}
 
 	private void addPlaceholder() {
+		currentView = View.PLOT;
 		LOGGER.info("Adding placeholder..");
 		JPanel view = new JPanel();
 		view.setLayout(new BoxLayout(view, BoxLayout.Y_AXIS));
@@ -383,10 +416,6 @@ public class DtaPlot {
 		timeSlider.setPaintTicks(true);
 		timeSlider.setValue(timeSlider.getMaximum());
 		timeSlider.validate();
-		if (t.size() > 1) {
-			timeSlider.setVisible(true);
-			side.setVisible(true);
-		}
 
 		refreshSelection();
 		addPoints();
@@ -499,13 +528,14 @@ public class DtaPlot {
 
 	private synchronized void addInfos() {
 		side.setVisible(false);
-		StringBuilder builder = new StringBuilder();
 		data.stream()
 				.filter(map -> {
 					int diff = timeSlider.getValue() - ((Number) map.get("time").get()).intValue();
 					return diff >= 0 && diff < 60;
 				}).findAny()
 				.ifPresent(m -> {
+					KeyValueTableModel model = ((KeyValueTableModel) infos.getModel());
+					model.clear();
 					int time = ((Number) m.get("time").get()).intValue();
 					ZonedDateTime zTime = ZonedDateTime.ofInstant(
 							Instant.ofEpochSecond(time),
@@ -517,20 +547,22 @@ public class DtaPlot {
 							timeFormat.format(zTime.getMonthValue()),
 							timeFormat.format(zTime.getYear())
 					);
-					builder.append("<h3>").append(getFriendlyString("time")).append(": ").append(label).append("</h3>");
+					model.insert(getFriendlyString("time"), label);
+					//builder.append("<h3>").append(getFriendlyString("time")).append(": ").append(label).append("</h3>");
 
 					m.forEach((s, value) -> {
 						if (value.get() instanceof Boolean) {
-							builder.append("<p>")
+							model.insert(getFriendlyString(s), getFriendlyString(value.get()));
+							/*builder.append("<p>")
 									.append(getFriendlyString(s))
 									.append(": ")
 									.append(getFriendlyString(value.get()))
-									.append("</p>");
+									.append("</p>");*/
 						}
 					});
 				});
-		infos.setText("<html><body>" + builder + "</body></html>");
-		infos.setCaretPosition(0);
+		//infos.setText("<html><body>" + builder + "</body></html>");
+		//infos.setCaretPosition(0);
 		side.setVisible(true);
 	}
 
@@ -556,6 +588,13 @@ public class DtaPlot {
 
 	private static String tr(String key, Object... args){
 		return Translations.translate(key, args);
+	}
+
+	private enum View {
+		WELCOME,
+		PLOT,
+		TCP,
+		WS
 	}
 
 }

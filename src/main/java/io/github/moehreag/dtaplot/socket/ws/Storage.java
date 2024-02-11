@@ -15,7 +15,6 @@ public class Storage {
 
 		for (String s : idNameMap.keySet()){
 			if (idValueMap.containsKey(s)) {
-				System.out.println("Merging: "+idNameMap.get(s)+" → "+idValueMap.get(s));
 				merged.put(idNameMap.get(s), Value.of(idValueMap.get(s)));
 			}
 		}

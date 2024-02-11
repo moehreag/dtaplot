@@ -8,6 +8,13 @@ public class Main {
 
 	static {
 		System.setProperty("org.slf4j.simpleLogger.logFile", "System.out");
+		if (Constants.NAME.contains("Dev")){
+			System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", "DEBUG");
+		}
+	}
+
+	public static void init() {
+
 	}
 
 	public static void main(String[] args) {

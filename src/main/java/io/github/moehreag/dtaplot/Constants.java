@@ -12,6 +12,11 @@ public class Constants {
 	static final String DISCOVERY_MAGIC_PACKET = "2000;111;1;\u0000";
 	// Content of response that is contained in responses to discovery broadcast
 	static final String DISCOVERY_RESPONSE_PREFIX = "2500;111;";
+	public static final int WRITE_TIMEOUT = 2;
+	public static final int PARAMETERS_WRITE = 3002;
+	public static final int PARAMETERS_READ = 3003;
+	public static final int CALCULATIONS_READ = 3004;
+	public static final int VISIBILITIES_READ = 3005;
 
 	static {
 		Package pkg = Main.class.getPackage();

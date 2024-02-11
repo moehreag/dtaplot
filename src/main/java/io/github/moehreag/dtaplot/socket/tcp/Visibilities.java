@@ -2,9 +2,9 @@ package io.github.moehreag.dtaplot.socket.tcp;
 
 import java.util.List;
 
-public class Visibility extends DataVector {
+public class Visibilities extends DataVector {
 
-	public Visibility() {
+	public Visibilities() {
 		super(List.of(
 				unknown("ID_Visi_NieAnzeigen"),
 				unknown("ID_Visi_ImmerAnzeigen"),
