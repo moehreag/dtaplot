@@ -29,18 +29,16 @@ import java.util.stream.Collectors;
 import io.github.moehreag.dtaplot.dta.DtaFile;
 import io.github.moehreag.dtaplot.dta.DtaParser;
 import io.github.moehreag.dtaplot.socket.SocketViewer;
-import io.github.moehreag.dtaplot.socket.TcpSocket;
-import io.github.moehreag.dtaplot.socket.WebSocket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ptolemy.plot.Plot;
 
 public class DtaPlot {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(DtaPlot.class.getSimpleName());
+	public static final Logger LOGGER = LoggerFactory.getLogger(DtaPlot.class.getSimpleName());
 
 	private final Supplier<String> HEATPUMP_LOCATION = () -> DotEnv.getOrDefault("PROCLOG_FILE",
-			() -> "http://"+Discovery.getHeatpump(this.frame).getHostString()+"/proclog");
+			() -> "http://" + Discovery.getHeatpump(this.frame).getHostString() + "/proclog");
 
 	private static final NumberFormat timeFormat = new DecimalFormat("00");
 
@@ -51,17 +49,55 @@ public class DtaPlot {
 	private final Vector<String> selectionItems = new Vector<>();
 	private final JComboBox<String> selections = new JComboBox<>(selectionItems);
 	private final JTable infos = new JTable(new KeyValueTableModel());
+	private final JLabel timeLabel = new JLabel();
 	private final JSlider timeSlider = new JSlider();
 	private final JFrame frame = new JFrame();
 	private final JPanel side = new JPanel();
 	private View currentView = View.WELCOME;
+	private final Map<View, AbstractAction> viewMenuActions = Map.of(
+			View.PLOT, new AbstractAction(tr("view.plot")) {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					for (AbstractAction c : viewMenuActions.values()) {
+						c.setEnabled(true);
+					}
+					setEnabled(false);
+					currentView = View.PLOT;
+					display();
+				}
+			},
+			View.TCP, new AbstractAction(tr("view.tcp")) {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					for (AbstractAction c : viewMenuActions.values()) {
+						c.setEnabled(true);
+					}
+					setEnabled(false);
+					currentView = View.TCP;
+					display();
+				}
+			}, View.WS, new AbstractAction(tr("view.ws")) {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					for (AbstractAction c : viewMenuActions.values()) {
+						c.setEnabled(true);
+					}
+					setEnabled(false);
+					currentView = View.WS;
+					display();
+				}
+			});
 
 	public void display() {
+		display(false);
+	}
+
+	public void display(boolean loaded) {
 
 		frame.setTitle("DtaPlot");
 		frame.getContentPane().removeAll();
 		side.removeAll();
-		LOGGER.info("Loading view: "+currentView);
+		LOGGER.info("Loading view: " + currentView);
 		if (currentView == View.WELCOME) {
 			addPlaceholder();
 		} else {
@@ -192,28 +228,18 @@ public class DtaPlot {
 
 			JMenu viewMenu = new JMenu(tr("menu.view"));
 
-			viewMenu.add(new AbstractAction(tr("view.plot")) {
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					currentView = View.PLOT;
-					display();
-				}
-			});
-			viewMenu.add(new AbstractAction(tr("view.tcp")) {
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					currentView = View.TCP;
-					display();
-				}
-			});
-			viewMenu.add(new AbstractAction(tr("view.ws")) {
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					currentView = View.WS;
-					display();
-				}
-			});
+			viewMenuActions.values().stream().sorted(Comparator.comparing(a -> a.getValue(Action.NAME).toString())).forEach(viewMenu::add);
 			menuBar.add(viewMenu);
+
+			JMenu helpMenu = new JMenu(tr("menu.help"));
+			helpMenu.add(new AbstractAction(tr("action.about")) {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					new AboutDialog(frame);
+				}
+			});
+			menuBar.add(helpMenu);
+
 			frame.add(menuBar, BorderLayout.NORTH);
 
 			if (currentView == View.PLOT) {
@@ -250,6 +276,7 @@ public class DtaPlot {
 
 				side.setLayout(new BoxLayout(side, BoxLayout.Y_AXIS));
 				side.add(timeSlider);
+				side.add(timeLabel);
 				timeSlider.addChangeListener(e -> addInfos());
 
 
@@ -261,17 +288,13 @@ public class DtaPlot {
 				plot.repaint();
 				plot.requestFocusInWindow();
 				frame.revalidate();
-			} else if (currentView == View.WS) {
+			} else if (currentView == View.WS && !loaded) {
 				JScrollPane pane = new JScrollPane();
-				CompletableFuture.runAsync(() -> {
-					SocketViewer.displayWs(pane);
-				});
+				CompletableFuture.runAsync(() -> SocketViewer.displayWs(pane));
 				frame.add(pane, BorderLayout.CENTER);
-			} else if (currentView == View.TCP) {
+			} else if (currentView == View.TCP && !loaded) {
 				JScrollPane pane = new JScrollPane();
-				CompletableFuture.runAsync(() -> {
-					SocketViewer.displayTcp(pane);
-				});
+				CompletableFuture.runAsync(() -> SocketViewer.displayTcp(pane));
 				frame.add(pane, BorderLayout.CENTER);
 			}
 		}
@@ -288,7 +311,7 @@ public class DtaPlot {
 	}
 
 	private void addPlaceholder() {
-		currentView = View.PLOT;
+		setView(View.PLOT);
 		LOGGER.info("Adding placeholder..");
 		JPanel view = new JPanel();
 		view.setLayout(new BoxLayout(view, BoxLayout.Y_AXIS));
@@ -298,7 +321,7 @@ public class DtaPlot {
 		in.setContentType("text/html");
 		in.setEditable(false);
 		in.setFont(new Font(in.getFont().getName(), in.getFont().getStyle(), 18));
-		in.setText("<h1><center>"+tr("text.welcome.title")+"</center></h1><br><p>"+tr("text.welcome.text")+"</p>");
+		in.setText("<h1><center>" + tr("text.welcome.title") + "</center></h1><br><p>" + tr("text.welcome.text") + "</p>");
 
 		view.add(Box.createVerticalGlue());
 		text.add(in);
@@ -344,30 +367,22 @@ public class DtaPlot {
 		frame.add(view, BorderLayout.CENTER);
 	}
 
+	private void setView(View view){
+		currentView = view;
+		viewMenuActions.values().forEach(a -> a.setEnabled(true));
+		viewMenuActions.get(view).setEnabled(false);
+	}
+
 	private JTextPane getBottomTextPane() {
 		JTextPane bottomText = new JTextPane();
 		bottomText.setContentType("text/html");
 		bottomText.setEditable(false);
 		bottomText.setFont(new Font(bottomText.getFont().getName(), bottomText.getFont().getStyle(), 10));
 
-		bottomText.setText("<a href=\""+ Constants.URL+"\">"+ Constants.NAME+" "+ Constants.VERSION+"</a>");
+		bottomText.setText("<a href=\"open-about\">" + Constants.NAME + " " + Constants.VERSION + "</a>");
 		bottomText.addHyperlinkListener(e -> {
-			try {
-				if (e.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
-					if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
-						Desktop.getDesktop().browse(e.getURL().toURI());
-					} else {
-						try {
-							ProcessBuilder builder = new ProcessBuilder("xdg-open", e.getURL().toString());
-							builder.start();
-						} catch (Exception ex) {
-							throw new UnsupportedOperationException("Failed to open " + e.getURL().toString());
-						}
-					}
-				}
-			} catch (Throwable throwable) {
-				JOptionPane.showMessageDialog(frame, throwable.toString(), "Error!", JOptionPane.ERROR_MESSAGE);
-				LOGGER.error("Failed to open url: ", throwable);
+			if (e.getDescription().equals("open-about") && e.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
+				new AboutDialog(frame);
 			}
 		});
 		return bottomText;
@@ -387,10 +402,37 @@ public class DtaPlot {
 				LOGGER.error("Failed to load file: ", ex);
 			}
 		} else if (file.getFileName().toString().endsWith(".json")) {
-			addToGraph(DataLoader.getInstance().load(file));
+			Collection<Map<String, Value<?>>> data = DataLoader.getInstance().load(file);
+			Set<String> keys = data.stream().map(Map::keySet).reduce(new HashSet<>(), (strings, strings2) -> {
+				strings.addAll(strings2);
+				return strings;
+			});
+			if (keys.contains("time")) {
+				LOGGER.info("Loading plot..");
+				setView(View.PLOT);
+				addToGraph(data);
+			} else if (keys.stream().anyMatch(s -> s.startsWith("ID"))) {
+				LOGGER.info("Loading tcp table..");
+				setView(View.TCP);
+				addTable(data);
+			} else {
+				LOGGER.info("Loading ws table..");
+				setView(View.WS);
+				addTable(data);
+			}
 		} else {
 			LOGGER.info("Unsupported File: " + file + " (" + file.getFileName() + ")");
 		}
+	}
+
+	private void addTable(Collection<Map<String, Value<?>>> data) {
+		JTable text = new JTable();
+		KeyValueTableModel tableModel = new KeyValueTableModel();
+		text.setModel(tableModel);
+		tableModel.insert(data);
+		display(true);
+		frame.add(new JScrollPane(text), BorderLayout.CENTER);
+		frame.revalidate();
 	}
 
 	public void addToGraph(Collection<Map<String, Value<?>>> data) {
@@ -416,6 +458,7 @@ public class DtaPlot {
 		timeSlider.setPaintTicks(true);
 		timeSlider.setValue(timeSlider.getMaximum());
 		timeSlider.validate();
+		timeLabel.setFont(new Font(timeLabel.getFont().getName(), timeLabel.getFont().getStyle(), 14));
 
 		refreshSelection();
 		addPoints();
@@ -547,7 +590,7 @@ public class DtaPlot {
 							timeFormat.format(zTime.getMonthValue()),
 							timeFormat.format(zTime.getYear())
 					);
-					model.insert(getFriendlyString("time"), label);
+					timeLabel.setText(getFriendlyString("time")+": "+label);
 					//builder.append("<h3>").append(getFriendlyString("time")).append(": ").append(label).append("</h3>");
 
 					m.forEach((s, value) -> {
@@ -585,8 +628,7 @@ public class DtaPlot {
 	}
 
 
-
-	private static String tr(String key, Object... args){
+	private static String tr(String key, Object... args) {
 		return Translations.translate(key, args);
 	}
 

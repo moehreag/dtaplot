@@ -22,18 +22,15 @@ public class Discovery {
 	private static final Logger LOGGER = LoggerFactory.getLogger(Discovery.class.getSimpleName());
 	private static InetSocketAddress remembered;
 
+	private static final Discovery INSTANCE = new Discovery();
+
 	public static InetSocketAddress getHeatpump(JFrame parent) {
 
 		if (remembered != null) {
 			return remembered;
 		}
 
-		try {
-			return new Discovery().showAddressDialog(parent);
-		} catch (Throwable t) {
-			t.printStackTrace();
-			throw t;
-		}
+		return INSTANCE.showAddressDialog(parent);
 	}
 
 	@SuppressWarnings("BusyWait")
@@ -115,8 +112,6 @@ public class Discovery {
 			}
 		}
 
-
-		LOGGER.debug(Arrays.toString(dialog.getContentPane().getComponents()));
 		LOGGER.debug("Waiting for user interaction...");
 		while (dialog.isVisible()) {
 			try {

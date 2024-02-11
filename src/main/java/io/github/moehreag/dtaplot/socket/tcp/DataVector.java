@@ -5,8 +5,12 @@ import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.*;
 
+import io.github.moehreag.dtaplot.Translations;
 import io.github.moehreag.dtaplot.Value;
 import lombok.Getter;
 
@@ -23,9 +27,14 @@ public abstract class DataVector {
 
 	public void read(int[] data) {
 		Map<String, Value<?>> map = new HashMap<>();
-		for (int i = 0; i < Math.min(data.length, this.data.size()); i++) {
-			Datatype type = this.data.get(i);
-			map.put(type.getName(), type.read(data[i]));
+		int size = this.data.size();
+		for (int i = 0; i < data.length; i++) {
+			Datatype type = i >= size ? unknown("Unknown_"+this.getClass().getSimpleName()+"_"+i) : this.data.get(i);
+			if (!type.getUnit().isEmpty()){
+				map.put(type.getName(), Value.of(type.read(data[i]).get()+" "+type.getUnit()));
+			} else {
+				map.put(type.getName(), type.read(data[i]));
+			}
 		}
 		values.add(map);
 	}
@@ -156,7 +165,18 @@ public abstract class DataVector {
 	}
 
 	protected static Datatype timestamp(String name) {
-		return Datatype.base(name, false);
+		return Datatype.custom(name, val -> {
+			ZonedDateTime zTime = ZonedDateTime.ofInstant(Instant.ofEpochSecond(val),
+					ZoneId.systemDefault());
+			String label = Translations.translate("date.format",
+					timeFormat.format(zTime.getHour()),
+					timeFormat.format(zTime.getMinute()),
+					timeFormat.format(zTime.getDayOfMonth()),
+					timeFormat.format(zTime.getMonthValue()),
+					timeFormat.format(zTime.getYear())
+			);
+			return Value.of(label);
+		});
 	}
 
 	protected static Datatype solarMode(String name, boolean writeable) {
@@ -352,7 +372,11 @@ public abstract class DataVector {
 	}
 
 	protected static Datatype errorcode(String name) {
-		return Datatype.base(name, false);
+		return Datatype.custom(name, v ->
+				Value.of(switch (v){
+			case 718 -> "Max. Aussentemp. (718)";
+			default -> v;
+		}));
 	}
 
 	protected static Datatype switchoffFile(String name) {

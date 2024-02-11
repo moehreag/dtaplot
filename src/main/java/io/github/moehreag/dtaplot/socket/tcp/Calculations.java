@@ -276,8 +276,4 @@ public class Calculations extends DataVector {
 				celsius("Desired_Room_Temperature")
 		));
 	}
-
-	public void read(int[] data){
-
-	}
 }

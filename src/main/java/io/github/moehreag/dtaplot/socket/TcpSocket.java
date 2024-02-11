@@ -1,6 +1,5 @@
 package io.github.moehreag.dtaplot.socket;
 
-import javax.swing.*;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
@@ -33,7 +32,7 @@ public class TcpSocket implements AutoCloseable {
 	public TcpSocket() {
 		InetSocketAddress address = Discovery.getHeatpump(null);
 
-		System.out.println("Connecting to: " + address.getHostString() + ":" + address.getPort());
+		LOGGER.info("Connecting to: " + address.getHostString() + ":" + address.getPort());
 		try {
 			socket = SocketChannel.open(address);
 		} catch (IOException e) {
@@ -41,7 +40,7 @@ public class TcpSocket implements AutoCloseable {
 		}
 	}
 
-	public static Collection<Map<String, Value<?>>> readAll(){
+	public static Collection<Map<String, Value<?>>> readAll() {
 		try (TcpSocket socket = new TcpSocket()) {
 			Parameters p = socket.readParameters();
 			Collection<Map<String, Value<?>>> data = new ArrayList<>(p.getValues());
@@ -58,14 +57,12 @@ public class TcpSocket implements AutoCloseable {
 	public Parameters readParameters() {
 		Parameters parameters = new Parameters();
 		try {
-			System.out.println("Connected!");
+			LOGGER.info("Connected!");
 			writeInts(socket, Constants.PARAMETERS_READ, 0);
 			int cmd = readInt(socket);
 			int length = readInt(socket);
-			System.out.println("CMD: " + cmd + " Length: " + length);
+			LOGGER.info("CMD: " + cmd + " Length: " + length);
 			int[] data = read(socket, length);
-			System.out.println(Arrays.toString(data));
-			System.out.println();
 			parameters.read(data);
 		} catch (IOException e) {
 			LOGGER.error("Failed to read: ", e);
@@ -77,14 +74,12 @@ public class TcpSocket implements AutoCloseable {
 	public Visibilities readVisibilities() {
 		Visibilities visibility = new Visibilities();
 		try {
-			System.out.println("Connected!");
+			LOGGER.info("Connected!");
 			writeInts(socket, Constants.VISIBILITIES_READ, 0);
 			int cmd = readInt(socket);
 			int length = readInt(socket);
-			System.out.println("CMD: " + cmd + " Length: " + length);
+			LOGGER.info("CMD: " + cmd + " Length: " + length);
 			int[] data = readChars(socket, length);
-			System.out.println(Arrays.toString(data));
-			System.out.println();
 			visibility.read(data);
 		} catch (IOException e) {
 			LOGGER.error("Failed to read: ", e);
@@ -95,15 +90,13 @@ public class TcpSocket implements AutoCloseable {
 	public Calculations readCalculations() {
 		Calculations calculations = new Calculations();
 		try {
-			System.out.println("Connected!");
+			LOGGER.info("Connected!");
 			writeInts(socket, Constants.CALCULATIONS_READ, 0);
 			int cmd = readInt(socket);
 			int stat = readInt(socket);
 			int length = readInt(socket);
-			System.out.println("CMD: " + cmd + " Length: " + length);
+			LOGGER.info("CMD: " + cmd + " Stat: " + stat + " Length: " + length);
 			int[] data = read(socket, length);
-			System.out.println(Arrays.toString(data));
-			System.out.println();
 			calculations.read(data);
 		} catch (IOException e) {
 			LOGGER.error("Failed to read: ", e);
@@ -187,6 +180,7 @@ public class TcpSocket implements AutoCloseable {
 
 	@Override
 	public void close() throws IOException {
+		LOGGER.info("Closing socket..");
 		socket.close();
 	}
 }

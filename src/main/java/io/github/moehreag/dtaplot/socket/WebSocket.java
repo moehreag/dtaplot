@@ -82,10 +82,10 @@ public class WebSocket {
 		@Override
 		public void onOpen(java.net.http.WebSocket webSocket) {
 			CompletableFuture.runAsync(() -> {
-				System.out.println("Connection opened!");
+				LOGGER.info("Connection opened!");
 				JDialog dialog = new JDialog((Window) null, "Enter Password");
 
-				dialog.add(new JLabel("Enter the password for your heatpump below:"), BorderLayout.NORTH);
+				dialog.add(new JLabel("Enter the password for your heatpump below (may be left empty):"), BorderLayout.NORTH);
 				JPanel center = new JPanel();
 				JTextField input = new JTextField();
 
@@ -115,9 +115,9 @@ public class WebSocket {
 
 						String pw = input.getText().isBlank() ? "0" : input.getText();
 
-						System.out.println("Sending login..");
+						LOGGER.info("Sending login..");
 						connection.send("LOGIN;" + pw);
-						System.out.println("Login sent!");
+						LOGGER.info("Login sent!");
 						connection.timer.schedule(new TimerTask() {
 							@Override
 							public void run() {
@@ -153,7 +153,7 @@ public class WebSocket {
 
 		@Override
 		public CompletionStage<?> onClose(java.net.http.WebSocket webSocket, int statusCode, String reason) {
-			System.out.println("Socket closed! " + statusCode + " " + reason);
+			LOGGER.info("Socket closed! " + statusCode + " " + reason);
 			connection.close();
 			return java.net.http.WebSocket.Listener.super.onClose(webSocket, statusCode, reason);
 		}
@@ -166,7 +166,7 @@ public class WebSocket {
 
 
 	public void close() {
-		System.out.println("Closing!");
+		LOGGER.info("Closing!");
 		if (socket != null) {
 			socket.sendClose(java.net.http.WebSocket.NORMAL_CLOSURE, "ok");
 			socket = null;
@@ -217,12 +217,12 @@ public class WebSocket {
 					break;
 				default:
 					/* unhandled case? */
-					System.out.println(doc.getDocumentElement().getTagName());
+					LOGGER.info(doc.getDocumentElement().getTagName());
 					NodeList list = doc.getDocumentElement().getChildNodes();
 					for (int i = 0; i < list.getLength(); i++) {
 						Node node = list.item(i);
 						String name = node.getNodeName();
-						System.out.println(name);
+						LOGGER.info(name);
 					}
 					break;
 
