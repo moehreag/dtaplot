@@ -250,7 +250,8 @@ public class DtaPlot {
 							if (fileName.endsWith(".eps")) {
 								plot.export(out);
 							} else {
-								ImageIO.write(plot.exportImage(new Rectangle(frame.getSize())), fileName.substring(fileName.lastIndexOf(".") + 1), out);
+								ImageIO.write(plot.exportImage(new Rectangle(Math.max(1920, frame.getWidth()), Math.max(1080, frame.getHeight()))),
+										fileName.substring(fileName.lastIndexOf(".") + 1), out);
 							}
 						} catch (IOException ex) {
 							LOGGER.error("Failed to save file: ", ex);
@@ -357,12 +358,13 @@ public class DtaPlot {
 					}
 				});
 
-				menuBar.add(tcpMenu);
 				if (!loaded) {
+					frame.getContentPane().removeAll();
 					JScrollPane pane = new JScrollPane();
 					CompletableFuture.runAsync(() -> SocketViewer.displayTcp(pane));
 					frame.add(pane, BorderLayout.CENTER);
 				}
+				menuBar.add(tcpMenu);
 			}
 			menuBar.add(helpMenu);
 			frame.add(menuBar, BorderLayout.NORTH);

@@ -16,9 +16,8 @@ previously saved files.
 
 ### Notes
 
-- When exporting images note that the resulting image will 
-have the resolution of the currently displayed graph pane.
-This means that if you increase the window size, the resolution will get
+- In case the resolution of an exported image is too little
+for your taste, the window size and the resolution will get
 higher.
 
 ### Screenshots

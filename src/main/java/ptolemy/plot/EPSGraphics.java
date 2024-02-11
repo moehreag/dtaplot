@@ -355,7 +355,7 @@ public class EPSGraphics extends Graphics {
             _buffer.append("/Helvetica findfont\n");
         }
 
-        _buffer.append("").append(size).append(" scalefont setfont\n");
+        _buffer.append(size).append(" scalefont setfont\n");
         _currentFont = font;
     }
 
