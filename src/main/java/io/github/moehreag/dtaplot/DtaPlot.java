@@ -95,7 +95,7 @@ public class DtaPlot {
 
 	public void display(boolean loaded) {
 
-		frame.setTitle("DtaPlot");
+		frame.setTitle(Constants.NAME+" "+Constants.VERSION);
 		side.removeAll();
 		LOGGER.info("Loading view: " + currentView);
 		if (currentView == View.WELCOME) {
@@ -329,6 +329,7 @@ public class DtaPlot {
 
 				boolean connected;
 				if (!loaded) {
+					frame.getContentPane().removeAll();
 					JScrollPane pane = new JScrollPane();
 					connected = true;
 					CompletableFuture.runAsync(() -> SocketViewer.displayWs(pane));
