@@ -7,18 +7,28 @@ import io.github.moehreag.dtaplot.KeyValueTableModel;
 public class SocketViewer {
 
 	public static void displayTcp(JScrollPane pane) {
-		JTable text = new JTable();
-		KeyValueTableModel tableModel = new KeyValueTableModel();
-		text.setModel(tableModel);
-		pane.setViewportView(text);
+		KeyValueTableModel tableModel;
+		if (pane.getViewport().getView() instanceof JTable table){
+			tableModel = (KeyValueTableModel) table.getModel();
+		} else {
+			JTable text = new JTable();
+			tableModel = new KeyValueTableModel();
+			text.setModel(tableModel);
+			pane.setViewportView(text);
+		}
 		tableModel.insert(TcpSocket.readAll());
 	}
 
 	public static void displayWs(JScrollPane pane) {
-		JTable text = new JTable();
-		KeyValueTableModel tableModel = new KeyValueTableModel();
-		text.setModel(tableModel);
-		pane.setViewportView(text);
+		KeyValueTableModel tableModel;
+		if (pane.getViewport().getView() instanceof JTable table){
+			tableModel = (KeyValueTableModel) table.getModel();
+		} else {
+			JTable text = new JTable();
+			tableModel = new KeyValueTableModel();
+			text.setModel(tableModel);
+			pane.setViewportView(text);
+		}
 		WebSocket.read(tableModel::insert);
 	}
 }

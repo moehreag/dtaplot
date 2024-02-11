@@ -32,14 +32,17 @@ public class AboutDialog {
 			}
 		});
 		TextPaneUtil.addLinkHandler(text, parent);
+		TextPaneUtil.hideCaret(text);
 		dialog.add(text);
 
-		dialog.add(new JButton(new AbstractAction(Translations.translate("action.close")) {
+		JPanel footer = new JPanel();
+		footer.add(new JButton(new AbstractAction(Translations.translate("action.close")) {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				dialog.dispose();
 			}
-		}), BorderLayout.SOUTH);
+		}));
+		dialog.add(footer, BorderLayout.SOUTH);
 
 		dialog.setSize(250, 200);
 		dialog.setLocationRelativeTo(null);

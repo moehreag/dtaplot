@@ -29,6 +29,7 @@ import java.util.stream.Collectors;
 import io.github.moehreag.dtaplot.dta.DtaFile;
 import io.github.moehreag.dtaplot.dta.DtaParser;
 import io.github.moehreag.dtaplot.socket.SocketViewer;
+import io.github.moehreag.dtaplot.socket.WebSocket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ptolemy.plot.Plot;
@@ -95,7 +96,6 @@ public class DtaPlot {
 	public void display(boolean loaded) {
 
 		frame.setTitle("DtaPlot");
-		frame.getContentPane().removeAll();
 		side.removeAll();
 		LOGGER.info("Loading view: " + currentView);
 		if (currentView == View.WELCOME) {
@@ -111,61 +111,13 @@ public class DtaPlot {
 					addFileFilters(chooser);
 					if (chooser.showOpenDialog(frame) != JFileChooser.APPROVE_OPTION)
 						return;
-					data.clear();
-					addToGraph(chooser.getSelectedFile().toPath());
+					if (currentView == View.PLOT) {
+						data.clear();
+					}
+					open(chooser.getSelectedFile().toPath());
 				}
 			});
-			fileMenu.add(new AbstractAction(tr("action.addFile")) {
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					CompletableFuture.runAsync(() -> {
-						JFileChooser chooser = new JFileChooser(new File("."));
-						chooser.setMultiSelectionEnabled(true);
-						addFileFilters(chooser);
-						if (chooser.showOpenDialog(frame) != JFileChooser.APPROVE_OPTION)
-							return;
-						for (File f : chooser.getSelectedFiles()) {
-							LOGGER.info("Adding file " + f + " to the graph!");
-							addToGraph(f.toPath());
-						}
-					});
-				}
-			});
-			fileMenu.add(new AbstractAction(tr("action.load")) {
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					CompletableFuture.runAsync(() -> {
-						String url = HEATPUMP_LOCATION.get();
-						if (url.trim().isEmpty()) {
-							return;
-						}
-						try (InputStream in = URI.create(url).toURL().openStream()) {
-							byte[] bytes = in.readAllBytes();
-							data.clear();
-							addToGraph(bytes);
-						} catch (IOException ex) {
-							LOGGER.error("Failed to load file: ", ex);
-						}
-					});
-				}
-			});
-			fileMenu.add(new AbstractAction(tr("action.addHp")) {
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					CompletableFuture.runAsync(() -> {
-						String url = HEATPUMP_LOCATION.get();
-						if (url.trim().isEmpty()) {
-							return;
-						}
-						try (InputStream in = URI.create(url).toURL().openStream()) {
-							byte[] bytes = in.readAllBytes();
-							addToGraph(bytes);
-						} catch (IOException ex) {
-							LOGGER.error("Failed to load file: ", ex);
-						}
-					});
-				}
-			});
+
 			fileMenu.add(new AbstractAction(tr("action.save")) {
 				@Override
 				public void actionPerformed(ActionEvent e) {
@@ -175,52 +127,24 @@ public class DtaPlot {
 						chooser.setFileFilter(json);
 						if (chooser.showSaveDialog(frame) != JFileChooser.APPROVE_OPTION)
 							return;
-						DataLoader.getInstance().save(data, chooser.getSelectedFile().toPath());
-					});
-				}
-			});
-			fileMenu.add(new AbstractAction(tr("action.append")) {
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					JFileChooser chooser = new JFileChooser(new File("."));
-					FileFilter json = new FileNameExtensionFilter(tr("filter.json"), "json");
-					chooser.setFileFilter(json);
-					if (chooser.showSaveDialog(frame) != JFileChooser.APPROVE_OPTION)
-						return;
-					DataLoader.getInstance().append(data, chooser.getSelectedFile().toPath());
-				}
-			});
-			fileMenu.add(new AbstractAction(tr("action.export")) {
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					JFileChooser chooser = new JFileChooser(new File("."));
-					List<String> supported = new ArrayList<>(Arrays.asList(ImageIO.getWriterFileSuffixes()));
-					supported.add("eps");
-					chooser.setFileFilter(new FileNameExtensionFilter(tr("filter.supported"), supported.toArray(String[]::new)));
-					for (String s : supported) {
-						chooser.addChoosableFileFilter(new FileNameExtensionFilter(s.toUpperCase(Locale.ROOT) + tr("filter.formatImage"), s));
-					}
-					if (chooser.showSaveDialog(frame) != JFileChooser.APPROVE_OPTION)
-						return;
-					String fileName = chooser.getSelectedFile().getName();
-					if (supported.stream().noneMatch(fileName::endsWith)) {
-						return;
-					}
-					try (OutputStream out = Files.newOutputStream(chooser.getSelectedFile().toPath())) {
-
-						if (fileName.endsWith(".eps")) {
-							plot.export(out);
-						} else {
-							ImageIO.write(plot.exportImage(new Rectangle(frame.getSize())), fileName.substring(fileName.lastIndexOf(".") + 1), out);
+						switch (currentView){
+							case WS, TCP -> {
+								JTable table = (JTable) ((JScrollPane)((BorderLayout)frame.getContentPane().getLayout()).getLayoutComponent(BorderLayout.CENTER))
+										.getViewport().getView();
+								KeyValueTableModel model = (KeyValueTableModel) table.getModel();
+								DataLoader.getInstance().save(model.getOriginal(), chooser.getSelectedFile().toPath());
+							}
+							case PLOT -> DataLoader.getInstance().save(data, chooser.getSelectedFile().toPath());
 						}
-					} catch (IOException ex) {
-						LOGGER.error("Failed to save file: ", ex);
-					}
+					});
 				}
 			});
 			fileMenu.add(new AbstractAction(tr("action.quit")) {
 				@Override
 				public void actionPerformed(ActionEvent e) {
+					if (WebSocket.isConnected()){
+						WebSocket.disconnect();
+					}
 					frame.dispose();
 				}
 			});
@@ -238,11 +162,105 @@ public class DtaPlot {
 					new AboutDialog(frame);
 				}
 			});
-			menuBar.add(helpMenu);
-
-			frame.add(menuBar, BorderLayout.NORTH);
 
 			if (currentView == View.PLOT) {
+				frame.getContentPane().removeAll();
+				JMenu plotMenu = new JMenu(tr("menu.plot"));
+
+				plotMenu.add(new AbstractAction(tr("action.load")) {
+					@Override
+					public void actionPerformed(ActionEvent e) {
+						CompletableFuture.runAsync(() -> {
+							String url = HEATPUMP_LOCATION.get();
+							if (url.trim().isEmpty()) {
+								return;
+							}
+							try (InputStream in = URI.create(url).toURL().openStream()) {
+								byte[] bytes = in.readAllBytes();
+								data.clear();
+								addToGraph(bytes);
+							} catch (IOException ex) {
+								LOGGER.error("Failed to load file: ", ex);
+							}
+						});
+					}
+				});
+				plotMenu.add(new AbstractAction(tr("action.addHp")) {
+					@Override
+					public void actionPerformed(ActionEvent e) {
+						CompletableFuture.runAsync(() -> {
+							String url = HEATPUMP_LOCATION.get();
+							if (url.trim().isEmpty()) {
+								return;
+							}
+							try (InputStream in = URI.create(url).toURL().openStream()) {
+								byte[] bytes = in.readAllBytes();
+								addToGraph(bytes);
+							} catch (IOException ex) {
+								LOGGER.error("Failed to load file: ", ex);
+							}
+						});
+					}
+				});
+				plotMenu.add(new AbstractAction(tr("action.addFile")) {
+					@Override
+					public void actionPerformed(ActionEvent e) {
+						CompletableFuture.runAsync(() -> {
+							JFileChooser chooser = new JFileChooser(new File("."));
+							chooser.setMultiSelectionEnabled(true);
+							addFileFilters(chooser);
+							if (chooser.showOpenDialog(frame) != JFileChooser.APPROVE_OPTION)
+								return;
+							for (File f : chooser.getSelectedFiles()) {
+								LOGGER.info("Adding file " + f + " to the graph!");
+								open(f.toPath());
+							}
+						});
+					}
+				});
+				plotMenu.add(new AbstractAction(tr("action.append")) {
+					@Override
+					public void actionPerformed(ActionEvent e) {
+						JFileChooser chooser = new JFileChooser(new File("."));
+						FileFilter json = new FileNameExtensionFilter(tr("filter.json"), "json");
+						chooser.setFileFilter(json);
+						if (chooser.showSaveDialog(frame) != JFileChooser.APPROVE_OPTION)
+							return;
+						DataLoader.getInstance().append(data, chooser.getSelectedFile().toPath());
+					}
+				});
+				plotMenu.add(new AbstractAction(tr("action.export")) {
+					@Override
+					public void actionPerformed(ActionEvent e) {
+						JFileChooser chooser = new JFileChooser(new File("."));
+						List<String> supported = new ArrayList<>(Arrays.asList(ImageIO.getWriterFileSuffixes()));
+						supported.add("eps");
+						chooser.setFileFilter(new FileNameExtensionFilter(tr("filter.supported"), supported.toArray(String[]::new)));
+						for (String s : supported) {
+							chooser.addChoosableFileFilter(new FileNameExtensionFilter(s.toUpperCase(Locale.ROOT) + tr("filter.formatImage"), s));
+						}
+						if (chooser.showSaveDialog(frame) != JFileChooser.APPROVE_OPTION)
+							return;
+						String fileName = chooser.getSelectedFile().getName();
+						if (supported.stream().noneMatch(fileName::endsWith)) {
+							return;
+						}
+						try (OutputStream out = Files.newOutputStream(chooser.getSelectedFile().toPath())) {
+
+							if (fileName.endsWith(".eps")) {
+								plot.export(out);
+							} else {
+								ImageIO.write(plot.exportImage(new Rectangle(frame.getSize())), fileName.substring(fileName.lastIndexOf(".") + 1), out);
+							}
+						} catch (IOException ex) {
+							LOGGER.error("Failed to save file: ", ex);
+						}
+					}
+				});
+				menuBar.add(plotMenu);
+
+
+				JPanel plotMain = new JPanel(new BorderLayout());
 
 				JButton set = new JButton(tr("button.display"));
 				JButton add = new JButton(tr("button.add"));
@@ -268,7 +286,7 @@ public class DtaPlot {
 				});
 
 				JPanel panel = new JPanel();
-				frame.add(panel, BorderLayout.SOUTH);
+				plotMain.add(panel, BorderLayout.SOUTH);
 				panel.add(selections);
 				panel.add(set);
 				panel.add(add);
@@ -281,22 +299,72 @@ public class DtaPlot {
 
 
 				side.add(new JScrollPane(infos));
+				side.add(Box.createRigidArea(new Dimension(infos.getWidth(), 1)));
 				frame.add(side, BorderLayout.EAST);
-				frame.add(plot);
+				plotMain.add(plot);
+				frame.add(plotMain);
 
 				plot.fillPlot();
 				plot.repaint();
 				plot.requestFocusInWindow();
+				plotMain.revalidate();
 				frame.revalidate();
-			} else if (currentView == View.WS && !loaded) {
-				JScrollPane pane = new JScrollPane();
-				CompletableFuture.runAsync(() -> SocketViewer.displayWs(pane));
-				frame.add(pane, BorderLayout.CENTER);
-			} else if (currentView == View.TCP && !loaded) {
-				JScrollPane pane = new JScrollPane();
-				CompletableFuture.runAsync(() -> SocketViewer.displayTcp(pane));
-				frame.add(pane, BorderLayout.CENTER);
+			} else if (currentView == View.WS) {
+				JMenu wsMenu = new JMenu(tr("menu.ws"));
+				JMenuItem connect = new JMenuItem(tr("action.connect"));
+				JMenuItem disconnect = new JMenuItem(tr("action.disconnect"));
+				connect.addActionListener(e -> {
+						display();
+						disconnect.setEnabled(false);
+						connect.setEnabled(false);
+
+				});
+				wsMenu.add(connect);
+				disconnect.addActionListener(e -> {
+						WebSocket.disconnect();
+						disconnect.setEnabled(false);
+						connect.setEnabled(true);
+				});
+				wsMenu.add(disconnect);
+
+				boolean connected;
+				if (!loaded) {
+					JScrollPane pane = new JScrollPane();
+					connected = true;
+					CompletableFuture.runAsync(() -> SocketViewer.displayWs(pane));
+					frame.add(pane, BorderLayout.CENTER);
+				} else {
+					connected = WebSocket.isConnected();
+				}
+
+				if (!connected){
+					disconnect.setEnabled(false);
+					connect.setEnabled(true);
+				} else {
+					disconnect.setEnabled(true);
+					connect.setEnabled(false);
+				}
+				menuBar.add(wsMenu);
+
+			} else if (currentView == View.TCP) {
+				JMenu tcpMenu = new JMenu(tr("menu.tcp"));
+
+				tcpMenu.add(new AbstractAction(tr("action.refresh")) {
+					@Override
+					public void actionPerformed(ActionEvent e) {
+						display();
+					}
+				});
+
+				menuBar.add(tcpMenu);
+				if (!loaded) {
+					JScrollPane pane = new JScrollPane();
+					CompletableFuture.runAsync(() -> SocketViewer.displayTcp(pane));
+					frame.add(pane, BorderLayout.CENTER);
+				}
 			}
+			menuBar.add(helpMenu);
+			frame.add(menuBar, BorderLayout.NORTH);
 		}
 
 		if (!frame.isVisible()) {
@@ -321,6 +389,7 @@ public class DtaPlot {
 		in.setContentType("text/html");
 		in.setEditable(false);
 		in.setFont(new Font(in.getFont().getName(), in.getFont().getStyle(), 18));
+		TextPaneUtil.hideCaret(in);
 		in.setText("<h1><center>" + tr("text.welcome.title") + "</center></h1><br><p>" + tr("text.welcome.text") + "</p>");
 
 		view.add(Box.createVerticalGlue());
@@ -336,7 +405,8 @@ public class DtaPlot {
 				if (chooser.showOpenDialog(frame) != JFileChooser.APPROVE_OPTION)
 					return;
 				data.clear();
-				addToGraph(chooser.getSelectedFile().toPath());
+				frame.getContentPane().removeAll();
+				open(chooser.getSelectedFile().toPath());
 			}
 		});
 		buttons.add(open);
@@ -349,6 +419,7 @@ public class DtaPlot {
 					if (url.trim().isEmpty()) {
 						return;
 					}
+					frame.getContentPane().removeAll();
 					try (InputStream in = URI.create(url).toURL().openStream()) {
 						byte[] bytes = in.readAllBytes();
 						addToGraph(bytes);
@@ -359,6 +430,22 @@ public class DtaPlot {
 			}
 		});
 		buttons.add(load);
+		buttons.add(new JButton(new AbstractAction(tr("action.connect.ws")) {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				frame.getContentPane().removeAll();
+				setView(View.WS);
+				display();
+			}
+		}));
+		buttons.add(new JButton(new AbstractAction(tr("action.connect.tcp")) {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				frame.getContentPane().removeAll();
+				setView(View.TCP);
+				display();
+			}
+		}));
 
 		view.add(buttons);
 		view.add(Box.createVerticalGlue());
@@ -368,6 +455,9 @@ public class DtaPlot {
 	}
 
 	private void setView(View view){
+		if (WebSocket.isConnected()) {
+			WebSocket.disconnect();
+		}
 		currentView = view;
 		viewMenuActions.values().forEach(a -> a.setEnabled(true));
 		viewMenuActions.get(view).setEnabled(false);
@@ -375,6 +465,7 @@ public class DtaPlot {
 
 	private JTextPane getBottomTextPane() {
 		JTextPane bottomText = new JTextPane();
+		TextPaneUtil.hideCaret(bottomText);
 		bottomText.setContentType("text/html");
 		bottomText.setEditable(false);
 		bottomText.setFont(new Font(bottomText.getFont().getName(), bottomText.getFont().getStyle(), 10));
@@ -388,12 +479,12 @@ public class DtaPlot {
 		return bottomText;
 	}
 
-	public void addToGraph(byte[] bytes) {
+	private void addToGraph(byte[] bytes) {
 		DtaFile dta = DtaParser.get(bytes);
 		addToGraph(dta.getDatapoints());
 	}
 
-	public void addToGraph(Path file) {
+	public void open(Path file) {
 		if (file.getFileName().toString().endsWith(".dta")) {
 			try {
 				byte[] bytes = Files.readAllBytes(file);
@@ -459,6 +550,7 @@ public class DtaPlot {
 		timeSlider.setValue(timeSlider.getMaximum());
 		timeSlider.validate();
 		timeLabel.setFont(new Font(timeLabel.getFont().getName(), timeLabel.getFont().getStyle(), 14));
+		timeLabel.setAlignmentX(0.5f);
 
 		refreshSelection();
 		addPoints();
@@ -593,9 +685,9 @@ public class DtaPlot {
 					timeLabel.setText(getFriendlyString("time")+": "+label);
 					//builder.append("<h3>").append(getFriendlyString("time")).append(": ").append(label).append("</h3>");
 
-					m.forEach((s, value) -> {
-						if (value.get() instanceof Boolean) {
-							model.insert(getFriendlyString(s), getFriendlyString(value.get()));
+					m.entrySet().stream().sorted(Map.Entry.<String, Value<?>>comparingByKey().reversed()).forEach((e) -> {
+						if (e.getValue().get() instanceof Boolean) {
+							model.insert(getFriendlyString(e.getKey()), getFriendlyString(e.getValue().get()));
 							/*builder.append("<p>")
 									.append(getFriendlyString(s))
 									.append(": ")

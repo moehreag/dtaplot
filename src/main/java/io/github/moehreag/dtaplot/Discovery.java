@@ -46,6 +46,7 @@ public class Discovery {
 		dialog.setSize(400, 150);
 
 		JTextPane instruction = new JTextPane();
+		TextPaneUtil.hideCaret(instruction);
 		instruction.setContentType("text/html");
 		instruction.setText(tr("dialog.message"));
 		instruction.setEditable(false);
@@ -195,7 +196,7 @@ public class Discovery {
 					}
 				}
 			} catch (Exception e) {
-				LOGGER.error("AA", e);
+				LOGGER.error("Error while searching: ", e);
 			}
 		}
 

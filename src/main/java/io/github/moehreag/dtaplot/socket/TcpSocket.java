@@ -6,7 +6,6 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
 
@@ -29,7 +28,7 @@ public class TcpSocket implements AutoCloseable {
 
 	private final SocketChannel socket;
 
-	public TcpSocket() {
+	private TcpSocket() {
 		InetSocketAddress address = Discovery.getHeatpump(null);
 
 		LOGGER.info("Connecting to: " + address.getHostString() + ":" + address.getPort());
@@ -57,7 +56,6 @@ public class TcpSocket implements AutoCloseable {
 	public Parameters readParameters() {
 		Parameters parameters = new Parameters();
 		try {
-			LOGGER.info("Connected!");
 			writeInts(socket, Constants.PARAMETERS_READ, 0);
 			int cmd = readInt(socket);
 			int length = readInt(socket);
@@ -74,7 +72,6 @@ public class TcpSocket implements AutoCloseable {
 	public Visibilities readVisibilities() {
 		Visibilities visibility = new Visibilities();
 		try {
-			LOGGER.info("Connected!");
 			writeInts(socket, Constants.VISIBILITIES_READ, 0);
 			int cmd = readInt(socket);
 			int length = readInt(socket);
@@ -90,7 +87,6 @@ public class TcpSocket implements AutoCloseable {
 	public Calculations readCalculations() {
 		Calculations calculations = new Calculations();
 		try {
-			LOGGER.info("Connected!");
 			writeInts(socket, Constants.CALCULATIONS_READ, 0);
 			int cmd = readInt(socket);
 			int stat = readInt(socket);

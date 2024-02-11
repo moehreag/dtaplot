@@ -7,9 +7,12 @@ import java.util.List;
 import java.util.Map;
 
 import io.github.moehreag.dtaplot.Value;
+import lombok.Getter;
 
 public class KeyValueTableModel extends AbstractTableModel {
 	private final List<List<Object>> data = new ArrayList<>();
+	@Getter
+	private Collection<Map<String, Value<?>>> original;
 
 	public KeyValueTableModel() {
 		for (int i = 0; i < getColumnCount(); i++) {
@@ -19,9 +22,10 @@ public class KeyValueTableModel extends AbstractTableModel {
 
 	public void insert(Collection<Map<String, Value<?>>> data) {
 		clear();
+		original = data;
 		for (Map<String, Value<?>> map : data) {
 			for (Map.Entry<String, Value<?>> entry : map.entrySet().stream().sorted(Map.Entry.comparingByKey()).toList()) {
-				this.data.get(0).add(entry.getKey());
+				this.data.get(0).add(Translations.translate(entry.getKey()));
 				this.data.get(1).add(entry.getValue().get());
 			}
 		}

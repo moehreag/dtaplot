@@ -11,19 +11,18 @@ import java.io.StringReader;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.http.HttpClient;
-import java.nio.file.Path;
 import java.util.Timer;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-import io.github.moehreag.dtaplot.DataLoader;
 import io.github.moehreag.dtaplot.Discovery;
+import io.github.moehreag.dtaplot.TextPaneUtil;
 import io.github.moehreag.dtaplot.Translations;
 import io.github.moehreag.dtaplot.Value;
 import io.github.moehreag.dtaplot.socket.ws.Storage;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,41 +35,39 @@ import org.xml.sax.SAXException;
 public class WebSocket {
 	private static final Logger LOGGER = LoggerFactory.getLogger(WebSocket.class.getSimpleName());
 
-	private final Timer timer = new Timer();
+	private Timer timer;
 	private java.net.http.WebSocket socket;
 
-	public static void main(String[] args) {
-		try {
-			new WebSocket((webSocket, m) -> {
-				webSocket.close();
-				DataLoader.getInstance().save(m, Path.of("wsparams.json"));
-			});
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
+	private static final WebSocket INSTANCE = new WebSocket();
 
-	private final BiConsumer<WebSocket, Collection<Map<String, Value<?>>>> consumer;
+	private Consumer<Collection<Map<String, Value<?>>>> consumer;
 
-	public WebSocket(BiConsumer<WebSocket, Collection<Map<String, Value<?>>>> consumer) {
-		this.consumer = consumer;
+	@Getter
+	private static boolean connected;
+
+	public static void disconnect(){
+		INSTANCE.close();
 	}
 
 	public static void read(Consumer<Collection<Map<String, Value<?>>>> consumer) {
+		if (connected){
+			LOGGER.warn("Websocket already connected!");
+			return;
+		}
 		try {
-			WebSocket c = new WebSocket((webSocket, maps) -> consumer.accept(maps));
-			c.load();
+			INSTANCE.consumer = consumer;
+			INSTANCE.load();
 		} catch (Exception e) {
-			throw new RuntimeException(e);
+			LOGGER.error("Error while reading websocket data", e);
 		}
 	}
 
 	public void load() {
 		InetSocketAddress a = Discovery.getHeatpump(null);
-		System.out.println(a);
 		socket = HttpClient.newHttpClient().newWebSocketBuilder().subprotocols("Lux_WS")
 				.buildAsync(URI.create("ws://" + a.getHostString() + ":" + 8214), new WebSocketClient(this))
 				.join();
+		connected = true;
 	}
 
 	@RequiredArgsConstructor
@@ -83,18 +80,23 @@ public class WebSocket {
 		public void onOpen(java.net.http.WebSocket webSocket) {
 			CompletableFuture.runAsync(() -> {
 				LOGGER.info("Connection opened!");
-				JDialog dialog = new JDialog((Window) null, "Enter Password");
+				JDialog dialog = new JDialog((Window) null, tr("dialog.password"));
 
-				dialog.add(new JLabel("Enter the password for your heatpump below (may be left empty):"), BorderLayout.NORTH);
+				JTextPane instructions = new JTextPane();
+				TextPaneUtil.hideCaret(instructions);
+				instructions.setEditable(false);
+				instructions.setText(tr("dialog.password.instruction"));
+				instructions.setFont(new JLabel().getFont());
+				dialog.add(instructions, BorderLayout.NORTH);
 				JPanel center = new JPanel();
 				JTextField input = new JTextField();
 
 				center.setLayout(new BorderLayout());
-				center.add(Box.createRigidArea(new Dimension(20, 40)), BorderLayout.SOUTH);
+				center.add(Box.createRigidArea(new Dimension(20, 35)), BorderLayout.SOUTH);
 				dialog.add(Box.createRigidArea(new Dimension(20, 10)), BorderLayout.WEST);
 				dialog.add(Box.createRigidArea(new Dimension(20, 10)), BorderLayout.EAST);
 				center.add(input);
-				center.add(Box.createRigidArea(new Dimension(20, 40)), BorderLayout.NORTH);
+				center.add(Box.createRigidArea(new Dimension(20, 35)), BorderLayout.NORTH);
 				dialog.add(center);
 
 				input.setMaximumSize(new Dimension(input.getWidth(), input.getFont().getSize() + 3));
@@ -105,6 +107,7 @@ public class WebSocket {
 					@Override
 					public void actionPerformed(ActionEvent e) {
 						dialog.dispose();
+						connection.close();
 					}
 				});
 
@@ -118,6 +121,7 @@ public class WebSocket {
 						LOGGER.info("Sending login..");
 						connection.send("LOGIN;" + pw);
 						LOGGER.info("Login sent!");
+						connection.timer = new Timer();
 						connection.timer.schedule(new TimerTask() {
 							@Override
 							public void run() {
@@ -138,6 +142,7 @@ public class WebSocket {
 				dialog.setSize(400, 200);
 				dialog.setLocationRelativeTo(null);
 				dialog.setVisible(true);
+				input.requestFocus();
 			});
 		}
 
@@ -172,6 +177,8 @@ public class WebSocket {
 			socket = null;
 		}
 		timer.cancel();
+		timer.purge();
+		connected = false;
 	}
 
 	public void parseResponse(CharSequence message) {
@@ -193,7 +200,9 @@ public class WebSocket {
 						String value = node.getFirstChild().getTextContent();
 						Storage.idValueMap.put(id, value);
 					}
-					consumer.accept(this, Set.of(Storage.getMerged()));
+					if (consumer != null) {
+						consumer.accept(Set.of(Storage.getMerged()));
+					}
 					break;
 				case "Navigation":
 					NodeList nodes = doc.getDocumentElement().getElementsByTagName("item");

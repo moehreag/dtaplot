@@ -27,4 +27,12 @@ public class TextPaneUtil {
 			}
 		});
 	}
+
+	public static void hideCaret(JTextPane pane){
+		pane.getCaret().setVisible(false);
+		pane.getCaret().setSelectionVisible(false);
+		pane.setSelectionColor(new Color(0, true));
+		pane.setSelectedTextColor(Color.BLACK);
+		pane.setCaretColor(Color.WHITE);
+	}
 }

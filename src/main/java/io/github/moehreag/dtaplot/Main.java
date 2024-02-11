@@ -22,7 +22,7 @@ public class Main {
 		if (args.length>0){
 			for (String s : args){
 				Path path = Path.of(s);
-				plot.addToGraph(path);
+				plot.open(path);
 			}
 		} else {
 			System.out.println("No file arguments found, opening empty view!");

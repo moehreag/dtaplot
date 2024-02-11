@@ -1,6 +1,6 @@
 # DtaPlot
 
-Plotting/Visualizing software for *some* data of 
+Plotting/Visualizing software for data of 
 Luxtronik heatpump controllers.
 
 ### Features

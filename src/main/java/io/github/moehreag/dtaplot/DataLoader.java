@@ -91,17 +91,19 @@ public class DataLoader {
 		Collection<Map<String, Value<?>>> existing = load(file);
 
 		for (Map<String, Value<?>> map : data){
-			int time = ((Number)map.get("time").get()).intValue();
+			if (map.containsKey("time")) {
+				int time = ((Number) map.get("time").get()).intValue();
 
-			boolean in = false;
-			for (Map<String, Value<?>> e : existing){
-				if (((Number)e.get("time").get()).intValue() == time){
-					in = true;
+				boolean in = false;
+				for (Map<String, Value<?>> e : existing) {
+					if (((Number) e.get("time").get()).intValue() == time) {
+						in = true;
+					}
 				}
-			}
 
-			if (!in){
-				existing.add(map);
+				if (!in) {
+					existing.add(map);
+				}
 			}
 		}
 
