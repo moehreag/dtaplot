@@ -29,6 +29,7 @@ import java.util.stream.Collectors;
 import io.github.moehreag.dtaplot.dta.DtaFile;
 import io.github.moehreag.dtaplot.dta.DtaParser;
 import io.github.moehreag.dtaplot.socket.SocketViewer;
+import io.github.moehreag.dtaplot.socket.TcpSocket;
 import io.github.moehreag.dtaplot.socket.WebSocket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -346,7 +347,7 @@ public class DtaPlot {
 				boolean connected;
 				if (!loaded) {
 					frame.getContentPane().removeAll();
-					JScrollPane pane = new JScrollPane();
+					JPanel pane = new JPanel(new BorderLayout());
 					connected = true;
 					CompletableFuture.runAsync(() -> SocketViewer.displayWs(pane));
 					frame.add(pane, BorderLayout.CENTER);
@@ -372,10 +373,21 @@ public class DtaPlot {
 						display();
 					}
 				});
+				tcpMenu.add(new AbstractAction(tr("action.write")) {
+					@Override
+					public void actionPerformed(ActionEvent e) {
+						int confirmed = JOptionPane.showConfirmDialog(frame, tr("dialog.confirmwrite.text"),
+								tr("dialog.confirmwrite.title"),
+								JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
+						if (confirmed == JOptionPane.OK_OPTION) {
+							TcpSocket.write();
+						}
+					}
+				});
 
 				if (!loaded) {
 					frame.getContentPane().removeAll();
-					JScrollPane pane = new JScrollPane();
+					JPanel pane = new JPanel(new BorderLayout());
 					CompletableFuture.runAsync(() -> SocketViewer.displayTcp(pane));
 					frame.add(pane, BorderLayout.CENTER);
 				}

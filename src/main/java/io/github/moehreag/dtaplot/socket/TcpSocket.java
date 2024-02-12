@@ -26,9 +26,16 @@ public class TcpSocket implements AutoCloseable {
 	private final ByteBuffer READ_BUFFER = ByteBuffer.allocateDirect(4);
 	private final ByteBuffer WRITE_BUFFER = ByteBuffer.allocateDirect(8);
 
-	private final SocketChannel socket;
+	private SocketChannel socket;
+
+	private static final TcpSocket INSTANCE = new TcpSocket();
+
+	private Parameters parameters;
 
 	private TcpSocket() {
+	}
+
+	private void connect() {
 		InetSocketAddress address = Discovery.getHeatpump(null);
 
 		LOGGER.info("Connecting to: " + address.getHostString() + ":" + address.getPort());
@@ -40,7 +47,8 @@ public class TcpSocket implements AutoCloseable {
 	}
 
 	public static Collection<Map<String, Value<?>>> readAll() {
-		try (TcpSocket socket = new TcpSocket()) {
+		try (TcpSocket socket = INSTANCE) {
+			socket.connect();
 			Parameters p = socket.readParameters();
 			Collection<Map<String, Value<?>>> data = new ArrayList<>(p.getValues());
 			Calculations c = socket.readCalculations();
@@ -48,8 +56,14 @@ public class TcpSocket implements AutoCloseable {
 			Visibilities v = socket.readVisibilities();
 			data.addAll(v.getValues());
 			return data;
-		} catch (IOException e) {
-			throw new RuntimeException(e);
+		}
+	}
+
+	public static Parameters write(){
+		try (TcpSocket socket = INSTANCE) {
+			socket.connect();
+			LOGGER.info("Writing all values to the heatpump!");
+			return socket.writeParameters(socket.parameters);
 		}
 	}
 
@@ -66,7 +80,7 @@ public class TcpSocket implements AutoCloseable {
 			LOGGER.error("Failed to read: ", e);
 		}
 
-		return parameters;
+		return this.parameters = parameters;
 	}
 
 	public Visibilities readVisibilities() {
@@ -111,7 +125,6 @@ public class TcpSocket implements AutoCloseable {
 				} catch (IOException e) {
 					LOGGER.error("Failed to write parameter: " + type.getName() + " with value: " + val.get());
 				}
-
 			}
 		}
 
@@ -175,8 +188,12 @@ public class TcpSocket implements AutoCloseable {
 	}
 
 	@Override
-	public void close() throws IOException {
+	public void close() {
 		LOGGER.info("Closing socket..");
-		socket.close();
+		try {
+			socket.close();
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
 	}
 }

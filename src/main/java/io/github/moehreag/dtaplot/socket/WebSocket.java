@@ -45,6 +45,8 @@ public class WebSocket {
 	@Getter
 	private static boolean connected;
 
+	private WebSocket(){}
+
 	public static void disconnect(){
 		INSTANCE.close();
 	}
