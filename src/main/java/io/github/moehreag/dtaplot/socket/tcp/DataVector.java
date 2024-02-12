@@ -31,7 +31,7 @@ public abstract class DataVector {
 		for (int i = 0; i < data.length; i++) {
 			Datatype type = i >= size ? unknown("Unknown_"+this.getClass().getSimpleName()+"_"+i) : this.data.get(i);
 			if (!type.getUnit().isEmpty()){
-				map.put(type.getName(), Value.of(type.read(data[i]).get()+" "+type.getUnit()));
+				map.put(type.getName(), type.read(data[i]));
 			} else {
 				map.put(type.getName(), type.read(data[i]));
 			}
@@ -102,8 +102,8 @@ public abstract class DataVector {
 			int minutes = Math.floorDiv(value, 60) % 60;
 			int seconds = value % 60;
 
-			return Value.of(String.format("%s:%s", hours, timeFormat.format(minutes)) +
-					(seconds > 0 ? String.format(":%s", timeFormat.format(seconds)) : ""));
+			return String.format("%s:%s", hours, timeFormat.format(minutes)) +
+					(seconds > 0 ? String.format(":%s", timeFormat.format(seconds)) : "");
 		}, value -> {
 			if (value.get() instanceof String s) {
 				Integer[] d = Arrays.stream(s.split(":")).map(Integer::parseInt).toArray(Integer[]::new);
@@ -148,7 +148,7 @@ public abstract class DataVector {
 	}
 
 	protected static Datatype hours2(String name, boolean writeable) {
-		return Datatype.custom(name, writeable, value -> Value.of(1 + value / 2), value -> {
+		return Datatype.custom(name, writeable, value -> 1 + value / 2, value -> {
 			if (value.get() instanceof Number num) {
 				return Math.round((num.floatValue() - 1) * 2);
 			}
@@ -168,14 +168,13 @@ public abstract class DataVector {
 		return Datatype.custom(name, val -> {
 			ZonedDateTime zTime = ZonedDateTime.ofInstant(Instant.ofEpochSecond(val),
 					ZoneId.systemDefault());
-			String label = Translations.translate("date.format",
+			return Translations.translate("date.format",
 					timeFormat.format(zTime.getHour()),
 					timeFormat.format(zTime.getMinute()),
 					timeFormat.format(zTime.getDayOfMonth()),
 					timeFormat.format(zTime.getMonthValue()),
 					timeFormat.format(zTime.getYear())
 			);
-			return Value.of(label);
 		});
 	}
 
@@ -199,10 +198,10 @@ public abstract class DataVector {
 					int hours2 = Math.floorDiv(value_high, 60);
 					int minutes2 = value_high % 60;
 
-					return Value.of(String.format(
+					return String.format(
 							"%s:%s-%s:%s",
 							hours1, timeFormat.format(minutes1), hours2, timeFormat.format(minutes2)
-					));
+					);
 				}, value -> {
 					if (value.get() instanceof String s) {
 						String[] d = s.split("-");
@@ -348,7 +347,7 @@ public abstract class DataVector {
 	}
 
 	protected static Datatype character(String name) {
-		return Datatype.custom(name, integer -> Value.of((char)(int)integer));
+		return Datatype.custom(name, integer -> (char)(int)integer);
 	}
 
 	protected static Datatype ipv4Address(String name) {
@@ -356,9 +355,9 @@ public abstract class DataVector {
 			ByteBuffer buf = ByteBuffer.wrap(new byte[4]);
 			buf.putInt(value);
 			try {
-				return Value.of(Inet4Address.getByAddress(buf.array()).getHostAddress());
+				return Inet4Address.getByAddress(buf.array()).getHostAddress();
 			} catch (UnknownHostException e) {
-				return Value.of("");
+				return "";
 			}
 		}, value -> {
 			if (value.get() instanceof String s && !s.isBlank()) {
@@ -373,10 +372,10 @@ public abstract class DataVector {
 
 	protected static Datatype errorcode(String name) {
 		return Datatype.custom(name, v ->
-				Value.of(switch (v){
+				switch (v){
 			case 718 -> "Max. Aussentemp. (718)";
 			default -> v;
-		}));
+		});
 	}
 
 	protected static Datatype switchoffFile(String name) {
@@ -492,9 +491,9 @@ public abstract class DataVector {
 			if (value > 0) {
 				int major = Math.floorDiv(value, 100);
 				int minor = value % 100;
-				return Value.of(String.format("%s.%s", major, minor));
+				return String.format("%s.%s", major, minor);
 			}
-			return Value.of("0");
+			return "0";
 		});
 	}
 }

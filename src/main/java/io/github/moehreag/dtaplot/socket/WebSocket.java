@@ -127,7 +127,7 @@ public class WebSocket {
 							public void run() {
 								connection.send("REFRESH");
 							}
-						}, 1000, 1000);
+						}, 10, 1000);
 
 
 						dialog.setVisible(false);
@@ -185,10 +185,8 @@ public class WebSocket {
 		try {
 			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 			DocumentBuilder builder = factory.newDocumentBuilder();
-			InputSource source = new InputSource();
-			source.setCharacterStream(new StringReader(message.toString()));
+			InputSource source = new InputSource(new StringReader(message.toString()));
 			Document doc = builder.parse(source);
-
 			String rootName = doc.getDocumentElement().getTagName();
 
 			switch (rootName) {

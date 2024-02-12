@@ -59,7 +59,7 @@ public class Discovery {
 		JPanel inputPanel = new JPanel(new FlowLayout());
 		dialog.add(inputPanel);
 		JLabel loading = new JLabel(tr("dialog.loading"));
-		loading.setFont(new Font(loading.getFont().getName(), Font.ITALIC, loading.getFont().getSize()));
+		loading.setFont(loading.getFont().deriveFont(Font.ITALIC));
 		inputPanel.add(loading);
 
 		JPanel footer = new JPanel(new FlowLayout(FlowLayout.RIGHT));

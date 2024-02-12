@@ -64,6 +64,18 @@ public class DtaPlot {
 					}
 					setEnabled(false);
 					currentView = View.PLOT;
+					CompletableFuture.runAsync(() -> {
+						String url = HEATPUMP_LOCATION.get();
+						if (url.trim().isEmpty()) {
+							return;
+						}
+						try (InputStream in = URI.create(url).toURL().openStream()) {
+							byte[] bytes = in.readAllBytes();
+							addToGraph(bytes);
+						} catch (IOException ex) {
+							LOGGER.error("Failed to load file: ", ex);
+						}
+					});
 					display();
 				}
 			},
@@ -300,7 +312,10 @@ public class DtaPlot {
 
 
 				side.add(new JScrollPane(infos));
+				infos.setShowGrid(true);
 				side.add(Box.createRigidArea(new Dimension(infos.getWidth(), 1)));
+				side.setMaximumSize(new Dimension(frame.getWidth() / 4, frame.getHeight()));
+				side.setPreferredSize(new Dimension(frame.getWidth() / 4, frame.getHeight()));
 				frame.add(side, BorderLayout.EAST);
 				plotMain.add(plot);
 				frame.add(plotMain);
@@ -391,7 +406,7 @@ public class DtaPlot {
 		JTextPane in = new JTextPane();
 		in.setContentType("text/html");
 		in.setEditable(false);
-		in.setFont(new Font(in.getFont().getName(), in.getFont().getStyle(), 18));
+		in.setFont(in.getFont().deriveFont(18f));
 		TextPaneUtil.hideCaret(in);
 		in.setText("<h1><center>" + tr("text.welcome.title") + "</center></h1><br><p>" + tr("text.welcome.text") + "</p>");
 
@@ -471,7 +486,7 @@ public class DtaPlot {
 		TextPaneUtil.hideCaret(bottomText);
 		bottomText.setContentType("text/html");
 		bottomText.setEditable(false);
-		bottomText.setFont(new Font(bottomText.getFont().getName(), bottomText.getFont().getStyle(), 10));
+		bottomText.setFont(bottomText.getFont().deriveFont( 10f));
 
 		bottomText.setText("<a href=\"open-about\">" + Constants.NAME + " " + Constants.VERSION + "</a>");
 		bottomText.addHyperlinkListener(e -> {
@@ -521,6 +536,7 @@ public class DtaPlot {
 
 	private void addTable(Collection<Map<String, Value<?>>> data) {
 		JTable text = new JTable();
+		text.setShowGrid(true);
 		KeyValueTableModel tableModel = new KeyValueTableModel();
 		text.setModel(tableModel);
 		tableModel.insert(data);
@@ -552,7 +568,7 @@ public class DtaPlot {
 		timeSlider.setPaintTicks(true);
 		timeSlider.setValue(timeSlider.getMaximum());
 		timeSlider.validate();
-		timeLabel.setFont(new Font(timeLabel.getFont().getName(), timeLabel.getFont().getStyle(), 14));
+		timeLabel.setFont(timeLabel.getFont().deriveFont(14f));
 		timeLabel.setAlignmentX(0.5f);
 
 		refreshSelection();

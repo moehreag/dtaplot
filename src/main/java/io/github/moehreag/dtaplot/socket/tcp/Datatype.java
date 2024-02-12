@@ -5,17 +5,16 @@ import java.util.function.Function;
 import io.github.moehreag.dtaplot.ArrayUtil;
 import io.github.moehreag.dtaplot.Value;
 import lombok.Getter;
+import lombok.ToString;
 
-@Getter
+@Getter @ToString
 public abstract class Datatype {
 
 	private final String name;
-	private final boolean writeable;
 	private String unit = "";
 
-	public Datatype(String name, boolean writeable) {
+	public Datatype(String name) {
 		this.name = name;
-		this.writeable = writeable;
 	}
 
 	public Datatype unit(String unit){
@@ -27,11 +26,42 @@ public abstract class Datatype {
 
 	public abstract int write(Value<?> val);
 
+	private static <T> Value<T> of(T val, boolean writeable, String unit){
+
+		if (writeable) {
+			return new Value.Mutable<>() {
+
+				private T value = val;
+
+				@Override
+				public void set(T value) {
+					this.value = value;
+				}
+
+				@Override
+				public T get() {
+					return value;
+				}
+
+				@Override
+				public String getUnit() {
+					return unit;
+				}
+
+				@Override
+				public String toString() {
+					return "Datatype:Value.Mutable(" + get() + (!getUnit().isEmpty() ? " " + getUnit() : "") + ")";
+				}
+			};
+		}
+		return Value.of(val, unit);
+	}
+
 	public static Datatype selection(String name, boolean writeable, String... codes){
-		return new Datatype(name, writeable) {
+		return new Datatype(name) {
 			@Override
 			public Value<?> read(int value) {
-				return Value.of(codes[value]);
+				return of(codes[value], writeable, getUnit());
 			}
 
 			@Override
@@ -42,10 +72,10 @@ public abstract class Datatype {
 	}
 
 	public static Datatype scaling(String name, boolean writeable, float scale){
-		return new Datatype(name, writeable) {
+		return new Datatype(name) {
 			@Override
 			public Value<?> read(int value) {
-				return Value.of(value*scale);
+				return of(value*scale, writeable, getUnit());
 			}
 
 			@Override
@@ -59,10 +89,10 @@ public abstract class Datatype {
 	}
 
 	public static Datatype bool(String name, boolean writeable){
-		return new Datatype(name, writeable) {
+		return new Datatype(name) {
 			@Override
 			public Value<?> read(int value) {
-				return Value.of(value != 0);
+				return of(value != 0, writeable, getUnit());
 			}
 
 			@Override
@@ -73,10 +103,10 @@ public abstract class Datatype {
 	}
 
 	public static Datatype base(String name, boolean writeable){
-		return new Datatype(name, writeable) {
+		return new Datatype(name) {
 			@Override
 			public Value<?> read(int value) {
-				return Value.of(value);
+				return of(value, writeable, getUnit());
 			}
 
 			@Override
@@ -89,11 +119,11 @@ public abstract class Datatype {
 		};
 	}
 
-	public static Datatype custom(String name, boolean writeable, Function<Integer, Value<?>> readF, Function<Value<?>, Integer> writeF){
-		return new Datatype(name, writeable) {
+	public static Datatype custom(String name, boolean writeable, Function<Integer, ?> readF, Function<Value<?>, Integer> writeF){
+		return new Datatype(name) {
 			@Override
 			public Value<?> read(int value) {
-				return readF.apply(value);
+				return of(readF.apply(value), writeable, getUnit());
 			}
 
 			@Override
@@ -103,11 +133,11 @@ public abstract class Datatype {
 		};
 	}
 
-	public static Datatype custom(String name, Function<Integer, Value<?>> readF){
-		return new Datatype(name, false) {
+	public static Datatype custom(String name, Function<Integer, ?> readF){
+		return new Datatype(name) {
 			@Override
 			public Value<?> read(int value) {
-				return readF.apply(value);
+				return of(readF.apply(value), false, getUnit());
 			}
 
 			@Override
