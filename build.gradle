@@ -2,6 +2,7 @@ plugins {
     id 'java'
     id 'io.freefair.lombok' version "8.+"
     id 'com.github.johnrengelman.shadow' version '8.1.1'
+    id 'maven-publish'
 }
 
 base.archivesName.set("dtaplot")
@@ -41,10 +42,24 @@ shadowJar {
     mergeServiceFiles()
 
     from ('LICENSE') {
-        rename '^(LICENSE.*?)(\\..*)?$', "\$1_${base.archivesName}\$2"
+        rename '^(LICENSE.*?)(\\..*)?$', "\$1_${base.archivesName.get()}\$2"
     }
 }
 
 test {
     useJUnitPlatform()
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifactId = archivesBaseName
+            from components.java
+        }
+    }
 }

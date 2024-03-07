@@ -40,7 +40,7 @@ public class DtaPlot {
 	public static final Logger LOGGER = LoggerFactory.getLogger(DtaPlot.class.getSimpleName());
 
 	private final Supplier<String> HEATPUMP_LOCATION = () -> DotEnv.getOrDefault("PROCLOG_FILE",
-			() -> "http://" + Discovery.getHeatpump(this.frame).getHostString() + "/proclog");
+			() -> "http://" + Discovery.getHeatpump(this.frame).getHostString() + "/NewProc");
 
 	private static final NumberFormat timeFormat = new DecimalFormat("00");
 
@@ -714,21 +714,14 @@ public class DtaPlot {
 							timeFormat.format(zTime.getYear())
 					);
 					timeLabel.setText(getFriendlyString("time")+": "+label);
-					//builder.append("<h3>").append(getFriendlyString("time")).append(": ").append(label).append("</h3>");
 
 					m.entrySet().stream().sorted(Map.Entry.<String, Value<?>>comparingByKey().reversed()).forEach((e) -> {
 						if (e.getValue().get() instanceof Boolean) {
 							model.insert(getFriendlyString(e.getKey()), getFriendlyString(e.getValue().get()));
-							/*builder.append("<p>")
-									.append(getFriendlyString(s))
-									.append(": ")
-									.append(getFriendlyString(value.get()))
-									.append("</p>");*/
+
 						}
 					});
 				});
-		//infos.setText("<html><body>" + builder + "</body></html>");
-		//infos.setCaretPosition(0);
 		side.setVisible(true);
 	}
 

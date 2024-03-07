@@ -14,10 +14,14 @@ The rendered plot can then also be exported to various image
 formats and all data can also be saved or merged with other,
 previously saved files.
 
-### Notes
+### TODO
+
+- DTA 9000 & 9001 version parsing doesn't work correctly at the moment.
+
+### Tips
 
 - In case the resolution of an exported image is too little
-for your taste, the window size and the resolution will get
+for your taste, increase the window size and the resolution will get
 higher.
 
 ### Screenshots

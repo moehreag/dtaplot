@@ -42,3 +42,4 @@ bin/
 *.json
 *.png
 .env
+dta/

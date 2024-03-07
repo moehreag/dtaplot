@@ -4,10 +4,10 @@ import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import io.github.moehreag.dtaplot.Value;
 import io.github.moehreag.dtaplot.dta.DataField;
 import io.github.moehreag.dtaplot.dta.DataFieldContainer;
 import io.github.moehreag.dtaplot.dta.DtaFile;
-import io.github.moehreag.dtaplot.Value;
 import lombok.AllArgsConstructor;
 
 public class DtaFile9003 extends DtaFile {
@@ -19,33 +19,41 @@ public class DtaFile9003 extends DtaFile {
 		int defSize = data.getInt();
 		short count = data.getShort();
 		short length = data.getShort();
-
 		List<FieldDef> list = new ArrayList<>();
+
 		readDef(list, defSize);
 
 		List<Map<String, Value<?>>> values = new ArrayList<>();
-		for (FieldDef d : list){
-			DataFieldContainer c = d.read();
-			if (!c.isVoid()){
-				Map<String, Value<?>> map = new HashMap<>();
-				c.get().forEach(val -> map.put(val.getName(), val.getValue()));
-				if (!map.isEmpty()){
-					values.add(map);
+
+		for (int i = 0; i < count; i++) {
+			Map<String, Value<?>> map = new HashMap<>();
+			map.put("time", of(data.getInt()));
+			for (FieldDef d : list) {
+				if (d.isEmpty()) {
+					continue;
 				}
+				DataFieldContainer c = d.read();
+				if (!c.isVoid()) {
+					c.get().forEach(val -> map.put(val.getName(), val.getValue()));
+				}
+			}
+			if (map.size() > 1) {
+				values.add(map);
 			}
 		}
 		setDatapoints(values);
+
 	}
 
 	private void readDef(List<FieldDef> list, int defSize) {
 
-		int end = data.position() + defSize -2;
+		int end = (data.position() + defSize) - 2 - 2;
 		String category = "";
-		while (data.position() < end){
+		while (data.position() < end) {
 			byte id = data.get();
 			int type = id & 0x0F;
 
-			switch (type){
+			switch (type) {
 				case 0: {
 					// Gruppe / Kategorie
 					category = readString();
@@ -58,7 +66,7 @@ public class DtaFile9003 extends DtaFile {
 					int color = readColor();
 					//fcfg->setColor(name, color);
 					short factor = 10;
-					if ((id & 0x80) == 0)
+					if ((id & 0x80) != 0)
 						factor = data.getShort();
 					list.add(new Analogue(category, name, color, factor));
 					break;
@@ -69,19 +77,19 @@ public class DtaFile9003 extends DtaFile {
 
 					// Sichtbarkeit fuer jedes Feld extra?
 					short visibility = (short) 0xFFFF;
-					if ((id & 0x40) == 0)
+					if ((id & 0x40) != 0)
 						visibility = data.getShort();
 
 					// factoryOnly fuer jedes Feld extra?
 					short factoryOnlyAll = 0;
-					if ((id & 0x20) == 0)
+					if ((id & 0x20) != 0)
 						factoryOnlyAll = data.getShort();
 
 					// in/out fuer jedes Feld extra
 					short ios = 0;
-					if ((id & 0x04) == 0)
+					if ((id & 0x04) != 0)
 						ios = data.getShort();
-					else if ((id & 0x80) == 0)
+					else if ((id & 0x80) != 0)
 						ios = (short) 0xFFFF;
 
 					Digital.Bit[] bits = new Digital.Bit[count];
@@ -100,7 +108,7 @@ public class DtaFile9003 extends DtaFile {
 					byte count = data.get();
 
 					String[] values = new String[count];
-					for (int i=0; i<count; ++i) {
+					for (int i = 0; i < count; ++i) {
 						String itemText = readString();
 						values[i] = itemText;
 					}
@@ -113,24 +121,23 @@ public class DtaFile9003 extends DtaFile {
 				}
 			}
 
-
 		}
 	}
 
-	private String readString(){
+	private String readString() {
 		StringBuilder builder = new StringBuilder();
-		while (true){
-			byte b = data.get();
-			if (b == 0){
+		while (true) {
+			char b = (char) data.get();
+			if (b == 0) {
 				break;
 			}
 			builder.append(b);
 		}
-		data.position(data.position()-1);
+		//data.position(data.position()+1);
 		return builder.toString().replace("Text_", "");
 	}
 
-	private int readColor(){
+	private int readColor() {
 		return 0xFF000000 | (data.get() << 16) | (data.get() << 8) | data.get();
 	}
 
@@ -143,22 +150,32 @@ public class DtaFile9003 extends DtaFile {
 		int val = highbytes ? buffer.getInt() : buffer.getShort();
 		double res = (val / factor * precision) / precision;
 
-		Value<Number> value = Value.of(res/10);
+		Value<Number> value = Value.of(res/ (precision/10));
 		return DataFieldContainer.single(category, name, value);
 	}
 
 	private interface FieldDef {
 
 		DataFieldContainer read();
+
+		default boolean isEmpty() {
+			return false;
+		}
 	}
 
 	@AllArgsConstructor
 	private static class Category implements FieldDef {
 
 		private final String name;
+
 		@Override
 		public DataFieldContainer read() {
 			return DataFieldContainer.empty();
+		}
+
+		@Override
+		public boolean isEmpty() {
+			return true;
 		}
 	}
 
@@ -189,8 +206,8 @@ public class DtaFile9003 extends DtaFile {
 		@Override
 		public DataFieldContainer read() {
 			DataField.DataFieldBit[] bits = new DataField.DataFieldBit[this.bits.length];
-			for (int i=0;i<bits.length;i++){
-				bits[i] = this.bits[i].read(i, readBit(ios, i));
+			for (int i = 0; i < bits.length; i++) {
+				bits[i] = this.bits[i].read(i, !readBit(ios, i));
 			}
 			return DataField.digital(category, data, bits);
 		}
@@ -200,7 +217,7 @@ public class DtaFile9003 extends DtaFile {
 			private final String name;
 			private final int color;
 
-			public DataField.DataFieldBit read(int bit, boolean inverted){
+			public DataField.DataFieldBit read(int bit, boolean inverted) {
 				return DataField.bit(name, bit, inverted);
 			}
 		}
@@ -228,5 +245,9 @@ public class DtaFile9003 extends DtaFile {
 			}).collect(Collectors.toCollection(ArrayList::new)));
 		}
 
+		@Override
+		public boolean isEmpty() {
+			return true;
+		}
 	}
 }

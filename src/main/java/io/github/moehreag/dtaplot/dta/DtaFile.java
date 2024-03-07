@@ -30,7 +30,8 @@ public abstract class DtaFile {
 
 	protected boolean readBit(int i, int bit, boolean inverted) {
 		if (Integer.bitCount(i) < bit) {
-			throw new IllegalArgumentException("Integer does not contain bit at position " + bit);
+			return false;
+			//throw new IllegalArgumentException("Integer "+i+" does not contain bit at position " + bit);
 		}
 		int value = (i >> bit) & 1;
 		return value == (inverted ? 0 : 1);
