@@ -192,7 +192,7 @@ public class DtaPlot {
 								byte[] bytes = in.readAllBytes();
 								data.clear();
 								addToGraph(bytes);
-							} catch (IOException ex) {
+							} catch (Exception ex) {
 								LOGGER.error("Failed to load file: ", ex);
 							}
 						});
@@ -209,7 +209,7 @@ public class DtaPlot {
 							try (InputStream in = URI.create(url).toURL().openStream()) {
 								byte[] bytes = in.readAllBytes();
 								addToGraph(bytes);
-							} catch (IOException ex) {
+							} catch (Exception ex) {
 								LOGGER.error("Failed to load file: ", ex);
 							}
 						});
@@ -453,7 +453,7 @@ public class DtaPlot {
 					try (InputStream in = URI.create(url).toURL().openStream()) {
 						byte[] bytes = in.readAllBytes();
 						addToGraph(bytes);
-					} catch (IOException ex) {
+					} catch (Exception ex) {
 						LOGGER.error("Failed to load file: ", ex);
 					}
 				});
@@ -510,16 +510,23 @@ public class DtaPlot {
 	}
 
 	private void addToGraph(byte[] bytes) {
-		DtaFile dta = DtaParser.get(bytes);
-		addToGraph(dta.getDatapoints());
+		CompletableFuture.runAsync(() -> {
+			try {
+				DtaFile dta = DtaParser.get(bytes);
+				EventQueue.invokeLater(() -> addToGraph(dta.getDatapoints()));
+			} catch (Exception e) {
+				LOGGER.error("Error while loading file: ", e);
+			}
+		});
 	}
 
 	public void open(Path file) {
 		if (file.getFileName().toString().endsWith(".dta")) {
 			try {
 				byte[] bytes = Files.readAllBytes(file);
-				addToGraph(bytes);
-			} catch (IOException ex) {
+				CompletableFuture.runAsync(() ->
+				addToGraph(bytes));
+			} catch (Exception ex) {
 				LOGGER.error("Failed to load file: ", ex);
 			}
 		} else if (file.getFileName().toString().endsWith(".json")) {
@@ -625,7 +632,11 @@ public class DtaPlot {
 			displayedDatasets.add((String) selections.getSelectedItem());
 		}
 		for (String s : displayedDatasets) {
-			addDataset(s);
+			try {
+				addDataset(s);
+			} catch (Exception e){
+				e.printStackTrace();
+			}
 		}
 	}
 

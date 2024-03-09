@@ -150,7 +150,7 @@ public class DtaFile9003 extends DtaFile {
 		int val = highbytes ? buffer.getInt() : buffer.getShort();
 		double res = (val / factor * precision) / precision;
 
-		Value<Number> value = Value.of(res/ (precision/10));
+		Value<Number> value = Value.of(res);
 		return DataFieldContainer.single(category, name, value);
 	}
 

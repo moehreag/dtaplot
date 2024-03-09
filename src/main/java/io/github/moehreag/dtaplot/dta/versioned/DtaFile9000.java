@@ -4,6 +4,7 @@ import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import io.github.moehreag.dtaplot.dta.DataField;
 import io.github.moehreag.dtaplot.dta.DataFieldContainer;
 import io.github.moehreag.dtaplot.dta.DtaFile;
 import io.github.moehreag.dtaplot.Value;
@@ -102,6 +103,35 @@ public class DtaFile9000 extends DtaFile {
 		fields.stream().filter(f -> !f.isVoid())
 				.forEach(c -> c.get().forEach(d -> map.put(d.getName(), d.getValue())));
 		return map;
+	}
+
+	private DataFieldContainer digital(String category, ByteBuffer buf, DataFieldBit... bits){
+		FieldType type = FieldType.of(data.get());
+		int val = type.read(data);
+		List<DataField<Boolean>> fields = new ArrayList<>();
+		for (DataFieldBit b : bits) {
+			int value = val >> b.getBit() & 1;
+
+			fields.add(new DataField<>(category, b.getName()) {
+				@Override
+				public Value<Boolean> getValue() {
+					return Value.of(value == (b.isInverted() ? 0 : 1));
+				}
+
+				@Override
+				public boolean isNumeric() {
+					return false;
+				}
+			});
+		}
+
+		return DataFieldContainer.multi(Collections.unmodifiableCollection(fields));
+	}
+
+	private DataFieldContainer unknown(int length, ByteBuffer buf){
+		FieldType type = FieldType.of(data.get());
+		float value = type.read(data);
+		return DataFieldContainer.empty();
 	}
 
 	private DataFieldContainer analogue(String category, String name) {

@@ -5,7 +5,7 @@ Luxtronik heatpump controllers.
 
 ### Features
 
-This program fetches data from the `/proclog` endpoint
+This program fetches data from the `/proclog` or `/NewProc` http endpoints
 exposed by the heatpump controller.
 Analog Data is then displayed in the plot on the left as a graph
 while digital data is displayed on the right. Various
@@ -16,7 +16,8 @@ previously saved files.
 
 ### TODO
 
-- DTA 9000 & 9001 version parsing doesn't work correctly at the moment.
+- DTA 9001 version parsing doesn't work correctly at the moment.
+- Error handling (currently the window freezes up. This is bad.)
 
 ### Tips
 
