@@ -10,7 +10,6 @@ import java.util.Collection;
 import java.util.Map;
 
 import io.github.moehreag.dtaplot.Constants;
-import io.github.moehreag.dtaplot.Discovery;
 import io.github.moehreag.dtaplot.Value;
 import io.github.moehreag.dtaplot.socket.tcp.Calculations;
 import io.github.moehreag.dtaplot.socket.tcp.Datatype;
@@ -35,9 +34,7 @@ public class TcpSocket implements AutoCloseable {
 	private TcpSocket() {
 	}
 
-	private void connect() {
-		InetSocketAddress address = Discovery.getHeatpump(null);
-
+	public void connect(InetSocketAddress address){
 		LOGGER.info("Connecting to: " + address.getHostString() + ":" + address.getPort());
 		try {
 			socket = SocketChannel.open(address);
@@ -46,9 +43,9 @@ public class TcpSocket implements AutoCloseable {
 		}
 	}
 
-	public static Collection<Map<String, Value<?>>> readAll() {
+	public static Collection<Map<String, Value<?>>> readAll(InetSocketAddress address) {
 		try (TcpSocket socket = INSTANCE) {
-			socket.connect();
+			socket.connect(address);
 			Parameters p = socket.readParameters();
 			Collection<Map<String, Value<?>>> data = new ArrayList<>(p.getValues());
 			Calculations c = socket.readCalculations();
@@ -59,9 +56,9 @@ public class TcpSocket implements AutoCloseable {
 		}
 	}
 
-	public static Parameters write(){
+	public static Parameters write(InetSocketAddress address){
 		try (TcpSocket socket = INSTANCE) {
-			socket.connect();
+			socket.connect(address);
 			LOGGER.info("Writing all values to the heatpump!");
 			return socket.writeParameters(socket.parameters);
 		}

@@ -1,4 +1,4 @@
-package io.github.moehreag.dtaplot;
+package io.github.moehreag.dtaplot.gui.swing;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -26,9 +26,10 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import com.formdev.flatlaf.FlatLightLaf;
+import io.github.moehreag.dtaplot.*;
 import io.github.moehreag.dtaplot.dta.DtaFile;
 import io.github.moehreag.dtaplot.dta.DtaParser;
-import io.github.moehreag.dtaplot.socket.SocketViewer;
 import io.github.moehreag.dtaplot.socket.TcpSocket;
 import io.github.moehreag.dtaplot.socket.WebSocket;
 import org.slf4j.Logger;
@@ -40,7 +41,7 @@ public class DtaPlot {
 	public static final Logger LOGGER = LoggerFactory.getLogger(DtaPlot.class.getSimpleName());
 
 	private final Supplier<String> HEATPUMP_LOCATION = () -> DotEnv.getOrDefault("PROCLOG_FILE",
-			() -> "http://" + Discovery.getHeatpump(this.frame).getHostString() + "/NewProc");
+			() -> "http://" + DiscoveryDialog.getHeatpump(this.frame).getHostString() + "/NewProc");
 
 	private static final NumberFormat timeFormat = new DecimalFormat("00");
 
@@ -102,13 +103,17 @@ public class DtaPlot {
 				}
 			});
 
+	public DtaPlot(){
+		FlatLightLaf.setup();
+	}
+
 	public void display() {
 		display(false);
 	}
 
 	public void display(boolean loaded) {
 
-		frame.setTitle(Constants.NAME+" "+Constants.VERSION);
+		frame.setTitle(Constants.NAME + " " + Constants.VERSION);
 		side.removeAll();
 		LOGGER.info("Loading view: " + currentView);
 		if (currentView == View.WELCOME) {
@@ -380,7 +385,7 @@ public class DtaPlot {
 								tr("dialog.confirmwrite.title"),
 								JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
 						if (confirmed == JOptionPane.OK_OPTION) {
-							TcpSocket.write();
+							TcpSocket.write(DiscoveryDialog.getHeatpump(null));
 						}
 					}
 				});

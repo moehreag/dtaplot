@@ -1,8 +1,10 @@
-package io.github.moehreag.dtaplot;
+package io.github.moehreag.dtaplot.gui.swing;
 
 import javax.swing.*;
 import javax.swing.event.HyperlinkEvent;
 import java.awt.*;
+
+import io.github.moehreag.dtaplot.gui.imgui.UrlHandler;
 
 public class TextPaneUtil {
 
@@ -10,16 +12,7 @@ public class TextPaneUtil {
 		pane.addHyperlinkListener(e -> {
 			try {
 				if (e.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
-					if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
-						Desktop.getDesktop().browse(e.getURL().toURI());
-					} else {
-						try {
-							ProcessBuilder builder = new ProcessBuilder("xdg-open", e.getURL().toString());
-							builder.start();
-						} catch (Exception ex) {
-							throw new UnsupportedOperationException("Failed to open " + e.getURL().toString());
-						}
-					}
+					UrlHandler.open(e.getURL());
 				}
 			} catch (Throwable throwable) {
 				JOptionPane.showMessageDialog(frame, throwable.toString(), "Error!", JOptionPane.ERROR_MESSAGE);

@@ -1,4 +1,4 @@
-package io.github.moehreag.dtaplot;
+package io.github.moehreag.dtaplot.gui.swing;
 
 import javax.swing.*;
 import javax.swing.table.AbstractTableModel;
@@ -13,6 +13,8 @@ import java.text.NumberFormat;
 import java.util.List;
 import java.util.*;
 
+import io.github.moehreag.dtaplot.Translations;
+import io.github.moehreag.dtaplot.Value;
 import lombok.Getter;
 
 public class KeyValueTableModel extends AbstractTableModel {

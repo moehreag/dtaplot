@@ -1,24 +1,19 @@
 package io.github.moehreag.dtaplot.socket;
 
-import javax.swing.*;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import java.awt.*;
-import java.awt.event.ActionEvent;
 import java.io.IOException;
 import java.io.StringReader;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.http.HttpClient;
-import java.util.Timer;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
-import io.github.moehreag.dtaplot.Discovery;
-import io.github.moehreag.dtaplot.TextPaneUtil;
 import io.github.moehreag.dtaplot.Translations;
 import io.github.moehreag.dtaplot.Value;
 import io.github.moehreag.dtaplot.socket.ws.Storage;
@@ -41,33 +36,35 @@ public class WebSocket {
 	private static final WebSocket INSTANCE = new WebSocket();
 
 	private Consumer<Collection<Map<String, Value<?>>>> consumer;
+	private Supplier<Optional<String>> passwordSupplier;
 
 	@Getter
 	private static boolean connected;
 
-	private WebSocket(){}
+	private WebSocket() {
+	}
 
-	public static void disconnect(){
+	public static void disconnect() {
 		INSTANCE.close();
 	}
 
-	public static void read(Consumer<Collection<Map<String, Value<?>>>> consumer) {
-		if (connected){
+	public static void read(InetSocketAddress address, Supplier<Optional<String>> passwordDialog, Consumer<Collection<Map<String, Value<?>>>> consumer) {
+		if (connected) {
 			LOGGER.warn("Websocket already connected!");
 			return;
 		}
 		try {
+			INSTANCE.passwordSupplier = passwordDialog;
 			INSTANCE.consumer = consumer;
-			INSTANCE.load();
+			INSTANCE.load(address);
 		} catch (Exception e) {
 			LOGGER.error("Error while reading websocket data", e);
 		}
 	}
 
-	public void load() {
-		InetSocketAddress a = Discovery.getHeatpump(null);
+	public void load(InetSocketAddress address) {
 		socket = HttpClient.newHttpClient().newWebSocketBuilder().subprotocols("Lux_WS")
-				.buildAsync(URI.create("ws://" + a.getHostString() + ":" + 8214), new WebSocketClient(this))
+				.buildAsync(URI.create("ws://" + address.getHostString() + ":" + 8214), new WebSocketClient(this))
 				.join();
 		connected = true;
 	}
@@ -82,69 +79,21 @@ public class WebSocket {
 		public void onOpen(java.net.http.WebSocket webSocket) {
 			CompletableFuture.runAsync(() -> {
 				LOGGER.info("Connection opened!");
-				JDialog dialog = new JDialog((Window) null, tr("dialog.password"));
+				connection.passwordSupplier.get().ifPresentOrElse(s -> {
+					String pw = s.isBlank() ? "0" : s;
 
-				JTextPane instructions = new JTextPane();
-				TextPaneUtil.hideCaret(instructions);
-				instructions.setEditable(false);
-				instructions.setText(tr("dialog.password.instruction"));
-				instructions.setFont(new JLabel().getFont());
-				dialog.add(instructions, BorderLayout.NORTH);
-				JPanel center = new JPanel();
-				JTextField input = new JTextField();
+					LOGGER.info("Sending login..");
+					connection.send("LOGIN;" + pw);
+					LOGGER.info("Login sent!");
+					connection.timer = new Timer();
+					connection.timer.schedule(new TimerTask() {
+						@Override
+						public void run() {
+							connection.send("REFRESH");
+						}
+					}, 10, 1000);
+				}, connection::close);
 
-				center.setLayout(new BorderLayout());
-				center.add(Box.createRigidArea(new Dimension(20, 35)), BorderLayout.SOUTH);
-				dialog.add(Box.createRigidArea(new Dimension(20, 10)), BorderLayout.WEST);
-				dialog.add(Box.createRigidArea(new Dimension(20, 10)), BorderLayout.EAST);
-				center.add(input);
-				center.add(Box.createRigidArea(new Dimension(20, 35)), BorderLayout.NORTH);
-				dialog.add(center);
-
-				input.setMaximumSize(new Dimension(input.getWidth(), input.getFont().getSize() + 3));
-
-				JPanel footer = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-
-				JButton cancel = new JButton(new AbstractAction(tr("action.cancel")) {
-					@Override
-					public void actionPerformed(ActionEvent e) {
-						dialog.dispose();
-						connection.close();
-					}
-				});
-
-				JButton done = new JButton(tr("action.select"));
-				done.addActionListener(new AbstractAction() {
-					@Override
-					public void actionPerformed(ActionEvent e) {
-
-						String pw = input.getText().isBlank() ? "0" : input.getText();
-
-						LOGGER.info("Sending login..");
-						connection.send("LOGIN;" + pw);
-						LOGGER.info("Login sent!");
-						connection.timer = new Timer();
-						connection.timer.schedule(new TimerTask() {
-							@Override
-							public void run() {
-								connection.send("REFRESH");
-							}
-						}, 10, 1000);
-
-
-						dialog.setVisible(false);
-						dialog.dispose();
-					}
-				});
-
-				footer.add(done);
-				footer.add(cancel);
-				dialog.add(footer, BorderLayout.SOUTH);
-
-				dialog.setSize(400, 200);
-				dialog.setLocationRelativeTo(null);
-				dialog.setVisible(true);
-				input.requestFocus();
 			});
 		}
 

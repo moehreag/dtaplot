@@ -1,9 +1,12 @@
-package io.github.moehreag.dtaplot;
+package io.github.moehreag.dtaplot.gui.swing;
 
 import javax.swing.*;
 import javax.swing.text.DefaultCaret;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+
+import io.github.moehreag.dtaplot.Constants;
+import io.github.moehreag.dtaplot.Translations;
 
 public class AboutDialog {
 

@@ -2,7 +2,7 @@ package io.github.moehreag.dtaplot;
 
 import java.nio.file.Path;
 
-import com.formdev.flatlaf.FlatLightLaf;
+import io.github.moehreag.dtaplot.gui.swing.DtaPlot;
 
 public class Main {
 
@@ -14,8 +14,6 @@ public class Main {
 	}
 
 	public static void main(String[] args) {
-
-		FlatLightLaf.setup();
 
 		DtaPlot plot = new DtaPlot();
 
