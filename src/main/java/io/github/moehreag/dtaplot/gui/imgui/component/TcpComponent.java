@@ -7,6 +7,7 @@ import java.util.Map;
 
 import imgui.ImGui;
 import imgui.flag.ImGuiCond;
+import imgui.flag.ImGuiTableFlags;
 import io.github.moehreag.dtaplot.Pair;
 import io.github.moehreag.dtaplot.Value;
 import io.github.moehreag.dtaplot.gui.imgui.Dialogs;
@@ -20,10 +21,11 @@ public class TcpComponent extends ViewComponent {
 	private final List<Pair<String, String>> content = new ArrayList<>();
 	@Override
 	public void draw(float width, float height) {
-		if (ImGui.beginTable("##tcpTable", 2)){
+		if (ImGui.beginTable("##tcpTable", 2,ImGuiTableFlags.RowBg | ImGuiTableFlags.Borders)){
 
-			ImGui.tableSetupColumn("column.name");
-			ImGui.tableSetupColumn("column.value");
+			ImGui.tableSetupColumn(tr("column.name"));
+			ImGui.tableSetupColumn(tr("column.value"));
+			ImGui.tableHeadersRow();
 
 			synchronized (content) {
 				content.forEach(p -> {

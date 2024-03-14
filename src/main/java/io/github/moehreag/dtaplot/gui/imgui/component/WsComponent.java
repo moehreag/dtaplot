@@ -4,6 +4,7 @@ import java.util.*;
 
 import imgui.ImGui;
 import imgui.flag.ImGuiCond;
+import imgui.flag.ImGuiTableFlags;
 import imgui.type.ImString;
 import io.github.moehreag.dtaplot.Pair;
 import io.github.moehreag.dtaplot.Translations;
@@ -23,12 +24,10 @@ public class WsComponent extends ViewComponent {
 
 	@Override
 	public void draw(float width, float height) {
-		if (ImGui.beginTable("##wsTable", 2)) {
+		if (ImGui.beginTable("##wsTable", 2, ImGuiTableFlags.RowBg | ImGuiTableFlags.Borders)) {
 
-			ImGui.tableNextColumn();
-			ImGui.text(tr("column.name"));
-			ImGui.tableNextColumn();
-			ImGui.text(tr("column.value"));
+			ImGui.tableSetupColumn(tr("column.name"));
+			ImGui.tableSetupColumn(tr("column.value"));
 			ImGui.tableHeadersRow();
 
 			synchronized (content) {

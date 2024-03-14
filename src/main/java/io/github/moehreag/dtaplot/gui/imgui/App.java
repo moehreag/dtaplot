@@ -6,7 +6,6 @@ import imgui.flag.ImGuiCond;
 import imgui.flag.ImGuiWindowFlags;
 import io.github.moehreag.dtaplot.Constants;
 import io.github.moehreag.dtaplot.Translations;
-import io.github.moehreag.dtaplot.gui.component.*;
 import io.github.moehreag.dtaplot.gui.imgui.component.*;
 import lombok.Getter;
 import org.lwjgl.glfw.GLFW;
@@ -27,7 +26,6 @@ public class App {
 	public App() {
 		INSTANCE = this;
 		window = new Window(960, 580, Constants.NAME + " " + Constants.VERSION, this::process);
-
 		window.run();
 	}
 

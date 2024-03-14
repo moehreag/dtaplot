@@ -20,9 +20,9 @@ public class DiscoveryDialog {
 	private static InetSocketAddress remembered;
 	private boolean show = false;
 	private int frameCount;
-	private ImBoolean rememberCheckbox = new ImBoolean();
-	private Map<String, InetSocketAddress> entryMap = new HashMap<>();
-	private ImInt selected = new ImInt();
+	private final ImBoolean rememberCheckbox = new ImBoolean();
+	private final Map<String, InetSocketAddress> entryMap = new HashMap<>();
+	private final ImInt selected = new ImInt();
 
 	private CompletableFuture<Void> discovery;
 	private String loadingText = tr("dialog.loading");
@@ -91,7 +91,7 @@ public class DiscoveryDialog {
 				show = false;
 			}
 			ImGui.sameLine();
-			if (ImGui.button(tr("action.select"))) {
+			if (ImGui.button(tr("action.select")) && names.length > 0) {
 
 				InetSocketAddress selectedAddress = entryMap.get(names[selected.get()]);
 				if (remember){

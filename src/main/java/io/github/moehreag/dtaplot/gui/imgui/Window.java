@@ -125,6 +125,8 @@ public class Window {
 
 	protected void initImGui() {
 		ImGui.createContext();
+		ImGui.getIO().setIniFilename(null);
+		// ImGui.loadIniSettingsFromMemory(); //TODO what do?
 		plotContext = ImPlot.createContext();
 	}
 
@@ -184,6 +186,11 @@ public class Window {
 		}
 
 		renderBuffer();
+
+		/*if (ImGui.getIO().getWantSaveIniSettings()){
+			ImGui.getIO().setWantSaveIniSettings(false);
+			ImGui.saveIniSettingsToMemory(); // TODO what do?
+		}*/
 	}
 
 	/**
