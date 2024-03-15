@@ -2,6 +2,8 @@ package io.github.moehreag.dtaplot;
 
 import java.nio.file.Path;
 
+import io.github.moehreag.dtaplot.gui.imgui.App;
+import io.github.moehreag.dtaplot.gui.imgui.FileHandler;
 import io.github.moehreag.dtaplot.gui.swing.DtaPlot;
 
 public class Main {
@@ -14,9 +16,23 @@ public class Main {
 	}
 
 	public static void main(String[] args) {
+		openImGui(args);
+	}
 
+	private static void openImGui(String[] args){
+		new App();
+		if (args.length>0){
+			for (String s : args){
+				Path path = Path.of(s);
+				FileHandler.open(path);
+			}
+		} else {
+			System.out.println("No file arguments found, opening empty view!");
+		}
+	}
+
+	private static void openSwing(String[] args){
 		DtaPlot plot = new DtaPlot();
-
 		if (args.length>0){
 			for (String s : args){
 				Path path = Path.of(s);

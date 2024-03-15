@@ -1,22 +1,17 @@
 package io.github.moehreag.dtaplot.gui.imgui.component;
 
-import java.util.*;
+import java.util.Optional;
 
 import imgui.ImGui;
 import imgui.flag.ImGuiCond;
-import imgui.flag.ImGuiTableFlags;
 import imgui.type.ImString;
-import io.github.moehreag.dtaplot.Pair;
 import io.github.moehreag.dtaplot.Translations;
-import io.github.moehreag.dtaplot.Value;
 import io.github.moehreag.dtaplot.gui.imgui.Dialogs;
 import io.github.moehreag.dtaplot.gui.imgui.MenuBar;
 import io.github.moehreag.dtaplot.gui.imgui.SocketLoader;
 import io.github.moehreag.dtaplot.socket.WebSocket;
 
-public class WsComponent extends ViewComponent {
-
-	private final List<Pair<String, String>> content = new ArrayList<>();
+public class WsComponent extends TableComponent {
 	private PwResult pwres = null;
 	private final ImString pwInput = new ImString();
 	private boolean doPwQuery;
@@ -24,23 +19,7 @@ public class WsComponent extends ViewComponent {
 
 	@Override
 	public void draw(float width, float height) {
-		if (ImGui.beginTable("##wsTable", 2, ImGuiTableFlags.RowBg | ImGuiTableFlags.Borders)) {
-
-			ImGui.tableSetupColumn(tr("column.name"));
-			ImGui.tableSetupColumn(tr("column.value"));
-			ImGui.tableHeadersRow();
-
-			synchronized (content) {
-				content.forEach(p -> {
-					ImGui.tableNextColumn();
-					ImGui.text(p.getLeft());
-					ImGui.tableNextColumn();
-					ImGui.text(p.getRight());
-				});
-			}
-
-			ImGui.endTable();
-		}
+		super.draw(width, height);
 		if (doPwQuery){
 			doPwQuery = false;
 			ImGui.openPopup(Translations.translate("dialog.password") + "##ws.pw");
@@ -72,18 +51,6 @@ public class WsComponent extends ViewComponent {
 			}
 
 			ImGui.endPopup();
-		}
-	}
-
-	public void load(Collection<Map<String, Value<?>>> data) {
-		synchronized (content) {
-			content.clear();
-			data.forEach(map -> {
-				map.forEach((s, value) -> {
-					String val = value.getUnit() != null ? String.valueOf(value.get()) : value.get() + value.getUnit();
-					content.add(Pair.of(s, val));
-				});
-			});
 		}
 	}
 

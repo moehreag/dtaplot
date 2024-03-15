@@ -5,7 +5,6 @@ import imgui.ImGui;
 import imgui.flag.ImGuiCond;
 import imgui.flag.ImGuiWindowFlags;
 import io.github.moehreag.dtaplot.Constants;
-import io.github.moehreag.dtaplot.Translations;
 import io.github.moehreag.dtaplot.gui.imgui.component.*;
 import lombok.Getter;
 import org.lwjgl.glfw.GLFW;
@@ -37,6 +36,10 @@ public class App {
 		current.getComponent().unload();
 		current = next;
 		current.getComponent().init();
+	}
+
+	public View<?> getCurrentView(){
+		return current;
 	}
 
 	private void process() {
@@ -79,14 +82,6 @@ public class App {
 
 	public void quit() {
 		GLFW.glfwSetWindowShouldClose(window.getHandle(), true);
-	}
-
-	public static void main(String[] args) {
-		new App();
-	}
-
-	private static String tr(String key, Object... args) {
-		return Translations.translate(key, args);
 	}
 
 	@Getter

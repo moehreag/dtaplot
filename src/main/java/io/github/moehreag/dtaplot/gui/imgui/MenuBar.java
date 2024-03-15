@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 
 import imgui.ImGui;
@@ -29,13 +30,19 @@ public class MenuBar {
 			Menu.of(tr("menu.view"),
 					MenuEntry.simple(tr("view.plot"), () -> {
 						App.getInstance().setView(App.View.PLOT);
-					}),
-					MenuEntry.simple(tr("view.tcp"), () -> {
+					}).enableIf(() -> App.getInstance().getCurrentView() != App.View.PLOT),
+					MenuEntry.handler(tr("view.tcp"), load -> {
 						App.getInstance().setView(App.View.TCP);
-					}),
-					MenuEntry.simple(tr("view.ws"), () -> {
+						Dialogs.showConnectDialog("w.connect.tcp", () -> load).ifPresent(address -> {
+							SocketLoader.loadTCP(address, App.View.TCP.getComponent());
+						});
+					}).enableIf(() -> App.getInstance().getCurrentView() != App.View.TCP),
+					MenuEntry.handler(tr("view.ws"), load -> {
 						App.getInstance().setView(App.View.WS);
-					})
+						Dialogs.showConnectDialog("w.connect.tcp", () -> load).ifPresent(address -> {
+							SocketLoader.loadWS(address, App.View.WS.getComponent());
+						});
+					}).enableIf(() -> App.getInstance().getCurrentView() != App.View.WS)
 			)
 	));
 
@@ -45,7 +52,7 @@ public class MenuBar {
 		menu.forEach(m -> {
 			if (ImGui.beginMenu(m.name)) {
 				m.entries.forEach(e -> {
-					if (ImGui.menuItem(e.name)) {
+					if (ImGui.menuItem(e.name, "", false, e.enableCondition.getAsBoolean())){
 						e.action.run();
 					}
 				});
@@ -56,7 +63,7 @@ public class MenuBar {
 		if (currentViewMenu != null) {
 			if (ImGui.beginMenu(currentViewMenu.name)) {
 				currentViewMenu.entries.forEach(e -> {
-					if (ImGui.menuItem(e.name)) {
+					if (ImGui.menuItem(e.name, "", false, e.enableCondition.getAsBoolean())){
 						e.action.run();
 					}
 				});
@@ -95,6 +102,7 @@ public class MenuBar {
 
 		private final Runnable action;
 		private final Runnable render;
+		private BooleanSupplier enableCondition = () -> true;
 
 		/*public static MenuEntry popup(String name, String popupName, int width, int height, Runnable popupGui){
 			AtomicBoolean shouldShow = new AtomicBoolean();
@@ -162,6 +170,11 @@ public class MenuBar {
 		public static MenuEntry simple(String name, Runnable onClick) {
 			return of(name, onClick, () -> {
 			});
+		}
+
+		public MenuEntry enableIf(BooleanSupplier condition){
+			enableCondition = condition;
+			return this;
 		}
 	}
 }

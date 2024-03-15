@@ -16,6 +16,8 @@ import imgui.ImVec2;
 import imgui.extension.implot.ImPlot;
 import imgui.extension.implot.flag.ImPlotAxisFlags;
 import imgui.extension.implot.flag.ImPlotFlags;
+import imgui.extension.implot.flag.ImPlotLocation;
+import imgui.extension.implot.flag.ImPlotOrientation;
 import imgui.flag.ImGuiDataType;
 import imgui.flag.ImGuiSliderFlags;
 import imgui.type.ImInt;
@@ -54,9 +56,11 @@ public class PlotComponent extends ViewComponent {
 			updated = false;
 		}
 		if (ImPlot.beginPlot("##PlotGraph", tr("label.time"), "°C", new ImVec2(width * 2 / 3, height - 70), ImPlotFlags.NoTitle, ImPlotAxisFlags.Time | autofit, autofit)) {
+			ImPlot.setLegendLocation(ImPlotLocation.NorthEast, ImPlotOrientation.Vertical, false);
 			displayedDatasets.forEach((s, data) -> {
 				ImPlot.plotLine(tr(s), data.getLeft(), data.getRight());
 			});
+
 			ImPlot.endPlot();
 		}
 
@@ -202,17 +206,17 @@ public class PlotComponent extends ViewComponent {
 
 	private void updateTableData(Collection<Map<String, Value<?>>> data) {
 
-		int minTime = -1;
-		int maxTime = -1;
+		int minTime = this.minTime;
+		int maxTime = this.maxTime+minTime;
 		for (Map<String, Value<?>> map : data) {
 
 			int time = ((Number) map.get("time").get()).intValue();
-			if (minTime == -1 || minTime > time) {
+			if (minTime == 0){
 				minTime = time;
+			} else {
+				minTime = Math.min(time, minTime);
 			}
-			if (maxTime == -1 || maxTime < time) {
-				maxTime = time;
-			}
+			maxTime = Math.max(time, maxTime);
 
 			map.forEach((s, value) -> {
 				if ("time".equals(s)) {

@@ -27,7 +27,7 @@ public class AboutDialog {
 			if (ImGui.beginPopupModal(tr("about.title"))) {
 
 				ImGui.pushFont(App.getInstance().titleFont);
-				ImGui.text(Constants.NAME+" "+Constants.VERSION);
+				ImGui.textWrapped(Constants.NAME+" "+Constants.VERSION);
 				ImGui.popFont();
 
 				ImGui.newLine();

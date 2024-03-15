@@ -1,56 +1,14 @@
 package io.github.moehreag.dtaplot.gui.imgui.component;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-
 import imgui.ImGui;
 import imgui.flag.ImGuiCond;
-import imgui.flag.ImGuiTableFlags;
-import io.github.moehreag.dtaplot.Pair;
-import io.github.moehreag.dtaplot.Value;
 import io.github.moehreag.dtaplot.gui.imgui.Dialogs;
 import io.github.moehreag.dtaplot.gui.imgui.DiscoveryDialog;
 import io.github.moehreag.dtaplot.gui.imgui.MenuBar;
 import io.github.moehreag.dtaplot.gui.imgui.SocketLoader;
 import io.github.moehreag.dtaplot.socket.TcpSocket;
 
-public class TcpComponent extends ViewComponent {
-
-	private final List<Pair<String, String>> content = new ArrayList<>();
-	@Override
-	public void draw(float width, float height) {
-		if (ImGui.beginTable("##tcpTable", 2,ImGuiTableFlags.RowBg | ImGuiTableFlags.Borders)){
-
-			ImGui.tableSetupColumn(tr("column.name"));
-			ImGui.tableSetupColumn(tr("column.value"));
-			ImGui.tableHeadersRow();
-
-			synchronized (content) {
-				content.forEach(p -> {
-					ImGui.tableNextColumn();
-					ImGui.text(p.getLeft());
-					ImGui.tableNextColumn();
-					ImGui.text(p.getRight());
-				});
-			}
-
-			ImGui.endTable();
-		}
-	}
-
-	public void load(Collection<Map<String, Value<?>>> data){
-		synchronized (content) {
-			content.clear();
-			data.forEach(map -> {
-				map.forEach((s, value) -> {
-					String val = value.getUnit() != null ? String.valueOf(value.get()) : value.get() + value.getUnit();
-					content.add(Pair.of(s, val));
-				});
-			});
-		}
-	}
+public class TcpComponent extends TableComponent {
 
 	@Override
 	public MenuBar.Menu getMenu() {
