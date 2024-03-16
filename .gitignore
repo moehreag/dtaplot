@@ -38,8 +38,5 @@ bin/
 ### Mac OS ###
 .DS_Store
 
-*.dta
-*.json
-*.png
 .env
 dta/
