@@ -98,8 +98,8 @@ public class Dialogs {
 
 	private static String addAllFilter(String filters){
 		if (filters.contains(",")){
-			String[] parts = filters.split(",", 2);
-			return parts[0]+","+FileFilters.ALL+","+parts[1];
+			String[] parts = filters.split("},", 2);
+			return parts[0] + "}," + FileFilters.ALL + "," + parts[1];
 		}
 		return filters+","+FileFilters.ALL;
 	}
