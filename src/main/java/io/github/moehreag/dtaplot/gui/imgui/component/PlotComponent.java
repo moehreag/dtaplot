@@ -273,7 +273,8 @@ public class PlotComponent extends ViewComponent {
 							.ifPresent(this::load);
 				}),
 				MenuBar.MenuEntry.handler(tr("action.addFile"), load -> {
-					Dialogs.showOpenDialog("plot.addFile", () -> load, FileFilters.OPEN).ifPresent(FileHandler::open);
+					Dialogs.showOpenMultipleDialog("plot.addFile", () -> load, FileFilters.OPEN)
+							.ifPresent(c -> c.forEach(FileHandler::open));
 				}),
 				MenuBar.MenuEntry.handler(tr("action.append"), load -> {
 					Dialogs.showSaveDialog("plot.append", () -> load, FileFilters.OPEN)

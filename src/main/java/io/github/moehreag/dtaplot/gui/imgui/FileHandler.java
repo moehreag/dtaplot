@@ -57,7 +57,7 @@ public class FileHandler {
 				App.View.WS.getComponent().load(data);
 			}
 		} else {
-			LOGGER.info("Unsupported File: " + file + " (" + file.getFileName() + ")");
+			LOGGER.info("Unsupported File: " + file);
 		}
 	}
 }

@@ -8,15 +8,14 @@ import java.util.function.BooleanSupplier;
 
 import imgui.extension.imguifiledialog.ImGuiFileDialog;
 import imgui.extension.imguifiledialog.flag.ImGuiFileDialogFlags;
-import io.github.moehreag.dtaplot.Translations;
 
 public class Dialogs {
 
-	public static Optional<Collection<Path>> showOpenMultipleDialog(BooleanSupplier action, String fileFilters) {
+	public static Optional<Collection<Path>> showOpenMultipleDialog(String dialogKey, BooleanSupplier action, String fileFilters) {
 		if (action.getAsBoolean()) {
-			ImGuiFileDialog.openModal("openMultiple", "Open Files", addAllFilter(fileFilters), "", 0, 0, ImGuiFileDialogFlags.HideColumnType);
+			ImGuiFileDialog.openModal(dialogKey, "Open Files", addAllFilter(fileFilters), "", 0, 0, ImGuiFileDialogFlags.HideColumnType);
 		}
-		if (ImGuiFileDialog.display("openMultiple", ImGuiFileDialogFlags.None, 200, 400, 800, 600)) {
+		if (ImGuiFileDialog.display(dialogKey, ImGuiFileDialogFlags.None, 200, 400, 800, 600)) {
 			if (ImGuiFileDialog.isOk()) {
 				ImGuiFileDialog.close();
 				return Optional.of(ImGuiFileDialog.getSelection().values().stream().map(Path::of).toList());
@@ -90,10 +89,6 @@ public class Dialogs {
 
 	public static String concatFileFilters(String... filters) {
 		return String.join(",", filters);
-	}
-
-	private static String tr(String key, Object... args) {
-		return Translations.translate(key, args);
 	}
 
 	private static String addAllFilter(String filters){
