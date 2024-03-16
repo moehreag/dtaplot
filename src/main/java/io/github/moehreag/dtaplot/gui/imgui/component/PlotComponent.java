@@ -26,10 +26,7 @@ import io.github.moehreag.dtaplot.Pair;
 import io.github.moehreag.dtaplot.Value;
 import io.github.moehreag.dtaplot.dta.DtaFile;
 import io.github.moehreag.dtaplot.dta.DtaParser;
-import io.github.moehreag.dtaplot.gui.imgui.Dialogs;
-import io.github.moehreag.dtaplot.gui.imgui.FileFilters;
-import io.github.moehreag.dtaplot.gui.imgui.FileHandler;
-import io.github.moehreag.dtaplot.gui.imgui.MenuBar;
+import io.github.moehreag.dtaplot.gui.imgui.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,6 +43,7 @@ public class PlotComponent extends ViewComponent {
 	private int minTime, maxTime;
 	private final ImInt currentSet = new ImInt();
 	private boolean updated;
+	private final ImVec2 plotPos = new ImVec2(), plotSize = new ImVec2();
 
 	public void draw(float width, float height) {
 		ImPlot.getStyle().setUseLocalTime(true);
@@ -61,8 +59,18 @@ public class PlotComponent extends ViewComponent {
 				ImPlot.plotLine(tr(s), data.getLeft(), data.getRight());
 			});
 
+			//plotPos.minus(ImGui.getStyle().getItemSpacingX(), ImGui.getStyle().getItemSpacingY());
+			/*plotPos.x = 1;
+			plotPos.y = 22;
+			plotSize.x = width*(2/3f)+ImGui.getStyle().getItemSpacingX()*2;
+			plotSize.y = height-70+ImGui.getStyle().getItemSpacingY()*2;*/
+			ImPlot.getPlotSize(plotSize);
+			ImPlot.getPlotPos(plotPos);
+
 			ImPlot.endPlot();
 		}
+		ImGui.getItemRectMin(plotPos);
+		ImGui.getItemRectSize(plotSize);
 
 		ImGui.sameLine();
 		ImGui.setCursorPosX(width * (2 / 3f) + ImGui.getStyle().getItemSpacingX() * 2);
@@ -270,6 +278,12 @@ public class PlotComponent extends ViewComponent {
 				MenuBar.MenuEntry.handler(tr("action.append"), load -> {
 					Dialogs.showSaveDialog("plot.append", () -> load, FileFilters.OPEN)
 							.ifPresent(p -> DataLoader.getInstance().append(data, p));
+				}),
+				MenuBar.MenuEntry.handler(tr("action.export"), load -> {
+					Dialogs.showSaveDialog("plot.export", () -> load, FileFilters.EXPORT)
+							.ifPresent(p -> {
+								ScreenshotUtil.screenshotRegion((int) plotPos.x, (int) plotPos.y, (int) plotSize.x, (int) plotSize.y, p);
+							});
 				})
 		);
 	}
@@ -280,5 +294,10 @@ public class PlotComponent extends ViewComponent {
 		} catch (IOException e) {
 			LOGGER.error("Failed to load file: ", e);
 		}
+	}
+
+	@Override
+	public Collection<Map<String, Value<?>>> getData() {
+		return data;
 	}
 }

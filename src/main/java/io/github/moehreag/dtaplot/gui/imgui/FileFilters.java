@@ -13,6 +13,7 @@ public class FileFilters {
 			Dialogs.buildFileFilter(tr("filter.dta"), "dta"));
 
 	public static final String EXPORT = buildImageFileFilter();
+	public static final String SAVE = Dialogs.buildFileFilter(tr("filter.json"), "json");
 
 	private static String buildImageFileFilter(){
 		String[] suffixes = ImageIO.getWriterFileSuffixes();

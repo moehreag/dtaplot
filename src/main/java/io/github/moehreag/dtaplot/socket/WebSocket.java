@@ -14,7 +14,6 @@ import java.util.concurrent.CompletionStage;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import io.github.moehreag.dtaplot.Translations;
 import io.github.moehreag.dtaplot.Value;
 import io.github.moehreag.dtaplot.socket.ws.Storage;
 import lombok.Getter;
@@ -127,8 +126,10 @@ public class WebSocket {
 			socket.sendClose(java.net.http.WebSocket.NORMAL_CLOSURE, "ok");
 			socket = null;
 		}
-		timer.cancel();
-		timer.purge();
+		if (timer != null) {
+			timer.cancel();
+			timer.purge();
+		}
 		connected = false;
 	}
 
@@ -189,9 +190,5 @@ public class WebSocket {
 		} catch (ParserConfigurationException | IOException | SAXException e) {
 			LOGGER.error("Failed to parse XML", e);
 		}
-	}
-
-	private static String tr(String key, Object... args) {
-		return Translations.translate(key, args);
 	}
 }

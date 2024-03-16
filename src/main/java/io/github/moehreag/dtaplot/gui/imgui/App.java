@@ -20,11 +20,13 @@ public class App {
 	public ImFont titleFont;
 
 	private static App INSTANCE;
+	@Getter
 	private final Window window;
 
 	public App() {
 		INSTANCE = this;
 		window = new Window(960, 580, Constants.NAME + " " + Constants.VERSION, this::process);
+		ImGui.styleColorsDark();
 		window.run();
 	}
 

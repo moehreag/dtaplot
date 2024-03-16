@@ -1,6 +1,12 @@
 package io.github.moehreag.dtaplot.gui.imgui.component;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
 import io.github.moehreag.dtaplot.Translations;
+import io.github.moehreag.dtaplot.Value;
 import io.github.moehreag.dtaplot.gui.imgui.MenuBar;
 
 public abstract class ViewComponent {
@@ -16,5 +22,9 @@ public abstract class ViewComponent {
 
 	public MenuBar.Menu getMenu() {
 		return null;
+	}
+
+	public Collection<Map<String, Value<?>>> getData(){
+		return List.of();
 	}
 }

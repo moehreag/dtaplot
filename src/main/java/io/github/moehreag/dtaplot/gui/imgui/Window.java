@@ -16,7 +16,6 @@ import org.lwjgl.glfw.*;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL32;
 import org.lwjgl.system.MemoryStack;
-import org.lwjgl.system.MemoryUtil;
 
 public class Window {
 
@@ -28,26 +27,34 @@ public class Window {
 	public Window(int width, int height, String title, Runnable processTask) {
 		GLFWErrorCallback.createPrint(System.err).set();
 
-		GLFW.glfwInitHint(GLFW.GLFW_PLATFORM, GLFW.GLFW_PLATFORM_WAYLAND);
+		if (GLFW.glfwPlatformSupported(GLFW.GLFW_PLATFORM_WAYLAND)) {
+			GLFW.glfwInitHint(GLFW.GLFW_PLATFORM, GLFW.GLFW_PLATFORM_WAYLAND);
+		}
 		if (!GLFW.glfwInit()) {
 			throw new IllegalStateException("Unable to initialize GLFW");
 		}
 
-		decideGlGlslVersions();
+		GLFW.glfwDefaultWindowHints();
+		GLFW.glfwWindowHint(GLFW.GLFW_CLIENT_API, GLFW.GLFW_OPENGL_API);
+		GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_CREATION_API, GLFW.GLFW_NATIVE_CONTEXT_API);
+		GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_VERSION_MAJOR, 3);
+		GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_VERSION_MINOR, 2);
+		GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_PROFILE, GLFW.GLFW_OPENGL_CORE_PROFILE);
+		GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_FORWARD_COMPAT, 1);
 
 		//GLFW.glfwWindowHint(GLFW.GLFW_VISIBLE, GLFW.GLFW_FALSE);
-		handle = GLFW.glfwCreateWindow(width, height, title, MemoryUtil.NULL, MemoryUtil.NULL);
+		handle = GLFW.glfwCreateWindow(width, height, title, 0, 0);
 
-		if (handle == MemoryUtil.NULL) {
+		if (handle == 0) {
 			throw new RuntimeException("Failed to create the GLFW window");
 		}
 
 		try (MemoryStack stack = MemoryStack.stackPush()) {
-			final IntBuffer pWidth = stack.mallocInt(1); // int*
-			final IntBuffer pHeight = stack.mallocInt(1); // int*
+			final IntBuffer pWidth = stack.mallocInt(1);
+			final IntBuffer pHeight = stack.mallocInt(1);
 
 			GLFW.glfwGetWindowSize(handle, pWidth, pHeight);
-			//final GLFWVidMode vidmode = Objects.requireNonNull(GLFW.glfwGetVideoMode(GLFW.glfwGetPrimaryMonitor()));
+			final GLFWVidMode vidmode = Objects.requireNonNull(GLFW.glfwGetVideoMode(GLFW.glfwGetPrimaryMonitor()));
 			//GLFW.glfwSetWindowPos(handle, (vidmode.width() - pWidth.get(0)) / 2, (vidmode.height() - pHeight.get(0)) / 2);
 		}
 
@@ -61,15 +68,15 @@ public class Window {
 		//GLFW.glfwShowWindow(handle);
 
 
-		clearBuffer();
-		renderBuffer();
+		//clearBuffer();
+		//renderBuffer();
 
-		GLFW.glfwSetWindowSizeCallback(handle, new GLFWWindowSizeCallback() {
+		/*GLFW.glfwSetWindowSizeCallback(handle, new GLFWWindowSizeCallback() {
 			@Override
 			public void invoke(final long window, final int width, final int height) {
 				runFrame();
 			}
-		});
+		});*/
 		initImGui();
 
 		try {
@@ -87,15 +94,13 @@ public class Window {
 		}
 
 		imGuiGlfw.init(handle, true);
-		imGuiGl3.init(glslVersion);
+		imGuiGl3.init("#version 150");
 
 		this.processTask = processTask;
 	}
 
 	private final ImGuiImplGlfw imGuiGlfw = new ImGuiImplGlfw();
 	private final ImGuiImplGl3 imGuiGl3 = new ImGuiImplGl3();
-
-	private String glslVersion = null;
 	private ImPlotContext plotContext;
 
 	/**
@@ -108,25 +113,9 @@ public class Window {
 		disposeWindow();
 	}
 
-	private void decideGlGlslVersions() {
-		final boolean isMac = System.getProperty("os.name").toLowerCase().contains("mac");
-		if (isMac) {
-			glslVersion = "#version 150";
-			GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_VERSION_MAJOR, 3);
-			GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_VERSION_MINOR, 2);
-			GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_PROFILE, GLFW.GLFW_OPENGL_CORE_PROFILE);  // 3.2+ only
-			GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_FORWARD_COMPAT, GLFW.GLFW_TRUE);          // Required on Mac
-		} else {
-			glslVersion = "#version 130";
-			GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_VERSION_MAJOR, 3);
-			GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_VERSION_MINOR, 0);
-		}
-	}
-
 	protected void initImGui() {
 		ImGui.createContext();
 		ImGui.getIO().setIniFilename(null);
-		// ImGui.loadIniSettingsFromMemory(); //TODO what do?
 		plotContext = ImPlot.createContext();
 	}
 
@@ -186,11 +175,6 @@ public class Window {
 		}
 
 		renderBuffer();
-
-		/*if (ImGui.getIO().getWantSaveIniSettings()){
-			ImGui.getIO().setWantSaveIniSettings(false);
-			ImGui.saveIniSettingsToMemory(); // TODO what do?
-		}*/
 	}
 
 	/**
@@ -198,6 +182,7 @@ public class Window {
 	 */
 	private void renderBuffer() {
 		GLFW.glfwSwapBuffers(handle);
+		ScreenshotUtil.run();
 		GLFW.glfwPollEvents();
 	}
 

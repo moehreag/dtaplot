@@ -19,7 +19,7 @@ public class Main {
 		openImGui(args);
 	}
 
-	private static void openImGui(String[] args){
+	public static void openImGui(String[] args){
 		new App();
 		if (args.length>0){
 			for (String s : args){
@@ -31,7 +31,7 @@ public class Main {
 		}
 	}
 
-	private static void openSwing(String[] args){
+	public static void openSwing(String[] args){
 		DtaPlot plot = new DtaPlot();
 		if (args.length>0){
 			for (String s : args){

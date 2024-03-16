@@ -3,9 +3,11 @@ package io.github.moehreag.dtaplot;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.ToString;
 
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 @Getter
+@ToString
 public class Pair<A, B> {
 
 	private final A left;
