@@ -53,17 +53,12 @@ public class PlotComponent extends ViewComponent {
 			autofit |= ImPlotAxisFlags.AutoFit;
 			updated = false;
 		}
-		if (ImPlot.beginPlot("##PlotGraph", tr("label.time"), "°C", new ImVec2(width * 2 / 3, height - 70), ImPlotFlags.NoTitle, ImPlotAxisFlags.Time | autofit, autofit)) {
+		if (ImPlot.beginPlot("##PlotGraph", tr("label.time"), "°C", new ImVec2(width * 2 / 3, height - 45), ImPlotFlags.NoTitle, ImPlotAxisFlags.Time | autofit, autofit)) {
 			ImPlot.setLegendLocation(ImPlotLocation.NorthEast, ImPlotOrientation.Vertical, false);
 			displayedDatasets.forEach((s, data) -> {
 				ImPlot.plotLine(tr(s), data.getLeft(), data.getRight());
 			});
 
-			//plotPos.minus(ImGui.getStyle().getItemSpacingX(), ImGui.getStyle().getItemSpacingY());
-			/*plotPos.x = 1;
-			plotPos.y = 22;
-			plotSize.x = width*(2/3f)+ImGui.getStyle().getItemSpacingX()*2;
-			plotSize.y = height-70+ImGui.getStyle().getItemSpacingY()*2;*/
 			ImPlot.getPlotSize(plotSize);
 			ImPlot.getPlotPos(plotPos);
 

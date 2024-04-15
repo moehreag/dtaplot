@@ -43,19 +43,13 @@ public class Window {
 		GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_FORWARD_COMPAT, 1);
 
 		//GLFW.glfwWindowHint(GLFW.GLFW_VISIBLE, GLFW.GLFW_FALSE);
-		handle = GLFW.glfwCreateWindow(width, height, title, 0, 0);
+		long monitor =  GLFW.glfwGetPrimaryMonitor();
+		float[] scaleX = new float[1], scaleY = new float[1];
+		GLFW.glfwGetMonitorContentScale(monitor, scaleX, scaleY);
+		handle = GLFW.glfwCreateWindow((int) (width * scaleX[0]), (int) (height * scaleY[0]), title, 0, 0);
 
 		if (handle == 0) {
 			throw new RuntimeException("Failed to create the GLFW window");
-		}
-
-		try (MemoryStack stack = MemoryStack.stackPush()) {
-			final IntBuffer pWidth = stack.mallocInt(1);
-			final IntBuffer pHeight = stack.mallocInt(1);
-
-			GLFW.glfwGetWindowSize(handle, pWidth, pHeight);
-			final GLFWVidMode vidmode = Objects.requireNonNull(GLFW.glfwGetVideoMode(GLFW.glfwGetPrimaryMonitor()));
-			//GLFW.glfwSetWindowPos(handle, (vidmode.width() - pWidth.get(0)) / 2, (vidmode.height() - pHeight.get(0)) / 2);
 		}
 
 		GLFW.glfwMakeContextCurrent(handle);
@@ -78,6 +72,7 @@ public class Window {
 			}
 		});*/
 		initImGui();
+		ImGui.getIO().setDisplayFramebufferScale(scaleX[0], scaleY[0]);
 
 		try {
 			ImFontConfig fontConfig = new ImFontConfig();
