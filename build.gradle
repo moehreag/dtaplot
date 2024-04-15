@@ -1,85 +1,53 @@
 plugins {
-    id 'java'
-    id 'io.freefair.lombok' version "8.+"
-    id 'com.github.johnrengelman.shadow' version '8.1.1'
-    id 'maven-publish'
+    id 'io.freefair.lombok' version "8.+" apply false
+    id 'com.github.johnrengelman.shadow' version '8.1.1' apply false
 }
 
-base.archivesName.set("dtaplot")
 group = 'io.github.moehreag'
-version = '1.0.0+imgui'
+version = '1.0.0'
 
-repositories {
-    mavenLocal()
-    mavenCentral()
-}
+subprojects {
+    apply plugin: 'io.freefair.lombok'
+    apply plugin: 'java'
+    apply plugin: 'idea'
+    apply plugin: 'maven-publish'
 
-java {
-    withSourcesJar()
-}
+    version = rootProject.version+"+"+project.name
 
-jar {
-    manifest {
-        attributes 'Main-Class': 'io.github.moehreag.dtaplot.Main'
-        attributes 'Implementation-Title': project.name
-        attributes 'Implementation-Version': project.version
-        attributes 'Implementation-Date': new Date()
+    repositories {
+        mavenLocal()
+        mavenCentral()
     }
 
-}
+    base.archivesName.set("dtaplot")
 
-ext {
-    lwjglVersion = '3.3.3'
-    imguiVersion = '1.86.11'
-}
-
-dependencies {
-    implementation files("libs/jfgjds-0.0.1-SNAPSHOT.jar")
-
-    implementation("com.formdev:flatlaf:3.0")
-    implementation 'org.slf4j:slf4j-api:2.0.10'
-    implementation 'org.slf4j:slf4j-simple:2.0.10'
-
-    implementation platform("org.lwjgl:lwjgl-bom:$lwjglVersion")
-
-    ['', '-opengl', '-glfw'].each {
-        implementation "org.lwjgl:lwjgl$it:$lwjglVersion"
-        implementation "org.lwjgl:lwjgl$it::natives-windows"
-        implementation "org.lwjgl:lwjgl$it::natives-linux"
+    dependencies {
+        implementation 'org.slf4j:slf4j-api:2.0.10'
+        implementation 'org.slf4j:slf4j-simple:2.0.10'
+        implementation files(rootDir.absolutePath+"/libs/jfgjds-0.0.1-SNAPSHOT.jar")
     }
 
-    implementation "io.github.spair:imgui-java-binding:$imguiVersion"
-    implementation "io.github.spair:imgui-java-lwjgl3:$imguiVersion"
+    java {
+        withSourcesJar()
 
-    implementation "io.github.spair:imgui-java-natives-windows-ft:$imguiVersion"
-    implementation "io.github.spair:imgui-java-natives-linux-ft:$imguiVersion"
-}
-
-tasks.build.dependsOn shadowJar
-
-shadowJar {
-    archiveClassifier.set("")
-    mergeServiceFiles()
-
-    from ('LICENSE') {
-        rename '^(LICENSE.*?)(\\..*)?$', "\$1_${base.archivesName.get()}\$2"
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
-}
 
-test {
-    useJUnitPlatform()
-}
+    jar {
+        manifest {
+            attributes 'Implementation-Title': project.name
+            attributes 'Implementation-Version': project.version
+            attributes 'Implementation-Date': new Date()
+        }
+    }
 
-java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
-}
-
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            artifactId = archivesBaseName
-            from components.java
+    publishing {
+        publications {
+            mavenJava(MavenPublication) {
+                artifactId = archivesBaseName
+                from components.java
+            }
         }
     }
 }

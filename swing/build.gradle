@@ -1,0 +1,41 @@
+apply plugin: 'com.github.johnrengelman.shadow'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation("com.formdev:flatlaf:3.0")
+    compileOnly project(":common")
+}
+
+
+tasks.withType(JavaCompile).configureEach {
+    source(rootProject.project(":common").sourceSets.main.allSource)
+}
+tasks.withType(Javadoc).configureEach {
+    source(project(":common").sourceSets.main.allJava)
+}
+tasks.named("sourcesJar", Jar) {
+    from(project(":common").sourceSets.main.allSource)
+}
+processResources {
+    from project(":common").sourceSets.main.resources
+}
+
+jar {
+    manifest {
+        attributes 'Main-Class': 'io.github.moehreag.dtaplot.gui.swing.SwingEntrypoint'
+    }
+}
+
+tasks.build.dependsOn shadowJar
+
+shadowJar {
+    archiveClassifier.set("")
+    mergeServiceFiles()
+
+    from ('LICENSE') {
+        rename '^(LICENSE.*?)(\\..*)?$', "\$1_${base.archivesName.get()}\$2"
+    }
+}
