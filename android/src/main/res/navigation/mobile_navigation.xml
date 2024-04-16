@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+            xmlns:app="http://schemas.android.com/apk/res-auto"
+            xmlns:tools="http://schemas.android.com/tools"
+            android:id="@+id/mobile_navigation"
+            app:startDestination="@+id/navigation_plot">
+
+    <fragment
+            android:id="@+id/navigation_plot"
+            android:name="io.github.moehreag.dtaplot.android.ui.plot.HomeFragment"
+            android:label="@string/title_plot"
+            tools:layout="@layout/fragment_home"/>
+
+    <fragment
+            android:id="@+id/navigation_tcp"
+            android:name="io.github.moehreag.dtaplot.android.ui.dashboard.DashboardFragment"
+            android:label="@string/title_tcp"
+            tools:layout="@layout/fragment_dashboard"/>
+
+    <fragment
+            android:id="@+id/navigation_ws"
+            android:name="io.github.moehreag.dtaplot.android.ui.notifications.NotificationsFragment"
+            android:label="@string/title_ws"
+            tools:layout="@layout/fragment_notifications"/>
+</navigation>

@@ -39,4 +39,5 @@ bin/
 .DS_Store
 
 .env
-dta/
+/dta/
+local.properties

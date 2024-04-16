@@ -1,8 +1,5 @@
 apply plugin: 'com.github.johnrengelman.shadow'
-
-repositories {
-    mavenCentral()
-}
+apply plugin: 'java'
 
 jar {
     manifest {

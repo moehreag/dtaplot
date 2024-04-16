@@ -1,0 +1,10 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Theme.Dtaplot" parent="Theme.AppCompat.Light.DarkActionBar">
+        <!-- Primary brand color. -->
+        <item name="colorPrimary">@color/material_dynamic_primary0</item>
+        <item name="colorPrimaryDark">@color/material_dynamic_neutral0</item>
+        <item name="colorAccent">@color/material_dynamic_secondary0</item>
+        <!-- Customize your theme here. -->
+    </style>
+</resources>

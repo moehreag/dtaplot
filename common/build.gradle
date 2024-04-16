@@ -1,14 +1,1 @@
-plugins {
-    id 'java'
-}
-
-repositories {
-    mavenCentral()
-}
-
-dependencies {
-
-}
-
-test {
-}
+apply plugin: 'java'

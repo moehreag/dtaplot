@@ -1,6 +1,7 @@
 plugins {
     id 'io.freefair.lombok' version "8.+" apply false
     id 'com.github.johnrengelman.shadow' version '8.1.1' apply false
+    id 'com.android.application' version '8.2.0' apply false
 }
 
 group = 'io.github.moehreag'
@@ -8,45 +9,41 @@ version = '1.0.0'
 
 subprojects {
     apply plugin: 'io.freefair.lombok'
-    apply plugin: 'java'
     apply plugin: 'idea'
     apply plugin: 'maven-publish'
 
     version = rootProject.version+"+"+project.name
 
-    repositories {
-        mavenLocal()
-        mavenCentral()
-    }
+    pluginManager.withPlugin('java') {
+        base.archivesName.set("dtaplot")
 
-    base.archivesName.set("dtaplot")
-
-    dependencies {
-        implementation 'org.slf4j:slf4j-api:2.0.10'
-        implementation 'org.slf4j:slf4j-simple:2.0.10'
-        implementation files(rootDir.absolutePath+"/libs/jfgjds-0.0.1-SNAPSHOT.jar")
-    }
-
-    java {
-        withSourcesJar()
-
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
-    }
-
-    jar {
-        manifest {
-            attributes 'Implementation-Title': project.name
-            attributes 'Implementation-Version': project.version
-            attributes 'Implementation-Date': new Date()
+        dependencies {
+            implementation 'org.slf4j:slf4j-api:2.0.10'
+            implementation 'org.slf4j:slf4j-simple:2.0.10'
+            implementation files(rootDir.absolutePath+"/libs/jfgjds-0.0.1-SNAPSHOT.jar")
         }
-    }
 
-    publishing {
-        publications {
-            mavenJava(MavenPublication) {
-                artifactId = archivesBaseName
-                from components.java
+        java {
+            withSourcesJar()
+
+            sourceCompatibility = JavaVersion.VERSION_17
+            targetCompatibility = JavaVersion.VERSION_17
+        }
+
+        jar {
+            manifest {
+                attributes 'Implementation-Title': project.name
+                attributes 'Implementation-Version': project.version
+                attributes 'Implementation-Date': new Date()
+            }
+        }
+
+        publishing {
+            publications {
+                mavenJava(MavenPublication) {
+                    artifactId = archivesBaseName
+                    from components.java
+                }
             }
         }
     }
