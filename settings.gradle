@@ -11,6 +11,7 @@ dependencyResolutionManagement {
         mavenLocal()
         google()
         mavenCentral()
+        maven{url = "https://jitpack.io"}
     }
 }
 
@@ -20,4 +21,4 @@ rootProject.name = 'dtaplot'
 include 'swing'
 include 'imgui'
 include 'common'
-include ':android'
+include 'android'

@@ -32,8 +32,17 @@ public class Translations {
 		String language = System.getProperty("user.language");
 		String country = System.getProperty("user.country");
 
+		if (language != null && country != null) {
+			loadLanguage(language, country);
+		}
+	}
 
-		loadLanguage(lang = language.toLowerCase(Locale.ROOT) + "_" + country.toLowerCase(Locale.ROOT), false);
+	public static void loadLanguage(String language, String region) {
+		try {
+			loadLanguage(lang = language.toLowerCase(Locale.ROOT) + "_" + region.toLowerCase(Locale.ROOT), false);
+		} catch (Exception e) {
+			LOGGER.error("Failed to load translations!", e);
+		}
 	}
 
 	private static void loadLanguage(String name, boolean required) throws IOException {
@@ -47,7 +56,7 @@ public class Translations {
 					}
 				});
 			} else if (required) {
-				throw new IllegalStateException("Could not find file for language: "+name);
+				throw new IllegalStateException("Could not find file for language: " + name);
 			}
 		}
 	}
@@ -57,7 +66,7 @@ public class Translations {
 	}
 
 	private static String get(String lang, String key) {
-		if (defaultLang.equals(lang)){
+		if (defaultLang.equals(lang)) {
 			return translations.get(defaultLang).getOrDefault(key, key);
 		}
 		return translations.getOrDefault(lang, translations.get(defaultLang)).getOrDefault(key, get(defaultLang, key));

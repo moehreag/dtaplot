@@ -24,10 +24,6 @@ public class Discovery {
 		return INSTANCE;
 	}
 
-	private static String tr(String key, Object... args) {
-		return Translations.translate(key, args);
-	}
-
 	public List<InetSocketAddress> discover() {
 
 		List<InetSocketAddress> results = new ArrayList<>();

@@ -1,7 +1,3 @@
 <resources>
     <string name="app_name">DtaPlot</string>
-    <string name="title_plot">Plot</string>
-    <string name="title_tcp">TCP Data</string>
-    <string name="title_ws">WS Data</string>
-    <string name="add_graph">Add Graph</string>
 </resources>
