@@ -34,12 +34,14 @@ class ActivityViewModel : ViewModel() {
 
     private val timeFormat: NumberFormat = DecimalFormat("00")
     private var graphData: MutableCollection<Map<String, Value<*>>> = mutableStateListOf()
+    private var validData: MutableCollection<Map<String, Value<*>>> = mutableStateListOf()
     val modelProducer = CartesianChartModelProducer.build()
 
     fun load(address: InetSocketAddress) {
         viewModelScope.launch(Dispatchers.IO) {
             val result = getDataFile(address)
             graphData.addAll(result)
+            validData.clear()
             modelProducer.tryRunTransaction {
                 lineSeries {
                     val data = getGraphData("TVL")
@@ -77,6 +79,7 @@ class ActivityViewModel : ViewModel() {
     }
 
     private fun getGraphData(setName: String): Pair<List<Number>, List<Number>> {
+        Log.i("DtaPlot/ViewModel-dbg", "getting graph data for $setName")
         val xs: MutableList<Number> = mutableListOf()
         val ys: MutableList<Number> = mutableListOf()
         getValidData().stream().sorted(
@@ -93,24 +96,35 @@ class ActivityViewModel : ViewModel() {
                     ys.add(y)
                 }
             }
+        Log.i("DtaPlot/ViewModel-dbg", "getting graph data for $setName - done")
         return Pair.of(xs, ys)
     }
 
     fun getSetNames(): List<String>{
+        Log.i("DtaPlot/ViewModel-dbg", "getting set names")
         val keys: MutableList<String> = mutableListOf()
-        graphData.stream().map { obj: Map<String, Value<*>> -> obj.keys }
+        getValidData().stream().map { obj: Map<String, Value<*>> -> obj.keys }
             .forEach { k: Set<String> ->
-                k.stream().filter { s: String -> !keys.contains(s) }
+                k.stream().filter { s: String -> !keys.contains(s) && s != "time" }
                     .forEach { e: String ->
                         keys.add(
                             e
                         )
                     }
             }
+        if (keys.isEmpty()){
+            keys.add("")
+        }
+        Log.i("DtaPlot/ViewModel-dbg", "getting set names - done")
         return keys
     }
 
-    private fun getValidData(): Collection<MutableMap<String, Value<*>>> {
+    private fun getValidData(): Collection<Map<String, Value<*>>> {
+        Log.i("DtaPlot/ViewModel-dbg", "getting valid data")
+        if (validData.isNotEmpty()){
+            return Collections.unmodifiableCollection(validData)
+        }
+
         val entries: MutableCollection<MutableMap<String, Value<*>>> = mutableListOf()
         for (map in graphData) {
             val clone: MutableMap<String, Value<*>> = HashMap<String, Value<*>>(map)
@@ -144,6 +158,8 @@ class ActivityViewModel : ViewModel() {
                 }
             }
         }
+        Log.i("DtaPlot/ViewModel-dbg", "getting valid data - done")
+        validData.addAll(entries)
         return Collections.unmodifiableCollection(entries)
     }
 
@@ -158,7 +174,7 @@ class ActivityViewModel : ViewModel() {
                 }
                 l += it.hostString
             }
-            Log.i("DtaPlot/IO", "Discovered: $l")
+            Log.i("DtaPlot/IO", "Discovered: $l (${list.size})")
         }
     }
 }

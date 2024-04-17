@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * The discovery of heatpumps is based on
- * <a href="https://github.com/Bouni/python-luxtronik/blob/main/luxtronik/discover.py">the python implementation</a>
+ * <a href="https://github.com/Bouni/python-luxtronik/blob/main/luxtronik/discover.py">this python implementation</a>
  */
 public class Discovery {
 
@@ -94,7 +94,7 @@ public class Discovery {
 	}
 
 	private static void sendBroadcastMessage(DatagramSocket socket, InetAddress address, int port) throws IOException {
-		LOGGER.debug("Sending broadcast: " + address + " " + port);
+		LOGGER.debug("Sending broadcast: {} {}", address, port);
 		byte[] message = Constants.DISCOVERY_MAGIC_PACKET.getBytes(StandardCharsets.UTF_8);
 		DatagramPacket packet = new DatagramPacket(message, message.length, address, port);
 		socket.send(packet);

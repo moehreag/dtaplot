@@ -31,9 +31,9 @@ object DiscoveryDialog {
 
     @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
     @Composable
-    fun draw(viewModel: ActivityViewModel, onConfirm: (InetSocketAddress) -> Unit) {
+    fun Draw(viewModel: ActivityViewModel, onConfirm: (InetSocketAddress) -> Unit) {
         if (dialogOpen.value) {
-            var address: InetSocketAddress? = remember { null }
+            var address: InetSocketAddress?
             Dialog(onDismissRequest = {
                 dialogOpen.value = false
             }) {
@@ -123,7 +123,9 @@ object DiscoveryDialog {
                                 address = selection
                                 Log.i("DtaPlot/DiscoveryDialog", "Selected: ${address?.hostString}")
                                 dialogOpen.value = false
-                                onConfirm.invoke(selection!!)
+                                if (selection != null){
+                                    onConfirm.invoke(selection!!)
+                                }
                             }) {
                                 Text(Translations.translate("dialog.confirm"))
                             }
