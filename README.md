@@ -18,6 +18,7 @@ previously saved files.
 
 - DTA 9001 version parsing doesn't work correctly at the moment.
 - Error handling (currently the window freezes up. This is bad.)
+- Scaling issues on high-res displays when using the `imgui` module.
 
 ### Tips
 
