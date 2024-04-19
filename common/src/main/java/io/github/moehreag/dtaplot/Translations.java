@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
 public class Translations {
 	private static final Logger LOGGER = LoggerFactory.getLogger(Translations.class.getSimpleName());
 	private static final Map<String, Map<String, String>> translations = new HashMap<>();
-	private static final String defaultLang = "de_de";
+	private static final String defaultLang = "de";
 	private static String lang;
 
 	static {
@@ -30,16 +30,15 @@ public class Translations {
 		loadLanguage(defaultLang, true);
 
 		String language = System.getProperty("user.language");
-		String country = System.getProperty("user.country");
 
-		if (language != null && country != null) {
-			loadLanguage(language, country);
+		if (language != null) {
+			loadLanguage(language);
 		}
 	}
 
-	public static void loadLanguage(String language, String region) {
+	public static void loadLanguage(String language) {
 		try {
-			loadLanguage(lang = language.toLowerCase(Locale.ROOT) + "_" + region.toLowerCase(Locale.ROOT), false);
+			loadLanguage(lang = language.toLowerCase(Locale.ROOT), false);
 		} catch (Exception e) {
 			LOGGER.error("Failed to load translations!", e);
 		}

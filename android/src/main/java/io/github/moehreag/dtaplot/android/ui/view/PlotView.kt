@@ -1,94 +1,68 @@
 package io.github.moehreag.dtaplot.android.ui.view
 
-import android.util.Log
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import android.graphics.Color
+import android.graphics.Typeface
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.outlined.Download
+import androidx.compose.material.icons.outlined.FileOpen
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
 import com.patrykandpatrick.vico.compose.cartesian.*
 import com.patrykandpatrick.vico.compose.cartesian.axis.*
 import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLayer
 import com.patrykandpatrick.vico.compose.common.ProvideVicoTheme
+import com.patrykandpatrick.vico.compose.common.rememberHorizontalLegend
 import com.patrykandpatrick.vico.compose.m3.common.rememberM3VicoTheme
 import com.patrykandpatrick.vico.core.cartesian.HorizontalLayout
 import com.patrykandpatrick.vico.core.cartesian.axis.AxisItemPlacer
 import com.patrykandpatrick.vico.core.common.Dimensions
+import com.patrykandpatrick.vico.core.common.LegendItem
+import com.patrykandpatrick.vico.core.common.component.ShapeComponent
+import com.patrykandpatrick.vico.core.common.component.TextComponent
+import com.patrykandpatrick.vico.core.common.shape.Shape
+import io.github.moehreag.dtaplot.Translations
 import io.github.moehreag.dtaplot.android.ActivityViewModel
 import io.github.moehreag.dtaplot.android.ui.DiscoveryDialog
 
 class PlotView : View {
+
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     override fun Draw(viewModel: ActivityViewModel) {
+        val options: MutableList<String> = remember { mutableStateListOf() }
+
+        var editSheetOpen by remember { mutableStateOf(false) }
+
         Scaffold(
-            bottomBar = {
-                BottomAppBar(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.primary,
-                    floatingActionButton = {
-                        FloatingActionButton(onClick = {
-                            DiscoveryDialog.open(viewModel)
-                        }) {
-                            Icon(Icons.Filled.Edit, "Load File")
-                        }
-                    },
-                    actions = {
-                        val options = viewModel.getSetNames()
-                        var selectedOptionText = options[0]
-                        IconButton(onClick = {
-
-                        }) {
-                            Icon(Icons.Rounded.Add, "Add to graph")
-                        }
-
-                        val expanded = remember { mutableStateOf(false) }
-                        ExposedDropdownMenuBox(
-                            expanded = expanded.value,
-                            onExpandedChange = {
-                                Log.i("DtaPlot/dbg", "dropdown: $expanded")
-                                expanded.value = it
-                            }
-                        ) {
-                            TextField(
-                                readOnly = true,
-                                value = selectedOptionText,
-                                onValueChange = { },
-                                trailingIcon = {
-                                    ExposedDropdownMenuDefaults.TrailingIcon(
-                                        expanded = expanded.value
-                                    )
-                                },
-                                colors = ExposedDropdownMenuDefaults.textFieldColors(),
-                                modifier = Modifier.menuAnchor()
-                            )
-                            ExposedDropdownMenu(
-                                expanded = expanded.value,
-                                onDismissRequest = {
-                                    expanded.value = false
-                                }
-                            ) {
-                                options.forEach { selectionOption ->
-                                    DropdownMenuItem(
-                                        onClick = {
-                                            selectedOptionText = selectionOption
-                                            expanded.value = false
-                                        }, text = {
-                                            Text(text = selectionOption)
-                                        }
-                                    )
-                                }
-                            }
-                        }
+            topBar = TopBar.create(Translations.translate("view.plot")) {
+                IconButton(onClick = {
+                    viewModel.openFile()
+                }) {
+                    Icon(imageVector = Icons.Outlined.FileOpen, contentDescription = "Open")
+                }
+                IconButton(onClick = { DiscoveryDialog.open(viewModel) }) {
+                    Icon(imageVector = Icons.Outlined.Download, contentDescription = "Download")
+                }
+            },
+            floatingActionButton = {
+                if (options.isNotEmpty()) {
+                    FloatingActionButton(onClick = {
+                        editSheetOpen = true
+                    }) {
+                        Icon(Icons.Filled.Edit, "Edit Graph")
                     }
-                )
-            }) { padding ->
+                }
+            }
+        ) { padding ->
 
             Graph(
                 viewModel,
@@ -97,9 +71,32 @@ class PlotView : View {
                     .height(800.dp)
             )
 
-            DiscoveryDialog.Draw(viewModel) {
-                viewModel.load(it)
+            if (editSheetOpen) {
+                ModalBottomSheet(onDismissRequest = {
+                    editSheetOpen = false
+                }) {
+                    LazyColumn(Modifier.padding(4.dp)) {
+                        items(options) {
+                            Row {
+                                Switch(checked = viewModel.isSetDisplayed(it), onCheckedChange = { checked ->
+                                    if (checked) {
+                                        viewModel.addSet(it)
+                                    } else {
+                                        viewModel.removeSet(it)
+                                    }
+                                })
+                                Spacer(modifier = Modifier.padding(horizontal = 12.dp))
+                                Text(text = it)
+                            }
+                        }
+                    }
+                }
             }
+
+            DiscoveryDialog.Draw(viewModel) {
+                viewModel.load(it, options)
+            }
+
         }
     }
 
@@ -129,6 +126,16 @@ class PlotView : View {
                     valueFormatter = { x, _, _ ->
                         model.formatValue(x.toLong())
                     }
+                ),
+                legend = rememberHorizontalLegend(
+                    items = model.legendNames().map {
+                        LegendItem(labelText = it, label = TextComponent.build {
+                            textSizeSp = 12f
+                            typeface = Typeface.MONOSPACE
+                        }, icon = ShapeComponent(shape = Shape.Pill))
+                    },
+                    iconSize = 12.dp,
+                    iconPadding = 6.dp
                 )
             )
             val scrollState = rememberVicoScrollState()
@@ -140,7 +147,23 @@ class PlotView : View {
                 modelProducer = model.modelProducer,
                 modifier = modifier,
                 runInitialAnimation = false,
-                horizontalLayout = HorizontalLayout.fullWidth()
+                horizontalLayout = HorizontalLayout.fullWidth(),
+                placeholder = {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .fillMaxHeight(),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(text = "No data loaded", style = MaterialTheme.typography.headlineMedium)
+                        Text(
+                            text = "Use the buttons to load a file",
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontStyle = FontStyle.Italic
+                        )
+                    }
+                }
             )
         })
     }

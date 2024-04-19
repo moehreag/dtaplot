@@ -14,26 +14,37 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import io.github.moehreag.dtaplot.Translations
 import io.github.moehreag.dtaplot.android.ActivityViewModel
+import kotlinx.coroutines.launch
 import java.net.InetSocketAddress
-import java.util.*
+import java.util.concurrent.Flow
 
 object DiscoveryDialog {
 
-    private var dialogOpen = mutableStateOf(false)
+    private val dialogOpen = mutableStateOf(false)
     private val options: MutableList<InetSocketAddress> = mutableStateListOf()
+    private var remembered: InetSocketAddress? = null
 
     fun open(viewModel: ActivityViewModel) {
         Log.i("DtaPlot/DiscoveryDialog", "opening dialog")
         dialogOpen.value = true
         options.clear()
-        viewModel.discover(options)
+        if (remembered == null) {
+            viewModel.discover(options)
+        } else {
+            Log.i("DtaPlot/DiscoveryDialog", "aborting as a value has been remembered: $remembered")
+        }
     }
 
     @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
     @Composable
     fun Draw(viewModel: ActivityViewModel, onConfirm: (InetSocketAddress) -> Unit) {
+        val scope = rememberCoroutineScope()
+
         if (dialogOpen.value) {
-            var address: InetSocketAddress?
+            if (remembered != null) {
+                dialogOpen.value = false
+                onConfirm.invoke(remembered!!)
+            }
             Dialog(onDismissRequest = {
                 dialogOpen.value = false
             }) {
@@ -46,22 +57,24 @@ object DiscoveryDialog {
                 ) {
                     val dropDownOpen = remember { mutableStateOf(false) }
                     var selection: InetSocketAddress? = remember { null }
-                    Column(modifier = Modifier.padding(all = 24.dp)) {
+                    Column(modifier = Modifier
+                        .padding(all = 24.dp)
+                        .fillMaxWidth()) {
                         Text(Translations.translate("dialog.message"))
-                        if (options.isEmpty()) {
-                            Text(
-                                Translations.translate("dialog.loading"),
-                                fontStyle = FontStyle.Italic,
-                                modifier = Modifier.padding(all = 4.dp)
-                            )
-                        } else {
-                            Row {
-                                IconButton(onClick = {
-                                    options.clear()
-                                    viewModel.discover(options)
-                                }, modifier = Modifier.padding(top = 5.dp)) {
-                                    Icon(Icons.Rounded.Refresh, "Refresh")
-                                }
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            IconButton(onClick = {
+                                options.clear()
+                                viewModel.discover(options)
+                            }) {
+                                Icon(Icons.Rounded.Refresh, "Refresh")
+                            }
+                            if (options.isEmpty()) {
+                                Text(
+                                    Translations.translate("dialog.loading"),
+                                    fontStyle = FontStyle.Italic,
+                                    modifier = Modifier.padding(all = 4.dp)
+                                )
+                            } else {
                                 val selectedOption: MutableState<InetSocketAddress> =
                                     remember { mutableStateOf(options[0]) }
                                 selection = selectedOption.value
@@ -82,7 +95,9 @@ object DiscoveryDialog {
                                             )
                                         },
                                         colors = ExposedDropdownMenuDefaults.textFieldColors(),
-                                        modifier = Modifier.menuAnchor().wrapContentWidth()
+                                        modifier = Modifier
+                                            .menuAnchor()
+                                            .wrapContentWidth()
                                     )
                                     ExposedDropdownMenu(
                                         modifier = Modifier.wrapContentWidth(),
@@ -108,6 +123,15 @@ object DiscoveryDialog {
                             }
                         }
 
+                        val remember = remember { mutableStateOf(false) }
+
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Checkbox(checked = remember.value, onCheckedChange = {
+                                remember.value = it
+                            })
+                            Text(text = Translations.translate("action.remember"))
+                        }
+
                         FlowRow(
                             modifier = Modifier.align(Alignment.End),
                             verticalArrangement = Arrangement.Bottom,
@@ -117,17 +141,21 @@ object DiscoveryDialog {
                             TextButton(onClick = {
                                 dialogOpen.value = false
                             }) {
-                                Text(Translations.translate("dialog.cancel"))
+                                Text(Translations.translate("action.cancel"))
                             }
                             TextButton(onClick = {
-                                address = selection
-                                Log.i("DtaPlot/DiscoveryDialog", "Selected: ${address?.hostString}")
+                                Log.i("DtaPlot/DiscoveryDialog", "Selected: ${selection?.hostString}")
                                 dialogOpen.value = false
-                                if (selection != null){
-                                    onConfirm.invoke(selection!!)
+                                if (selection != null) {
+                                    if (remember.value) {
+                                        remembered = selection!!
+                                    }
+                                    scope.launch {
+                                        onConfirm.invoke(selection!!)
+                                    }
                                 }
                             }) {
-                                Text(Translations.translate("dialog.confirm"))
+                                Text(Translations.translate("action.select"))
                             }
                         }
 
