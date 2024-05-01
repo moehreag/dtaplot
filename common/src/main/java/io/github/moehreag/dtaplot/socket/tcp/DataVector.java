@@ -139,6 +139,10 @@ public abstract class DataVector {
 		return Datatype.base(name, false);
 	}
 
+	protected static Datatype mixedCircuitMode(String name){
+		return mixedCircuitMode(name, false);
+	}
+
 	protected static Datatype mixedCircuitMode(String name, boolean writeable) {
 		return Datatype.selection(name, writeable, "Automatic", "Party", "Holidays", "Off");
 	}
