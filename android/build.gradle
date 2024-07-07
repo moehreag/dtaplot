@@ -55,8 +55,8 @@ dependencies {
     implementation 'androidx.compose.material:material-icons-core'
     implementation 'androidx.compose.material:material-icons-extended'
     implementation 'androidx.compose.material3:material3-window-size-class'
-    implementation("androidx.core:core-ktx:1.13.0")
-    implementation('androidx.lifecycle:lifecycle-runtime-ktx:2.8.0-beta01')
+    implementation("androidx.core:core-ktx:1.13.1")
+    implementation('androidx.lifecycle:lifecycle-runtime-ktx:2.8.3')
     implementation("androidx.activity:activity-compose:1.9.0")
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
@@ -65,10 +65,10 @@ dependencies {
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
-    implementation('org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1-Beta')
+    implementation('org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1')
 
-    implementation('com.patrykandpatrick.vico:compose-m3:2.0.0-alpha.19')
-    implementation 'com.neovisionaries:nv-websocket-client:2.14'
+    implementation('com.patrykandpatrick.vico:compose-m3:2.0.0-alpha.22')
+    implementation('com.neovisionaries:nv-websocket-client:2.14')
 
     implementation project(":common")
 }

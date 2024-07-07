@@ -59,7 +59,9 @@ public class WsComponent extends TableComponent {
 		return MenuBar.Menu.of(ViewComponent.tr("menu.ws"),
 				MenuBar.MenuEntry.handler(ViewComponent.tr("action.connect"), open -> {
 					Dialogs.showConnectDialog("ws.connect", () -> open)
-							.ifPresent(a -> SocketLoader.loadWS(a, this));
+							.ifPresent(a -> {
+								SocketLoader.loadWS(a, this);
+							});
 				}),
 				MenuBar.MenuEntry.simple(ViewComponent.tr("action.disconnect"), () -> {
 					if (WebSocket.isConnected()) {

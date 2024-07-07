@@ -15,7 +15,9 @@ import imgui.type.ImInt;
 import imgui.type.ImString;
 import io.github.moehreag.dtaplot.Discovery;
 import io.github.moehreag.dtaplot.Translations;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class DiscoveryDialog {
 
 	private static final DiscoveryDialog INSTANCE = new DiscoveryDialog();
@@ -29,13 +31,14 @@ public class DiscoveryDialog {
 	private CompletableFuture<Void> discovery;
 	private String loadingText = tr("dialog.loading");
 	private long time;
-	private ImBoolean rememberEnabled = new ImBoolean();
-	private ImBoolean inputEnabled = new ImBoolean();
-	private ImString inputText = new ImString();
+	private final ImBoolean rememberEnabled = new ImBoolean();
+	private final ImBoolean inputEnabled = new ImBoolean();
+	private final ImString inputText = new ImString();
 
 	public static void open(String id) {
 
 		if (remembered != null) {
+			INSTANCE.show = true;
 			return;
 		}
 		INSTANCE.entryMap.clear();
@@ -57,7 +60,12 @@ public class DiscoveryDialog {
 
 	public static Optional<InetSocketAddress> show(String id) {
 		if (INSTANCE.show) {
-			return Optional.ofNullable(remembered).or(() -> INSTANCE.display(id));
+			if (remembered != null) {
+				INSTANCE.show = false;
+				log.debug("Returning remembered heatpump address {}", remembered);
+				return Optional.of(remembered);
+			}
+			return INSTANCE.display(id);
 		}
 		return Optional.empty();
 	}
@@ -71,7 +79,6 @@ public class DiscoveryDialog {
 				ImGui.endPopup();
 				return Optional.empty();
 			}
-			boolean remember;
 
 			ImGui.textWrapped(tr("dialog.message"));
 
@@ -90,7 +97,7 @@ public class DiscoveryDialog {
 			}
 
 			ImGui.checkbox(tr("action.edit"), inputEnabled);
-			remember = ImGui.checkbox(tr("action.remember"), rememberEnabled);
+			ImGui.checkbox(tr("action.remember"), rememberEnabled);
 
 			ImGui.setCursorPos(
 					ImGui.getContentRegionAvailX() -
@@ -110,7 +117,7 @@ public class DiscoveryDialog {
 				if (inputEnabled.get()) {
 					try {
 						InetSocketAddress selectedAddress = new InetSocketAddress(InetAddress.getByName(inputText.get()), 8889);
-						if (remember) {
+						if (rememberEnabled.get()) {
 							remembered = selectedAddress;
 						}
 						show = false;
@@ -123,7 +130,7 @@ public class DiscoveryDialog {
 
 				InetSocketAddress selectedAddress = entryMap.get(names[selected.get()]);
 
-				if (remember) {
+				if (rememberEnabled.get()) {
 					remembered = selectedAddress;
 				}
 

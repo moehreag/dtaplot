@@ -47,10 +47,12 @@ class ActivityViewModel : ViewModel() {
 
     private fun updateGraph(){
         Log.i("DtaPlot/IO", "Updating graph")
-        modelProducer.tryRunTransaction {
-            lineSeries {
-                displayedData.forEach {
-                    series(it.value.left, it.value.right)
+        viewModelScope.launch(Dispatchers.IO) {
+            modelProducer.runTransaction {
+                lineSeries {
+                    displayedData.forEach {
+                        series(it.value.left, it.value.right)
+                    }
                 }
             }
         }
