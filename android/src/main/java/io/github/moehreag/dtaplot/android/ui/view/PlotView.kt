@@ -1,6 +1,5 @@
 package io.github.moehreag.dtaplot.android.ui.view
 
-import android.graphics.Color
 import android.graphics.Typeface
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -11,19 +10,20 @@ import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.FileOpen
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
-import com.patrykandpatrick.vico.compose.cartesian.*
+import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
 import com.patrykandpatrick.vico.compose.cartesian.axis.*
 import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLayer
+import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
+import com.patrykandpatrick.vico.compose.cartesian.rememberVicoScrollState
+import com.patrykandpatrick.vico.compose.cartesian.rememberVicoZoomState
 import com.patrykandpatrick.vico.compose.common.ProvideVicoTheme
 import com.patrykandpatrick.vico.compose.common.rememberHorizontalLegend
 import com.patrykandpatrick.vico.compose.m3.common.rememberM3VicoTheme
-import com.patrykandpatrick.vico.core.cartesian.HorizontalLayout
-import com.patrykandpatrick.vico.core.cartesian.axis.AxisItemPlacer
+import com.patrykandpatrick.vico.core.cartesian.axis.HorizontalAxis
 import com.patrykandpatrick.vico.core.common.Dimensions
 import com.patrykandpatrick.vico.core.common.LegendItem
 import com.patrykandpatrick.vico.core.common.component.ShapeComponent
@@ -106,19 +106,19 @@ class PlotView : View {
             val chart = rememberCartesianChart(
                 rememberLineCartesianLayer(),
                 startAxis = rememberStartAxis(
-                    rememberAxisLabelComponent(padding = Dimensions(2f)),
-                    rememberAxisLineComponent(margins = Dimensions(2f)),
-                    rememberAxisTickComponent(),
+                    label = rememberAxisLabelComponent(padding = Dimensions(2f)),
+                    line = rememberAxisLineComponent(margins = Dimensions(2f)),
+                    tick = rememberAxisTickComponent(),
                     guideline = rememberAxisGuidelineComponent(),
                     title = "°C"
                 ),
                 bottomAxis = rememberBottomAxis(
-                    rememberAxisLabelComponent(margins = Dimensions(2f)),
-                    rememberAxisLineComponent(margins = Dimensions(2f)),
-                    rememberAxisTickComponent(),
+                    label = rememberAxisLabelComponent(margins = Dimensions(2f)),
+                    line = rememberAxisLineComponent(margins = Dimensions(2f)),
+                    tick = rememberAxisTickComponent(),
                     guideline = null,
                     itemPlacer = remember {
-                        AxisItemPlacer.Horizontal.default(
+                        HorizontalAxis.ItemPlacer.default(
                             spacing = 3,
                             addExtremeLabelPadding = true
                         )
@@ -129,10 +129,10 @@ class PlotView : View {
                 ),
                 legend = rememberHorizontalLegend(
                     items = model.legendNames().map {
-                        LegendItem(labelText = it, label = TextComponent.build {
-                            textSizeSp = 12f
+                        LegendItem(label = it, labelComponent = TextComponent(
+                            textSizeSp = 12f,
                             typeface = Typeface.MONOSPACE
-                        }, icon = ShapeComponent(shape = Shape.Pill))
+                        ), icon = ShapeComponent(shape = Shape.Pill))
                     },
                     iconSize = 12.dp,
                     iconPadding = 6.dp
@@ -147,7 +147,6 @@ class PlotView : View {
                 modelProducer = model.modelProducer,
                 modifier = modifier,
                 runInitialAnimation = false,
-                horizontalLayout = HorizontalLayout.fullWidth(),
                 placeholder = {
                     Column(
                         modifier = Modifier
