@@ -25,7 +25,7 @@ abstract class TableView : View {
 
             LazyColumn(modifier = Modifier
                 .padding(padding)
-                .fillMaxWidth(), content = {
+                .fillMaxWidth()) {
                 items(content) {
                     Row(modifier = Modifier.padding(4.dp).fillMaxWidth()) {
                         OutlinedTextField(value = it.right.get().toString(), onValueChange = { newVal ->
@@ -41,7 +41,7 @@ abstract class TableView : View {
                         }, readOnly = it.right !is Value.Mutable<*>, modifier = Modifier.fillMaxWidth())
                     }
                 }
-            })
+            }
     }
 
     fun hasContent(): Boolean {

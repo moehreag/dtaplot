@@ -10,15 +10,12 @@ import com.neovisionaries.ws.client.WebSocketFrame
 import io.github.moehreag.dtaplot.Value
 import io.github.moehreag.dtaplot.socket.ws.Storage
 import org.xml.sax.InputSource
-import org.xml.sax.SAXException
-import java.io.IOException
 import java.io.StringReader
 import java.net.InetSocketAddress
 import java.net.URI
 import java.util.*
 import java.util.concurrent.CompletableFuture
 import javax.xml.parsers.DocumentBuilderFactory
-import javax.xml.parsers.ParserConfigurationException
 import kotlin.collections.set
 
 object WebSocket {
@@ -174,11 +171,7 @@ object WebSocket {
                     }
                 }
             }
-        } catch (e: ParserConfigurationException) {
-            Log.e("DtaPlot/WebSocket","Failed to parse XML", e)
-        } catch (e: IOException) {
-            Log.e("DtaPlot/WebSocket","Failed to parse XML", e)
-        } catch (e: SAXException) {
+        } catch (e: Exception) {
             Log.e("DtaPlot/WebSocket","Failed to parse XML", e)
         }
     }

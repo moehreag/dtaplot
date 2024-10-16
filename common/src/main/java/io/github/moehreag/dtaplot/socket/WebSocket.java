@@ -78,7 +78,9 @@ public class WebSocket {
 		public void onOpen(java.net.http.WebSocket webSocket) {
 			CompletableFuture.runAsync(() -> {
 				LOGGER.info("Connection opened!");
-				connection.passwordSupplier.get().ifPresentOrElse(s -> {
+				Optional<String> op = connection.passwordSupplier.get();
+				if (op.isPresent()) {
+					String s = op.get();
 					String pw = s.isBlank() ? "0" : s;
 
 					LOGGER.info("Sending login..");
@@ -91,7 +93,9 @@ public class WebSocket {
 							connection.send("REFRESH");
 						}
 					}, 10, 1000);
-				}, connection::close);
+				} else {
+					connection.close();
+				}
 
 			});
 		}
@@ -108,7 +112,7 @@ public class WebSocket {
 
 		@Override
 		public CompletionStage<?> onClose(java.net.http.WebSocket webSocket, int statusCode, String reason) {
-			LOGGER.info("Socket closed! " + statusCode + " " + reason);
+			LOGGER.info("Socket closed! {} {}", statusCode, reason);
 			connection.close();
 			return java.net.http.WebSocket.Listener.super.onClose(webSocket, statusCode, reason);
 		}

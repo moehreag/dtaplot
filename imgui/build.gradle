@@ -8,7 +8,7 @@ jar {
 }
 
 ext {
-    lwjglVersion = '3.3.3'
+    lwjglVersion = '3.3.4'
     imguiVersion = '1.86.11'
 }
 
@@ -51,4 +51,8 @@ shadowJar {
     from ('LICENSE') {
         rename '^(LICENSE.*?)(\\..*)?$', "\$1_${base.archivesName.get()}\$2"
     }
+}
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
 }

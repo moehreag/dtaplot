@@ -5,13 +5,14 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
@@ -19,6 +20,10 @@ import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.lifecycleScope
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import io.github.moehreag.dtaplot.Main
 import io.github.moehreag.dtaplot.Translations
 import io.github.moehreag.dtaplot.android.ui.view.PlotView
@@ -42,7 +47,7 @@ class MainActivity : ComponentActivity() {
     @Preview(widthDp = 250)
     @Composable
     private fun App() {
-        val viewModel = remember { ActivityViewModel() }
+        val viewModel = rememberSaveable(saver = ActivityViewModel.saver(applicationContext, lifecycleScope)) { ActivityViewModel() }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             val lightColors: ColorScheme = dynamicLightColorScheme(applicationContext)
@@ -54,22 +59,22 @@ class MainActivity : ComponentActivity() {
                     lightColors
                 }
             ) {
-                BodyContent(viewModel)
+                Navigator(viewModel)
             }
         } else {
             MaterialTheme {
-                BodyContent(viewModel)
+                Navigator(viewModel)
             }
         }
 
     }
 
     @Composable
-    fun BodyContent(model: ActivityViewModel) {
-
-        val view = rememberSaveable { mutableStateOf(View.PLOT) }
+    private fun Navigator(model: ActivityViewModel) {
+        val navController = rememberNavController()
         val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
         val scope = rememberCoroutineScope()
+        val view = rememberSaveable { mutableStateOf(View.PLOT) }
         TopBar.openDrawer = {
             scope.launch {
                 drawerState.open()
@@ -100,6 +105,7 @@ class MainActivity : ComponentActivity() {
                             scope.launch {
                                 drawerState.close()
                             }
+                            navController.navigate(View.PLOT.navRoute)
                         })
                     NavigationDrawerItem(
                         label = { Text(text = Translations.translate("view.tcp")) },
@@ -109,6 +115,7 @@ class MainActivity : ComponentActivity() {
                             scope.launch {
                                 drawerState.close()
                             }
+                            navController.navigate(View.TCP.navRoute)
                         })
                     NavigationDrawerItem(
                         label = { Text(text = Translations.translate("view.ws")) },
@@ -118,18 +125,26 @@ class MainActivity : ComponentActivity() {
                             scope.launch {
                                 drawerState.close()
                             }
+                            navController.navigate(View.WS.navRoute)
                         })
                 }
             }) {
-
-            view.value.Draw(model)
+            NavHost(
+                navController = navController,
+                startDestination = View.PLOT.navRoute,
+                enterTransition = {EnterTransition.None},
+                exitTransition = { ExitTransition.None}) {
+                composable(View.PLOT.navRoute) { View.PLOT.Draw(model) }
+                composable(View.TCP.navRoute) { View.TCP.Draw(model) }
+                composable(View.WS.navRoute) { View.WS.Draw(model) }
+            }
         }
     }
 }
 
 
-enum class View(private val instance: io.github.moehreag.dtaplot.android.ui.view.View) {
-    PLOT(PlotView()), TCP(TcpView()), WS(WsView());
+enum class View(private val instance: io.github.moehreag.dtaplot.android.ui.view.View, val navRoute: String) {
+    PLOT(PlotView(), "plotView"), TCP(TcpView(), "tcpView"), WS(WsView(), "wsView");
 
     @Composable
     fun Draw(activityViewModel: ActivityViewModel) {

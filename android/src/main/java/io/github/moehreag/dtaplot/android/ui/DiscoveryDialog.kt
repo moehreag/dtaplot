@@ -14,14 +14,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import io.github.moehreag.dtaplot.Translations
 import io.github.moehreag.dtaplot.android.ActivityViewModel
-import kotlinx.coroutines.launch
+import java.net.InetAddress
 import java.net.InetSocketAddress
-import java.util.concurrent.Flow
 
 object DiscoveryDialog {
 
     private val dialogOpen = mutableStateOf(false)
-    private val options: MutableList<InetSocketAddress> = mutableStateListOf()
+    private val options: MutableList<InetSocketAddress?> = mutableStateListOf()
     private var remembered: InetSocketAddress? = null
 
     fun open(viewModel: ActivityViewModel) {
@@ -38,8 +37,6 @@ object DiscoveryDialog {
     @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
     @Composable
     fun Draw(viewModel: ActivityViewModel, onConfirm: (InetSocketAddress) -> Unit) {
-        val scope = rememberCoroutineScope()
-
         if (dialogOpen.value) {
             if (remembered != null) {
                 dialogOpen.value = false
@@ -57,9 +54,11 @@ object DiscoveryDialog {
                 ) {
                     val dropDownOpen = remember { mutableStateOf(false) }
                     var selection: InetSocketAddress? = remember { null }
-                    Column(modifier = Modifier
-                        .padding(all = 24.dp)
-                        .fillMaxWidth()) {
+                    Column(
+                        modifier = Modifier
+                            .padding(all = 24.dp)
+                            .fillMaxWidth()
+                    ) {
                         Text(Translations.translate("dialog.message"))
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             IconButton(onClick = {
@@ -74,9 +73,33 @@ object DiscoveryDialog {
                                     fontStyle = FontStyle.Italic,
                                     modifier = Modifier.padding(all = 4.dp)
                                 )
+                            } else if (options[0] == null) {
+                                var value by remember { mutableStateOf("") }
+                                TextField(value = value, singleLine = true, placeholder = {
+                                    Text(
+                                        Translations.translate("dialog.enterip"),
+                                        fontStyle = FontStyle.Italic,
+                                        modifier = Modifier.padding(all = 4.dp)
+                                    )
+                                }, onValueChange = { s ->
+                                    value = s
+                                },
+                                    colors = ExposedDropdownMenuDefaults.textFieldColors()
+                                )
+                                runCatching {
+                                    val parts = value.let {
+                                        if (it.contains(":")) {
+                                            it.split(":")
+                                        } else listOf(it, "8889")
+                                    }
+                                    selection = InetSocketAddress(
+                                        InetAddress.getByName(parts[0]),
+                                        if (parts.size < 2) 8889 else parts[1].toInt()
+                                    )
+                                }
                             } else {
                                 val selectedOption: MutableState<InetSocketAddress> =
-                                    remember { mutableStateOf(options[0]) }
+                                    remember { options[0]?.let { mutableStateOf(it) }!! }
                                 selection = selectedOption.value
                                 ExposedDropdownMenuBox(
                                     modifier = Modifier.wrapContentWidth(),
@@ -96,7 +119,7 @@ object DiscoveryDialog {
                                         },
                                         colors = ExposedDropdownMenuDefaults.textFieldColors(),
                                         modifier = Modifier
-                                            .menuAnchor()
+                                            .menuAnchor(MenuAnchorType.PrimaryEditable, true)
                                             .wrapContentWidth()
                                     )
                                     ExposedDropdownMenu(
@@ -109,12 +132,12 @@ object DiscoveryDialog {
                                         options.forEach { selectionOption ->
                                             DropdownMenuItem(
                                                 onClick = {
-                                                    selectedOption.value = selectionOption
+                                                    selectedOption.value = selectionOption!!
                                                     dropDownOpen.value = false
                                                     selection = selectedOption.value
                                                 },
                                                 text = {
-                                                    Text(text = selectionOption.hostString)
+                                                    Text(text = selectionOption!!.hostString)
                                                 }
                                             )
                                         }
@@ -150,9 +173,7 @@ object DiscoveryDialog {
                                     if (remember.value) {
                                         remembered = selection!!
                                     }
-                                    scope.launch {
-                                        onConfirm.invoke(selection!!)
-                                    }
+                                    onConfirm.invoke(selection!!)
                                 }
                             }) {
                                 Text(Translations.translate("action.select"))

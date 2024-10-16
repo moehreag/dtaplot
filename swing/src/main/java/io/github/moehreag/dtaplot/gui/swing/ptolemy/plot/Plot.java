@@ -276,7 +276,7 @@ public class Plot extends PlotBox implements PlotInterface {
 	public synchronized void addPoint(final int dataset, final double x,
 									  final double y, final double[] derivatives,
 									  final boolean connected) {
-		Runnable doAddPoint = new io.github.moehreag.dtaplot.gui.swing.ptolemy.util.RunnableExceptionCatcher(() ->
+		Runnable doAddPoint = new RunnableExceptionCatcher(() ->
 				_addPoint(dataset, x, y, derivatives, 0, 0, connected, false));
 
 		deferIfNecessary(doAddPoint);
@@ -316,7 +316,7 @@ public class Plot extends PlotBox implements PlotInterface {
 												   final double x, final double y, final double[] derivatives,
 												   final double yLowEB, final double yHighEB,
 												   final boolean connected) {
-		Runnable doAddPoint = new io.github.moehreag.dtaplot.gui.swing.ptolemy.util.RunnableExceptionCatcher(() ->
+		Runnable doAddPoint = new RunnableExceptionCatcher(() ->
 				_addPoint(dataset, x, y, derivatives, yLowEB, yHighEB,
 				connected, true));
 
@@ -339,7 +339,7 @@ public class Plot extends PlotBox implements PlotInterface {
 	 */
 	@Override
 	public synchronized void clear(final boolean format) {
-		Runnable doClear = new io.github.moehreag.dtaplot.gui.swing.ptolemy.util.RunnableExceptionCatcher(() -> _clear(format));
+		Runnable doClear = new RunnableExceptionCatcher(() -> _clear(format));
 
 		deferIfNecessary(doClear);
 	}
@@ -359,7 +359,7 @@ public class Plot extends PlotBox implements PlotInterface {
 	 */
 	@Override
 	public synchronized void clear(final int dataset) {
-		Runnable doClear = new io.github.moehreag.dtaplot.gui.swing.ptolemy.util.RunnableExceptionCatcher(() -> _clear(dataset));
+		Runnable doClear = new RunnableExceptionCatcher(() -> _clear(dataset));
 
 		deferIfNecessary(doClear);
 	}
@@ -383,7 +383,7 @@ public class Plot extends PlotBox implements PlotInterface {
 	 */
 	@Override
 	public synchronized void erasePoint(final int dataset, final int index) {
-		Runnable doErasePoint = new io.github.moehreag.dtaplot.gui.swing.ptolemy.util.RunnableExceptionCatcher(() -> _erasePoint(dataset, index));
+		Runnable doErasePoint = new RunnableExceptionCatcher(() -> _erasePoint(dataset, index));
 
 		deferIfNecessary(doErasePoint);
 	}
@@ -404,7 +404,7 @@ public class Plot extends PlotBox implements PlotInterface {
 	 */
 	@Override
 	public synchronized void fillPlot() {
-		Runnable doFill = new io.github.moehreag.dtaplot.gui.swing.ptolemy.util.RunnableExceptionCatcher(this::_fillPlot);
+		Runnable doFill = new RunnableExceptionCatcher(this::_fillPlot);
 
 		deferIfNecessary(doFill);
 	}
@@ -534,7 +534,7 @@ public class Plot extends PlotBox implements PlotInterface {
 	public synchronized void samplePlot() {
 		// This needs to be done in the event thread.
 		// run method
-		Runnable sample = new io.github.moehreag.dtaplot.gui.swing.ptolemy.util.RunnableExceptionCatcher(() -> {
+		Runnable sample = new RunnableExceptionCatcher(() -> {
 			synchronized (Plot.this) {
 				// Create a sample plot.
 				clear(true);
@@ -1493,8 +1493,7 @@ public class Plot extends PlotBox implements PlotInterface {
 
 			for (ArrayList<PlotPoint> point : _points) {
 				result.append("\\pscurve[showpoints=true]{-}");
-				ArrayList<PlotPoint> pts = point;
-				for (PlotPoint pt : pts) {
+				for (PlotPoint pt : point) {
 					if (!pt.connected) {
 						// FIXME: Break connection.
 					}
@@ -1558,7 +1557,7 @@ public class Plot extends PlotBox implements PlotInterface {
 
 				return true;
 			} else if (lcLine.startsWith("dataset:")) {
-				if (_reuseDatasets && !lcLine.isEmpty()) {
+				if (_reuseDatasets) {
 					String tlegend = line.substring(8).trim();
 					_currentdataset = -1;
 
@@ -1582,12 +1581,10 @@ public class Plot extends PlotBox implements PlotInterface {
 				_sawFirstDataSet = true;
 				_currentdataset++;
 
-				if (!lcLine.isEmpty()) {
-					String legend = line.substring(8).trim();
+				String legend = line.substring(8).trim();
 
-					if (legend != null && !legend.isEmpty()) {
-						addLegend(_currentdataset, legend);
-					}
+				if (!legend.isEmpty()) {
+					addLegend(_currentdataset, legend);
 				}
 
 				_maxDataset = _currentdataset;
@@ -1613,11 +1610,7 @@ public class Plot extends PlotBox implements PlotInterface {
 					}
 				}
 
-				if (lcLine.indexOf("off", 6) >= 0) {
-					setConnected(false);
-				} else {
-					setConnected(true);
-				}
+				setConnected(lcLine.indexOf("off", 6) < 0);
 
 				return true;
 			} else if (lcLine.startsWith("impulses:")) {
@@ -1625,17 +1618,9 @@ public class Plot extends PlotBox implements PlotInterface {
 				// as the global default.  Otherwise, it is assumed to apply
 				// only to the current dataset.
 				if (_sawFirstDataSet) {
-					if (lcLine.indexOf("off", 9) >= 0) {
-						setImpulses(false, _currentdataset);
-					} else {
-						setImpulses(true, _currentdataset);
-					}
+					setImpulses(lcLine.indexOf("off", 9) < 0, _currentdataset);
 				} else {
-					if (lcLine.indexOf("off", 9) >= 0) {
-						setImpulses(false);
-					} else {
-						setImpulses(true);
-					}
+					setImpulses(lcLine.indexOf("off", 9) < 0);
 				}
 
 				return true;
@@ -1784,7 +1769,7 @@ public class Plot extends PlotBox implements PlotInterface {
 	 */
 	@Override
 	protected void _resetScheduledTasks() {
-		Runnable redraw = new io.github.moehreag.dtaplot.gui.swing.ptolemy.util.RunnableExceptionCatcher(() -> {
+		Runnable redraw = new RunnableExceptionCatcher(() -> {
 			_scheduledBinsToAdd.clear();
 			_scheduledBinsToErase.clear();
 		});
@@ -2797,7 +2782,7 @@ public class Plot extends PlotBox implements PlotInterface {
 
 		ArrayList<PlotPoint> points = _points.get(dataset);
 		ArrayList<Bin> bins = _bins.get(dataset);
-		Bin bin = bins.get(0);
+		Bin bin = bins.getFirst();
 		int nbrOfBins = bins.size();
 		assert nbrOfBins > 0;
 
@@ -2988,7 +2973,7 @@ public class Plot extends PlotBox implements PlotInterface {
 		_prevErasedxpos.set(dataset, xpos);
 		_prevErasedypos.set(dataset, bin.lastYPos());
 
-		bins.remove(0);
+		bins.removeFirst();
 	}
 
 	/* Erase the point at the given index in the given dataset.  If
@@ -3022,12 +3007,8 @@ public class Plot extends PlotBox implements PlotInterface {
 			_yBottom = Double.MAX_VALUE;
 			_yTop = -Double.MAX_VALUE;
 
-			for (int dataset = 0; dataset < _points.size(); dataset++) {
-				ArrayList<PlotPoint> points = _points.get(dataset);
-
-				for (int index = 0; index < points.size(); index++) {
-					PlotPoint pt = points.get(index);
-
+			for (ArrayList<PlotPoint> points : _points) {
+				for (PlotPoint pt : points) {
 					if (pt.x < _xBottom) {
 						_xBottom = pt.x;
 					}

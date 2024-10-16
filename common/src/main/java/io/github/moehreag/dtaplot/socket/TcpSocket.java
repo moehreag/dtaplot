@@ -35,7 +35,7 @@ public class TcpSocket implements AutoCloseable {
 	}
 
 	public void connect(InetSocketAddress address){
-		LOGGER.info("Connecting to: " + address.getHostString() + ":" + address.getPort());
+		LOGGER.info("Connecting to: {}:{}", address.getHostString(), address.getPort());
 		try {
 			socket = SocketChannel.open(address);
 		} catch (IOException e) {

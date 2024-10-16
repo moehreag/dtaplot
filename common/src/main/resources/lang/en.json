@@ -54,6 +54,7 @@
 	"dialog.title": "Find Device",
 	"dialog.message": "Confirm the address of your heatpump below or correct if necessary:",
 	"dialog.loading": "Looking for supported devices",
+	"dialog.enterip": "Enter IP Address...",
 	"dialog.loading.indicator": ".",
 	"action.select": "Select",
 	"action.cancel": "Cancel",

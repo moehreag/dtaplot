@@ -29,7 +29,7 @@ class WsView : TableView() {
             topBar = TopBar.create(Translations.translate("view.ws")),
             bottomBar = {
                 BottomAppBar {
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                         TextButton(onClick = {
                             if (WebSocket.isConnected()) {
                                 scope.launch(Dispatchers.IO) {

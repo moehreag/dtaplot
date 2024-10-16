@@ -1,9 +1,10 @@
 package io.github.moehreag.dtaplot.android.ui.view
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Redo
-import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material.icons.rounded.Upload
 import androidx.compose.material3.*
@@ -12,8 +13,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.unit.dp
 import io.github.moehreag.dtaplot.Translations
 import io.github.moehreag.dtaplot.android.ActivityViewModel
 import io.github.moehreag.dtaplot.android.ui.DiscoveryDialog
@@ -32,7 +31,7 @@ class TcpView: TableView() {
             topBar = TopBar.create(Translations.translate("view.tcp")),
             bottomBar = {
                 BottomAppBar {
-                    Row (modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                    Row (modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                         TextButton(onClick = {
                             currentAction = Action.READ
                             DiscoveryDialog.open(viewModel)

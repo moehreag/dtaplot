@@ -18,9 +18,9 @@ previously saved files.
 
 - DTA 9001 version parsing doesn't work correctly at the moment.
 - Error handling (currently the window freezes up. This is bad.)
-- Scaling issues on high-res displays when using the `imgui` module.
-- Performance issues in the `android` module
-- Missing features in the `android` module (File saving/loading..)
+- `ImGui`: Scaling issues on high-res displays
+- `Android`: Missing features (File saving/loading, ...)
+- `Android`: localisation
 
 ### Tips
 
@@ -32,6 +32,9 @@ higher.
 
 ![Screenshot of the Welcome Page (Swing Module)](assets/welcome.png)
 ![Screenshot of displayed graphs (Swing Module)](assets/graphs.png)
+![Screenshot of displayed graphs (Android Module)](assets/graphs_android.png)
+![Screenshot of displayed graphs (Dear ImGui Module)](assets/graphs_imgui.png)
+
 
 ### Related Projects
 
